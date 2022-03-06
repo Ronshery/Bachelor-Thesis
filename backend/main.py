@@ -12,13 +12,15 @@ from bm_api import app
 
 # this thread will start kopf, i.e. our custom kubernetes operator that listens to kubernetes events, acts accordingly
 def kopf_thread(stop_me: threading.Event) -> None:
+    import bm_operator
+
     try:
         kopf_loop = uvloop.new_event_loop()
         asyncio.set_event_loop(kopf_loop)
 
         with contextlib.closing(kopf_loop):
             kopf.configure(verbose=True)
-            kopf_loop.run_until_complete(kopf.operator(stop_flag=stop_me))  # <<< for graceful termination
+            kopf_loop.run_until_complete(kopf.operator(stop_flag=stop_me, clusterwide=True))  # <<< for graceful termination
     finally:
         stop_me.set()
 
@@ -57,5 +59,13 @@ if __name__ == '__main__':
     t_kopf.start()
     t_api.start()
 
-    t_api.join()
-    t_kopf.join()
+    try:
+        t_api.join()
+        t_kopf.join()
+    except KeyboardInterrupt:
+        stop_me_event.set()
+
+        t_api.join()
+        t_kopf.join()
+    finally:
+        print("benchmarking-framework: Backend has shut down.")
