@@ -1,12 +1,19 @@
-import time
+import asyncio
+
 import kopf
 
 # use config file as desired
 from . import operator_config
 
 
+@kopf.on.startup()
+async def startup(logger, **_):
+    logger.info('Starting Operator in 5s...')
+    await asyncio.sleep(5)
+
+
 @kopf.on.login()
-def login_fn(logger, **kwargs):
+async def login(logger, **_):
     logger.info("Creating ConnectionInfo from operator_config module")
 
     return kopf.ConnectionInfo(
@@ -17,21 +24,3 @@ def login_fn(logger, **kwargs):
         scheme=operator_config.KUBERNETES_AUTH_SCHEME,
         token=operator_config.KUBERNETES_TOKEN
     )
-
-
-@kopf.on.cleanup()
-async def cleanup_fn(logger, **kwargs):
-    logger.info("Cleaning up kopf resources ...")
-    pass
-
-
-@kopf.on.create('kopfexamples')
-async def create_fn(logger, spec, name, meta, status, **kwargs):
-    logger.info(f"And here we are! Created {name} with spec: {spec}")
-
-
-@kopf.daemon('kopfexamples')
-async def my_daemon(spec, stopped, logger, **kwargs):
-    while not stopped:
-        logger.info(f"Object's spec: {spec}")
-        time.sleep(1)
