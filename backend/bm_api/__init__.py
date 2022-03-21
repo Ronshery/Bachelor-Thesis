@@ -3,8 +3,8 @@ from typing import List
 from fastapi import FastAPI
 
 from . import api_config
-from models.node import Node, NodeMetrics
-from models.benchmark import BenchmarkResult
+from bm_api.models.node import Node, NodeMetrics
+from bm_api.models.benchmark import BenchmarkResult
 
 app = FastAPI()
 
