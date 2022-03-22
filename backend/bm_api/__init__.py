@@ -1,13 +1,16 @@
 from typing import List
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+import pykube
 
 from . import api_config
-from bm_api.models.node import Node, NodeMetrics
+from bm_api.k8s_client import K8sClient
+from bm_api.models.node import NodeModel, NodeMetricsModel
 from bm_api.models.benchmark import BenchmarkResult
 
-app = FastAPI()
 
+app = FastAPI()
+k8s_client = K8sClient()
 
 @app.get("/version")
 async def get_version():
@@ -22,25 +25,37 @@ async def run_benchmark(type: str, node_id: str):
     raise NotImplementedError
 
 
-@app.get("/nodes/{node_id}", response_model=Node)
-async def get_node(node_id: str):
-    # TODO
-    raise NotImplementedError
+@app.get("/nodes/{node_name}", response_model=NodeModel)
+async def get_node(node_name: str):
+    try:
+        node = k8s_client.get_node_by_name(node_name)
+        return node
+    except Exception:
+        raise HTTPException(status_code=404, detail="Node not found")
 
 
-@app.get("/nodes", response_model=List[Node])
+@app.get("/nodes", response_model=List[NodeModel])
 async def get_all_nodes():
-    # TODO
-    raise NotImplementedError
+    try:
+        nodes = k8s_client.get_nodes()
+        return nodes
+    except Exception:
+        raise HTTPException(status_code=404, detail="Node not found")
 
 
-@app.get("/metrics/{node_id}", response_model=NodeMetrics)
-async def get_node_metrics(node_id: str):
-    # TODO
-    raise NotImplementedError
+@app.get("/metrics/{node_name}", response_model=NodeMetricsModel)
+async def get_node_metrics(node_name: str):
+    try:
+        metrics: NodeMetricsModel = k8s_client.get_node_metrics_by_name(node_name)
+        return metrics
+    except Exception:
+        raise HTTPException(status_code=404, detail="Node metrics not found")
 
 
-@app.get("/metrics", response_model=List[NodeMetrics])
+@app.get("/metrics", response_model=List[NodeMetricsModel])
 async def get_all_nodes_metrics():
-    # TODO
-    raise NotImplementedError
+    try:
+        metrics_list: List[NodeMetricsModel] = k8s_client.get_node_metrics()
+        return metrics_list
+    except Exception:
+        raise HTTPException(status_code=404, detail="No node metrics found")
