@@ -1,5 +1,6 @@
-from typing import Literal, Optional
+from typing import Literal, Optional, Dict
 from pydantic import BaseModel
+from bm_api.models.k8s.io.k8s.api.core.v1 import Node
 
 
 class NodeLimitations(BaseModel):
@@ -8,21 +9,14 @@ class NodeLimitations(BaseModel):
     num_pods: Optional[int] # like this?
 
 
-class Node(BaseModel):
-    id: str
-    node_type: Literal["master", "slave"]
-    kernel_version: str
-    kubernetes_version: str
-    num_replicas: int
-    limitations: Optional[NodeLimitations]
+# inherits from k8s OpenAPI specs and can be extended
+# with custom fields, i.e. the name of the current cluster
+class NodeModel(Node):
+    cluster: Optional[str] = None  # name of current k8s cluster
 
 
-class NodeMetrics(BaseModel):
-    # percentage value sufficient? maybe current value and maximum available would also make sense?
-
-    node_id: str
-    cpu_load: float
-    memory_usage: float
-    storage_usage: float
-    network_down: float
-    network_up: float
+# based on the metrics-server API
+# https://github.com/kubernetes-sigs/metrics-server
+class NodeMetricsModel(BaseModel):
+    name: str
+    usage: Dict[str, str]
