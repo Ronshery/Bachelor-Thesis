@@ -4,11 +4,21 @@ import time
 from common.monitoring import handle_monitoring
 
 
-def handle_benchmarking(name, spec, stopped, logger,
+def handle_benchmarking(name,
+                        spec: Spec,
+                        stopped,
+                        logger,
                         started: datetime.datetime,
                         runtime: datetime.timedelta):
+                        runtime: datetime.timedelta,
+                        **kwargs):
+
+    logger.info(f"{name}: started: {started}, {spec}")
+
     while not stopped:
         time.sleep(5)
+
+    print(f"{datetime.datetime.utcnow()}: {name}  HAS stopped")
 
     # TODO: do something with collected metrics
     # get metrics

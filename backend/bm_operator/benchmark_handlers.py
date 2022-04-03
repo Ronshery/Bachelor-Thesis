@@ -6,8 +6,13 @@ import kopf
 from common.benchmarking import handle_benchmarking
 
 
-@kopf.daemon("sysbenches")
+def bmfw_filter(spec, meta, **_):
+    return meta.get("name") == "sysbench-bmfw"
+
+
+@kopf.daemon("sysbenches", when=bmfw_filter)
 def handle_cpu_sysbench_benchmarking(spec, stopped, logger, started, runtime, **_):
+    print(f"HANDLING BENCHMARKING SYSBENCH: {_['meta']['name']}")
     handle_benchmarking("cpu-sysbench", spec, stopped, logger, started, runtime)
 
 

@@ -8,8 +8,8 @@ from . import operator_config
 
 @kopf.on.startup()
 async def startup(logger, **_):
-    logger.info('Starting Operator in 5s...')
-    await asyncio.sleep(5)
+    logger.info('Starting Operator in 1s...')
+    await asyncio.sleep(1)
 
 
 @kopf.on.login()
