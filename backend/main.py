@@ -52,6 +52,10 @@ def api_thread(stop_me: threading.Event) -> None:
 
 
 if __name__ == '__main__':
+    import orm
+
+    orm.create_tables()
+
     stop_me_event: threading.Event = threading.Event()
     t_kopf: threading.Thread = threading.Thread(target=kopf_thread, args=(stop_me_event,))
     t_api: threading.Thread = threading.Thread(target=api_thread, args=(stop_me_event,))

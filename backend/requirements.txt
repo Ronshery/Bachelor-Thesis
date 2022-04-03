@@ -3,6 +3,7 @@ kopf==1.35.3
 uvloop==0.16.0
 fastapi==0.75.0
 pykube-ng==22.1.0
+SQLAlchemy==1.4.34
 ## The following requirements were added by pip freeze:
 aiohttp==3.8.1
 aiosignal==1.2.0
