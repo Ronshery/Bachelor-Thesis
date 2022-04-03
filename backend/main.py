@@ -12,7 +12,7 @@ from bm_api import app
 
 # this thread will start kopf, i.e. our custom kubernetes operator that listens to kubernetes events, acts accordingly
 def kopf_thread(stop_me: threading.Event) -> None:
-    import bm_operator
+    import bm_operator.benchmark_handlers
 
     try:
         kopf_loop = uvloop.new_event_loop()

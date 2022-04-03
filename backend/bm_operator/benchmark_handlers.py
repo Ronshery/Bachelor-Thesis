@@ -6,7 +6,7 @@ import kopf
 from common.benchmarking import handle_benchmarking
 
 
-@kopf.daemon("sysbenchs", __name="cpu-sysbench")
+@kopf.daemon("sysbenches")
 def handle_cpu_sysbench_benchmarking(spec, stopped, logger, started, runtime, **_):
     handle_benchmarking("cpu-sysbench", spec, stopped, logger, started, runtime)
 

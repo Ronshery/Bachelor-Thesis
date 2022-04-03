@@ -14,13 +14,4 @@ async def startup(logger, **_):
 
 @kopf.on.login()
 async def login(logger, **_):
-    logger.info("Creating ConnectionInfo from operator_config module")
-
-    return kopf.ConnectionInfo(
-        server=operator_config.KUBERNETES_SERVER,
-        ca_path=operator_config.KUBERNETES_CA_PATH,
-        insecure=True,
-        username=operator_config.KUBERNETES_USERNAME,
-        scheme=operator_config.KUBERNETES_AUTH_SCHEME,
-        token=operator_config.KUBERNETES_TOKEN
-    )
+    return kopf.login_with_kubeconfig(**_)
