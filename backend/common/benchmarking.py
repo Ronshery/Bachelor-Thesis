@@ -1,6 +1,8 @@
 import datetime
 import time
 
+from kopf import Spec
+
 from common.monitoring import handle_monitoring
 
 
@@ -9,7 +11,6 @@ def handle_benchmarking(name,
                         stopped,
                         logger,
                         started: datetime.datetime,
-                        runtime: datetime.timedelta):
                         runtime: datetime.timedelta,
                         **kwargs):
 
