@@ -1,7 +1,7 @@
 apiVersion: perf.kubestone.xridge.io/v1alpha1
 kind: Sysbench
 metadata:
-  name: sysbench-bmfw
+  name: sysbench-cpu
 spec:
   image:
     name: xridge/sysbench:1.0.17-1
