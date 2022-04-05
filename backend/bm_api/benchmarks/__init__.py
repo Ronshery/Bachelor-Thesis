@@ -1,2 +1,3 @@
 from .base import BaseBenchmark
-from .cpu import CpuBenchmark
+from .cpu import CpuSysbenchBenchmark
+from .memory import MemorySysbenchBenchmark

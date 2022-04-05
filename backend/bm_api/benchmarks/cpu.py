@@ -1,25 +1,22 @@
 import pykube
-import yaml
 
 from bm_api.benchmarks.base import BaseBenchmark, BenchmarkStartupResult
 
 
-class CpuBenchmark(BaseBenchmark):
-    def run(self, pykube_client: pykube.HTTPClient, node_name: str) -> BenchmarkStartupResult:
-        with open("config/sysbench_cpu.yaml") as f:
-            dpl = yaml.safe_load(f)
-            # use object factory:
-            # - all kubestone benchmarks use api_version = 'perf.kubestone.xridge.io/v1alpha1'
-            # - specify 'kind', here: 'Sysbench'
-            factory = pykube.object_factory(pykube_client, "perf.kubestone.xridge.io/v1alpha1", "Sysbench")
-            factory(pykube_client, dpl).create()
+class CpuSysbenchBenchmark(BaseBenchmark):
+    @property
+    def kind(self):
+        return "Sysbench"
 
-            # TODO add pod
-            return BenchmarkStartupResult(success=True, pod=None, benchmark_spec=self)
-
-        raise NotImplementedError
+    @property
+    def config_path(self):
+        return "config/cpu_sysbench.yaml"
 
     @property
     def name(self):
-        return "CPU"
+        return "cpu-sysbench"
+
+    def _run(self, pykube_client: pykube.HTTPClient, node_name: str) -> BenchmarkStartupResult:
+        # TODO add pod
+        return BenchmarkStartupResult(success=True, pod=None, benchmark_spec=self)
 
