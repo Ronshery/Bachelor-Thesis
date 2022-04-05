@@ -6,13 +6,13 @@ import kopf
 from common.benchmarking import handle_benchmarking
 
 
-def sysbench_cpu_filter(spec, meta, **_):
-    return meta.get("name") == "sysbench-cpu"
+def cpu_sysbench_filter(spec, meta, **_):
+    return meta.get("name").startswith("cpu-sysbench")
 
 
-@kopf.daemon("sysbenches", when=sysbench_cpu_filter)
+@kopf.daemon("sysbenches", when=cpu_sysbench_filter)
 def handle_cpu_sysbench_benchmarking(spec, stopped, logger, started, runtime, **_):
-    handle_benchmarking("sysbench-cpu", spec, stopped, logger, started, runtime)
+    handle_benchmarking("cpu-sysbench", spec, stopped, logger, started, runtime)
 
 
 @kopf.daemon("fios")

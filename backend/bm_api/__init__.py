@@ -17,7 +17,9 @@ k8s_client = K8sClient()
 
 benchmark_mappings: Dict[str, Type[bm_api.benchmarks.BaseBenchmark]] = {
     "cpu-sysbench": bm_api.benchmarks.CpuSysbenchBenchmark,
-    "memory-sysbench": bm_api.benchmarks.MemorySysbenchBenchmark
+    "memory-sysbench": bm_api.benchmarks.MemorySysbenchBenchmark,
+    "network-iperf3": bm_api.benchmarks.NetworkIperf3Benchmark,
+    "network-qperf": bm_api.benchmarks.NetworkQperfBenchmark
 }
 
 

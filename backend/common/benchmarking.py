@@ -23,6 +23,6 @@ def handle_benchmarking(name,
 
     # TODO: do something with collected metrics
     # get metrics
-    benchmark_job_dict = handle_monitoring(name, {}, logger, started, runtime)
+    # benchmark_job_dict = handle_monitoring(name, {}, logger, started, runtime)
 
     logger.info(f"Deleted {name}")
