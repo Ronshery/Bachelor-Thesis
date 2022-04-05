@@ -1,7 +1,7 @@
 from typing import List, Dict, Type
 
 import pykube
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, responses
 
 
 from . import api_config
@@ -26,6 +26,12 @@ async def get_version():
     return {
         "version": api_config.BMAPI_VERSION
     }
+
+
+@app.get("/", include_in_schema=False)
+async def redirect():
+    response = responses.RedirectResponse(url='/docs')
+    return response
 
 
 @app.post("/benchmark/{bm_type}/{node_id}", response_model=BenchmarkResult)
