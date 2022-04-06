@@ -2,7 +2,8 @@ uvicorn==0.17.5
 kopf==1.35.3
 uvloop==0.16.0
 fastapi==0.75.0
-pykube-ng
+pykube-ng==22.1.0
+SQLAlchemy==1.4.34
 ## The following requirements were added by pip freeze:
 aiohttp==3.8.1
 aiosignal==1.2.0
@@ -24,3 +25,6 @@ sniffio==1.2.0
 starlette==0.17.1
 typing_extensions==4.1.1
 yarl==1.7.2
+certifi==2021.10.8
+requests==2.27.1
+urllib3==1.26.9

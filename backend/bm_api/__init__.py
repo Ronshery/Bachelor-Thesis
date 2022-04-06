@@ -1,16 +1,29 @@
-from typing import List
+from typing import List, Dict, Type
 
-from fastapi import FastAPI, HTTPException
 import pykube
+from fastapi import FastAPI, HTTPException, responses
+
 
 from . import api_config
 from bm_api.k8s_client import K8sClient
 from bm_api.models.node import NodeModel, NodeMetricsModel
 from bm_api.models.benchmark import BenchmarkResult
 
+import bm_api.benchmarks
 
 app = FastAPI()
 k8s_client = K8sClient()
+
+
+benchmark_mappings: Dict[str, Type[bm_api.benchmarks.BaseBenchmark]] = {
+    "cpu-sysbench": bm_api.benchmarks.CpuSysbenchBenchmark,
+    "memory-sysbench": bm_api.benchmarks.MemorySysbenchBenchmark,
+    "network-iperf3": bm_api.benchmarks.NetworkIperf3Benchmark,
+    "network-qperf": bm_api.benchmarks.NetworkQperfBenchmark,
+    "disk-ioping": bm_api.benchmarks.DiskIopingBenchmark,
+    "disk-fio": bm_api.benchmarks.DiskFioBenchmark
+}
+
 
 @app.get("/version")
 async def get_version():
@@ -19,10 +32,27 @@ async def get_version():
     }
 
 
-@app.post("/benchmark/{type}/{node_id}", response_model=BenchmarkResult)
-async def run_benchmark(type: str, node_id: str):
-    # TODO
-    raise NotImplementedError
+@app.get("/", include_in_schema=False)
+async def redirect():
+    response = responses.RedirectResponse(url='/docs')
+    return response
+
+
+@app.post("/benchmark/{bm_type}/{node_id}", response_model=BenchmarkResult)
+async def run_benchmark(bm_type: str, node_id: str):
+    bm_type = bm_type.lower()
+    if bm_type in benchmark_mappings:
+        # TODO: centrally initialize pykube client
+        pk_api = pykube.HTTPClient(pykube.KubeConfig.from_file())
+
+        bm_cls = benchmark_mappings[bm_type]
+        bm = bm_cls()
+
+        startup_result = bm.run(pk_api, node_id)
+
+        return startup_result
+    else:
+        raise HTTPException(status_code=404, detail=f"Benchmark '{bm_type}' not found")
 
 
 @app.get("/nodes/{node_name}", response_model=NodeModel)

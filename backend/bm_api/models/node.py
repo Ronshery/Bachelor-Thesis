@@ -1,6 +1,11 @@
+from __future__ import annotations
+
 from typing import Literal, Optional, Dict
+
+import pykube
 from pydantic import BaseModel
 from bm_api.models.k8s.io.k8s.api.core.v1 import Node
+from bm_api.models.k8s.io.k8s.apimachinery.pkg.apis.meta.v1 import ObjectMeta
 
 
 class NodeLimitations(BaseModel):
@@ -13,6 +18,15 @@ class NodeLimitations(BaseModel):
 # with custom fields, i.e. the name of the current cluster
 class NodeModel(Node):
     cluster: Optional[str] = None  # name of current k8s cluster
+
+    @staticmethod
+    def from_pykube(n: pykube.objects.Node) -> NodeModel:
+        return NodeModel(
+            apiVersion=n.version,
+            metadata=ObjectMeta(
+                **n.metadata
+            )
+        )
 
 
 # based on the metrics-server API
