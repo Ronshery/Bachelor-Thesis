@@ -19,7 +19,9 @@ benchmark_mappings: Dict[str, Type[bm_api.benchmarks.BaseBenchmark]] = {
     "cpu-sysbench": bm_api.benchmarks.CpuSysbenchBenchmark,
     "memory-sysbench": bm_api.benchmarks.MemorySysbenchBenchmark,
     "network-iperf3": bm_api.benchmarks.NetworkIperf3Benchmark,
-    "network-qperf": bm_api.benchmarks.NetworkQperfBenchmark
+    "network-qperf": bm_api.benchmarks.NetworkQperfBenchmark,
+    "disk-ioping": bm_api.benchmarks.DiskIopingBenchmark,
+    "disk-fio": bm_api.benchmarks.DiskFioBenchmark
 }
 
 

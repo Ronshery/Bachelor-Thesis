@@ -21,7 +21,7 @@ class NetworkIperf3Benchmark(BaseBenchmark):
 
     def _run(self, client: pykube.HTTPClient, factory: Type[APIObject], spec: Dict,
              *args, **kwargs) -> BenchmarkStartupResult:
-        client_node_name, server_node_name = (args[0].split("@") + [None, None])[:2]
+        client_node_name, server_node_name = (args[0].split("@@@") + [None, None])[:2]
         spec = self.merge_dicts(spec, {"spec": {
             "clientConfiguration": {"podScheduling": {"nodeName": client_node_name}},
             "serverConfiguration": {"podScheduling": {"nodeName": server_node_name}}
@@ -31,7 +31,7 @@ class NetworkIperf3Benchmark(BaseBenchmark):
         return BenchmarkStartupResult(success=True, pod=None, benchmark_spec=self)
 
 
-class NetworkQperfBenchmark(BaseBenchmark):
+class NetworkQperfBenchmark(NetworkIperf3Benchmark):
     @property
     def kind(self):
         return "Qperf"
@@ -43,14 +43,3 @@ class NetworkQperfBenchmark(BaseBenchmark):
     @property
     def name(self):
         return "network-qperf"
-
-    def _run(self, client: pykube.HTTPClient, factory: Type[APIObject], spec: Dict,
-             *args, **kwargs) -> BenchmarkStartupResult:
-        client_node_name, server_node_name = (args[0].split("@") + [None, None])[:2]
-        spec = self.merge_dicts(spec, {"spec": {
-            "clientConfiguration": {"podScheduling": {"nodeName": client_node_name}},
-            "serverConfiguration": {"podScheduling": {"nodeName": server_node_name}}
-        }})
-        factory(client, spec).create()
-        # TODO add pod
-        return BenchmarkStartupResult(success=True, pod=None, benchmark_spec=self)
