@@ -19,14 +19,14 @@ class NetworkIperf3Benchmark(BaseBenchmark):
     def name(self):
         return "network-iperf3"
 
-    def _run(self, client: pykube.HTTPClient, factory: Type[APIObject], spec: Dict,
+    def _run(self, client: pykube.HTTPClient, spec: Dict,
              *args, **kwargs) -> BenchmarkStartupResult:
         client_node_name, server_node_name = (args[0].split("@@@") + [None, None])[:2]
         spec = self.merge_dicts(spec, {"spec": {
             "clientConfiguration": {"podScheduling": {"nodeName": client_node_name}},
             "serverConfiguration": {"podScheduling": {"nodeName": server_node_name}}
         }})
-        factory(client, spec).create()
+        self.get_factory(client)(client, spec).create()
         # TODO add pod
         return BenchmarkStartupResult(success=True, pod=None, benchmark_spec=self)
 

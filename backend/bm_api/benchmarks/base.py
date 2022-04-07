@@ -3,7 +3,7 @@ from __future__ import annotations
 import dataclasses
 import os.path
 from abc import ABC
-from typing import Optional, Type, Any, Dict
+from typing import Optional, Type, Dict
 
 import pykube
 import yaml
@@ -22,6 +22,12 @@ class BaseBenchmark(ABC):
     @property
     def config_path(self):
         raise NotImplementedError
+
+    def get_factory(self, client: pykube.HTTPClient) -> Type[APIObject]:
+        # use object factory:
+        # - all kubestone benchmarks use api_version = 'perf.kubestone.xridge.io/v1alpha1'
+        # - specify 'kind', e.g. 'Sysbench'
+        return pykube.object_factory(client, "perf.kubestone.xridge.io/v1alpha1", self.kind)
 
     @staticmethod
     def merge_dicts(tgt, enhancer):
@@ -44,18 +50,14 @@ class BaseBenchmark(ABC):
                 spec = yaml.safe_load(f)
                 # make sure to execute in 'kubestone' namespace
                 spec = self.merge_dicts(spec, {"metadata": {"namespace": "kubestone"}})
-                # use object factory:
-                # - all kubestone benchmarks use api_version = 'perf.kubestone.xridge.io/v1alpha1'
-                # - specify 'kind', e.g. 'Sysbench'
-                factory: Type[APIObject] = pykube.object_factory(client, "perf.kubestone.xridge.io/v1alpha1", self.kind)
                 # now: run custom logic
-                self._run(client, factory, spec, *args, **kwargs)
+                self._run(client, spec, *args, **kwargs)
 
-    def _run(self, client: pykube.HTTPClient, factory: Type[APIObject], spec: Dict,
+    def _run(self, client: pykube.HTTPClient, spec: Dict,
              *args, **kwargs) -> BenchmarkStartupResult:
         node_name: str = args[0].split("@@@")[0]
         spec = self.merge_dicts(spec, {"spec": {"podConfig": {"podScheduling": {"nodeName": node_name}}}})
-        factory(client, spec).create()
+        self.get_factory(client)(client, spec).create()
         # TODO add pod
         return BenchmarkStartupResult(success=True, pod=None, benchmark_spec=self)
 

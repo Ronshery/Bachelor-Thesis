@@ -38,6 +38,30 @@ async def redirect():
     return response
 
 
+@app.get("/benchmarks")
+async def get_all_benchmarks():
+    try:
+        return k8s_client.get_benchmarks(list(benchmark_mappings.values()))
+    except Exception:
+        raise HTTPException(status_code=404, detail="Benchmarks not found")
+
+
+@app.get("/benchmarks/kind={bm_type}")
+async def get_all_benchmarks_by_kind(bm_type: str):
+    try:
+        return k8s_client.get_benchmarks(list(benchmark_mappings.values()), bm_type=bm_type)
+    except Exception:
+        raise HTTPException(status_code=404, detail=f"Benchmarks for kind '{bm_type}' not found")
+
+
+@app.get("/benchmarks/node={node_id}")
+async def get_all_benchmarks_by_node(node_id: str):
+    try:
+        return k8s_client.get_benchmarks(list(benchmark_mappings.values()), node_name=node_id)
+    except Exception:
+        raise HTTPException(status_code=404, detail=f"Benchmarks for node '{node_id}' not found")
+
+
 @app.post("/benchmark/{bm_type}/{node_id}", response_model=BenchmarkResult)
 async def run_benchmark(bm_type: str, node_id: str):
     bm_type = bm_type.lower()
