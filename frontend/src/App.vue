@@ -7,6 +7,7 @@
 </template>
 
 <script setup lang="ts">
+/*
 import { useStore } from "vuex";
 import Node from "@/models/Node";
 
@@ -25,6 +26,7 @@ console.log("****************");
 console.log(store.getters);
 console.log(Node.query().all());
 console.log(NodeModel.query().where("name", "myfirstnode").get());
+ */
 </script>
 <style>
 * {

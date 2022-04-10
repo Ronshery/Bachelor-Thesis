@@ -8,7 +8,7 @@
       <button @click="reset">Reset</button>
       {{ selectedNodes }}
       <br />
-      {{ layoutsData }}
+      {{ layouts }}
       <br />
       {{ layoutsBackup }}
     </div>
@@ -17,62 +17,62 @@
       v-model:selected-nodes="selectedNodes"
       v-model:zoom-level="zoomLevel"
       :nodes="nodes"
-      :edges="edges"
       :configs="configs"
-      v-model:layouts="layoutsData"
       :event-handlers="eventHandlers"
       :layers="layers"
-    >
-      <!-- Additional layer -->
-      <template #badge="{ scale }">
-        <!--
-          If the `view.scalingObjects` config is `false`(default),
-          scaling does not change the display size of the nodes/edges.
-          The `scale` is passed as a scaling factor to implement
-          this behavior. -->
-        <circle
-          v-for="(pos, node) in layoutsData.nodes"
-          :key="node"
-          :cx="pos.x * scale"
-          :cy="pos.y * scale"
-          :r="4 * scale"
-          :fill="nodes[node].active ? '#00cc00' : '#ff5555'"
-          style="pointer-events: none"
-        />
-      </template>
-    </v-network-graph>
+      v-model:layouts="layouts"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, defineEmits, defineProps, onMounted } from "vue";
+import {
+  ref,
+  nextTick,
+  defineEmits,
+  defineProps,
+  onMounted,
+  computed,
+  reactive,
+  watch,
+  watchEffect,
+} from "vue";
 import * as vNG from "v-network-graph";
 import { useStore } from "vuex";
 
 // vue data
-const props = defineProps(["nodes", "edges", "configs", "layouts", "layers"]);
+const props = defineProps(["nodes", "configs", "layers"]);
 const emit = defineEmits(["nodeClicked"]);
 const store = useStore();
 
 // data
 let zoomLevel = ref(1);
 const selectedNodes = ref<string[]>([]);
-const layoutsData = ref(props.layouts);
 const graph = ref<vNG.Instance>();
-const layoutsBackup = JSON.parse(JSON.stringify(props.layouts));
+const layouts = ref<vNG.Layouts>();
+const layoutsBackup = ref<vNG.Layouts>();
+let layoutsBackupSet = false;
 
 // methods
 onMounted(() => {
-  console.log(store.state);
+  store.dispatch("initializeGraph", graph);
+  graph.value?.panToCenter();
+  graph.value?.fitToContents();
+  zoomLevel.value = 0.5;
 });
 
 const reset = async () => {
-  zoomLevel.value = 1;
-  for (const [key, value] of Object.entries(layoutsData.value.nodes)) {
-    // assignment without reference
-    layoutsData.value.nodes[key] = JSON.parse(
-      JSON.stringify(layoutsBackup)
-    ).nodes[key];
+  console.log(zoomLevel.value);
+  zoomLevel.value = 0.1;
+  if (layouts.value && layoutsBackupSet && layoutsBackup.value) {
+    for (const [key] of Object.entries(layouts.value.nodes)) {
+      // assignment without reference
+      console.log(layouts.value.nodes[key]);
+      console.log(layoutsBackup.value.nodes[key]);
+      layouts.value.nodes[key] = JSON.parse(
+        JSON.stringify(layoutsBackup.value.nodes[key])
+      );
+    }
   }
   nextTick().then(() => {
     graph.value?.panToCenter();
@@ -82,12 +82,17 @@ const reset = async () => {
 
 const eventHandlers: vNG.EventHandlers = {
   "node:click": ({ node }) => {
-    console.log(node);
-    console.log(props);
     emit("nodeClicked", node);
   },
   "view:click": () => {
     emit("nodeClicked", null);
+  },
+  "node:dragstart": () => {
+    // set layoutsBackup
+    if (!layoutsBackupSet) {
+      layoutsBackup.value = JSON.parse(JSON.stringify(layouts.value));
+      layoutsBackupSet = true;
+    }
   },
 };
 </script>
