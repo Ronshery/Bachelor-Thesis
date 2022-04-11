@@ -2,12 +2,18 @@ from __future__ import annotations
 
 import dataclasses
 import os.path
+import string
 from abc import ABC
+import random
 from typing import Optional, Type, Dict
 
 import pykube
 import yaml
 from pykube.objects import APIObject
+
+
+def generate_suffix(length: int):
+    return ''.join(random.SystemRandom().choice(string.ascii_lowercase + string.digits) for _ in range(length))
 
 
 class BaseBenchmark(ABC):
@@ -23,11 +29,12 @@ class BaseBenchmark(ABC):
     def config_path(self):
         raise NotImplementedError
 
-    def get_factory(self, client: pykube.HTTPClient) -> Type[APIObject]:
+    @staticmethod
+    def get_factory(client: pykube.HTTPClient, kind: str) -> Type[APIObject]:
         # use object factory:
         # - all kubestone benchmarks use api_version = 'perf.kubestone.xridge.io/v1alpha1'
         # - specify 'kind', e.g. 'Sysbench'
-        return pykube.object_factory(client, "perf.kubestone.xridge.io/v1alpha1", self.kind)
+        return pykube.object_factory(client, "perf.kubestone.xridge.io/v1alpha1", kind)
 
     @staticmethod
     def merge_dicts(tgt, enhancer):
@@ -50,6 +57,9 @@ class BaseBenchmark(ABC):
                 spec = yaml.safe_load(f)
                 # make sure to execute in 'kubestone' namespace
                 spec = self.merge_dicts(spec, {"metadata": {"namespace": "kubestone"}})
+                # add suffix to 'name', so that they are different and
+                # one can schedule multiple benchmarks of one kind simultaneously
+                spec['metadata']['name'] = f"{spec['metadata'].get('name', None)}-{generate_suffix(10)}"
                 # now: run custom logic
                 self._run(client, spec, *args, **kwargs)
 
@@ -57,7 +67,7 @@ class BaseBenchmark(ABC):
              *args, **kwargs) -> BenchmarkStartupResult:
         node_name: str = args[0].split("@@@")[0]
         spec = self.merge_dicts(spec, {"spec": {"podConfig": {"podScheduling": {"nodeName": node_name}}}})
-        self.get_factory(client)(client, spec).create()
+        self.get_factory(client, self.kind)(client, spec).create()
         # TODO add pod
         return BenchmarkStartupResult(success=True, pod=None, benchmark_spec=self)
 

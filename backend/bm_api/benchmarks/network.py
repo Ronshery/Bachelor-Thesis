@@ -26,7 +26,7 @@ class NetworkIperf3Benchmark(BaseBenchmark):
             "clientConfiguration": {"podScheduling": {"nodeName": client_node_name}},
             "serverConfiguration": {"podScheduling": {"nodeName": server_node_name}}
         }})
-        self.get_factory(client)(client, spec).create()
+        self.get_factory(client, self.kind)(client, spec).create()
         # TODO add pod
         return BenchmarkStartupResult(success=True, pod=None, benchmark_spec=self)
 
