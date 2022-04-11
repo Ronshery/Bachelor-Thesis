@@ -1,11 +1,11 @@
 import datetime
 import time
 import uuid
-from typing import TypeVar, Type
+from typing import Type, Optional
 
 import pykube
-from kopf import Spec
 from pykube import Pod
+from pykube.objects import APIObject
 from sqlalchemy.orm import Session
 
 from common.metrics import get_benchmark_metrics, TMetricClass
@@ -13,23 +13,25 @@ from common.metrics import get_benchmark_metrics, TMetricClass
 pk_api = pykube.HTTPClient(pykube.KubeConfig.from_file())
 
 
-def handle_benchmarking(name,
-                        spec: Spec,
-                        stopped,
+def handle_benchmarking(namespace: str,
+                        name: str,
                         logger,
                         started: datetime.datetime,
-                        metrics_cls: Type[TMetricClass],
-                        **kwargs):
+                        stopped,
+                        body: dict,
+                        metrics_cls: Optional[Type[TMetricClass]] = None,  # make this later no longer optional
+                        **_):
     # from orm import engine
     # from orm.models import Benchmark
 
-    logger.info(f"{name}: started: {started}, {spec}")
+    logger.info(f"{name}: started: {started}, {body['spec']}")
+
+    kind: str = body["kind"]
+    factory_instance: Type[APIObject] = pykube.object_factory(pk_api, "perf.kubestone.xridge.io/v1alpha1", kind)
 
     while not stopped:
-        pods = pykube.Pod.objects(pk_api, namespace="kubestone")\
-            .filter(selector={
-                "job-name": name
-            }).all()
+        pods = pykube.Pod.objects(pk_api, namespace=namespace) \
+            .filter(selector={"job-name": name}).all()
 
         logger.info(f"{name}: Found {len(pods)} pods")
 
@@ -59,6 +61,12 @@ def handle_benchmarking(name,
 
             # TODO: after storing its metrics, delete the pod
             # p.delete()
+
+        obj = factory_instance.objects(pk_api, namespace=namespace).get_by_name(name).obj
+
+        # delete if completed
+        if obj["status"]["completed"]:
+            factory_instance(pk_api, obj).delete()
 
         time.sleep(15)
 
