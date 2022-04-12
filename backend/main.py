@@ -35,7 +35,7 @@ def api_thread(stop_me: threading.Event) -> None:
 
         # monitor the flag and stop it somehow. here, disgracefully.
         with contextlib.closing(api_loop):
-            config = uvicorn.Config(app=app, loop=api_loop)
+            config = uvicorn.Config(app=app, loop=api_loop, host="0.0.0.0")
             server = uvicorn.Server(config)
             server_task = asyncio.gather(server.serve())
             waiter_task = asyncio.gather(api_loop.run_in_executor(None, stop_me.wait))

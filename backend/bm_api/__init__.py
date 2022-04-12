@@ -10,6 +10,7 @@ from bm_api.models.node import NodeModel, NodeMetricsModel
 from bm_api.models.benchmark import BenchmarkResult
 
 import bm_api.benchmarks
+import logging
 
 app = FastAPI()
 k8s_client = K8sClient()
@@ -42,7 +43,8 @@ async def redirect():
 async def get_all_benchmarks():
     try:
         return k8s_client.get_benchmarks(list(benchmark_mappings.values()))
-    except Exception:
+    except Exception as e:
+        logging.error(e)
         raise HTTPException(status_code=404, detail="Benchmarks not found")
 
 
@@ -50,7 +52,8 @@ async def get_all_benchmarks():
 async def get_all_benchmarks_by_kind(bm_type: str):
     try:
         return k8s_client.get_benchmarks(list(benchmark_mappings.values()), bm_type=bm_type)
-    except Exception:
+    except Exception as e:
+        logging.error(e)
         raise HTTPException(status_code=404, detail=f"Benchmarks for kind '{bm_type}' not found")
 
 
@@ -58,7 +61,8 @@ async def get_all_benchmarks_by_kind(bm_type: str):
 async def get_all_benchmarks_by_node(node_id: str):
     try:
         return k8s_client.get_benchmarks(list(benchmark_mappings.values()), node_name=node_id)
-    except Exception:
+    except Exception as e:
+        logging.error(e)
         raise HTTPException(status_code=404, detail=f"Benchmarks for node '{node_id}' not found")
 
 
@@ -67,7 +71,7 @@ async def run_benchmark(bm_type: str, node_id: str):
     bm_type = bm_type.lower()
     if bm_type in benchmark_mappings:
         # TODO: centrally initialize pykube client
-        pk_api = pykube.HTTPClient(pykube.KubeConfig.from_file())
+        pk_api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
         bm_cls = benchmark_mappings[bm_type]
         bm = bm_cls()
@@ -84,7 +88,8 @@ async def get_node(node_name: str):
     try:
         node = k8s_client.get_node_by_name(node_name)
         return node
-    except Exception:
+    except Exception as e:
+        logging.error(e)
         raise HTTPException(status_code=404, detail="Node not found")
 
 
@@ -93,7 +98,8 @@ async def get_all_nodes():
     try:
         nodes = k8s_client.get_nodes()
         return nodes
-    except Exception:
+    except Exception as e:
+        logging.error(e)
         raise HTTPException(status_code=404, detail="Node not found")
 
 
@@ -102,7 +108,8 @@ async def get_node_metrics(node_name: str):
     try:
         metrics: NodeMetricsModel = k8s_client.get_node_metrics_by_name(node_name)
         return metrics
-    except Exception:
+    except Exception as e:
+        logging.error(e)
         raise HTTPException(status_code=404, detail="Node metrics not found")
 
 
@@ -111,5 +118,6 @@ async def get_all_nodes_metrics():
     try:
         metrics_list: List[NodeMetricsModel] = k8s_client.get_node_metrics()
         return metrics_list
-    except Exception:
+    except Exception as e:
+        logging.error(e)
         raise HTTPException(status_code=404, detail="No node metrics found")
