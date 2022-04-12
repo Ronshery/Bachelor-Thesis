@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from common.metrics import get_benchmark_metrics, TMetricClass
 
-pk_api = pykube.HTTPClient(pykube.KubeConfig.from_file())
+pk_api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
 
 def handle_benchmarking(namespace: str,

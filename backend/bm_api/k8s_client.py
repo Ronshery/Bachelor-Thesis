@@ -30,7 +30,8 @@ class K8sClient:
                        node_name: Optional[str] = None):
         res_list: List[Dict] = []
         for cls in classes:
-            json_result = cls().get_factory(self.api).objects(self.api).filter(namespace="kubestone").execute().json()
+            cls_instance = cls()
+            json_result = cls_instance.get_factory(self.api, cls_instance.kind).objects(self.api).filter(namespace="kubestone").execute().json()
             for idx in range(len(json_result["items"])):
                 json_result["items"][idx]["metadata"].pop("managedFields", None)
             res_list += json_result["items"]

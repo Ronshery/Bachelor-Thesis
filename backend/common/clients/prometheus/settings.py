@@ -11,6 +11,6 @@ class PrometheusQuery:
 
 
 class PrometheusSettings(BaseSettings):
-    prometheus_endpoint: Optional[str] = "http://localhost:9090"
+    prometheus_endpoint: Optional[str] = "http://prometheus-kube-prometheus-prometheus.prometheus.svc.cluster.local:9090"
     prometheus_query_step_width: Optional[int] = 5  # in seconds
 
