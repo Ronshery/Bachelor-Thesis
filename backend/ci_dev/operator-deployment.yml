@@ -152,3 +152,9 @@ spec:
         ports:
         - containerPort: 8000
           name: perona-api
+        volumeMounts:
+        - mountPath: /tmp
+          name: sqlite-volume
+      volumes:
+      - name: sqlite-volume
+        emptyDir: {}

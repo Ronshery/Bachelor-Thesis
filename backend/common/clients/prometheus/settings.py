@@ -4,10 +4,10 @@ from pydantic import BaseSettings
 
 class PrometheusQuery:
     # percentage values, i.e. 0 <= x <= 100
-    MEMORY_USED: str = '100 - ((avg_over_time(k8s_node_node_memory_MemAvailable_bytes[30s]) / avg_over_time(' \
-                  'k8s_node_node_memory_MemTotal_bytes[30s])) * 100) '
-    CPU_BUSY: str = '100 - (avg by (instance) (rate(k8s_node_node_cpu_seconds_total{mode="idle"}[30s])) * 100)'
-    DISK_IO_UTIL: str = '100 * (sum by (instance) (rate(k8s_node_node_disk_io_time_seconds_total[30s])))'
+    MEMORY_USED: str = '100 - ((avg_over_time(node_memory_MemAvailable_bytes[1m]) / ' \
+                       'avg_over_time(node_memory_MemTotal_bytes[1m])) * 100)'
+    CPU_BUSY: str = '100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[1m])) * 100)'
+    DISK_IO_UTIL: str = '100 * (sum by (instance) (rate(node_disk_io_time_seconds_total[1m])))'
 
 
 class PrometheusSettings(BaseSettings):
