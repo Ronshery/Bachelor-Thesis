@@ -5,7 +5,7 @@ IMAGE_NAME="perona-operator:dev"
 # delete old cluster
 kind delete cluster --name benchmark-operator
 # build docker image
-docker build . -t $IMAGE_NAME
+docker build --network=host -t $IMAGE_NAME .
 # create kind cluster
 kind create cluster --config=ci_dev/kind-config.yml
 # add docker image to kind cluster
@@ -27,4 +27,4 @@ helm install \
     --set prometheus.service.nodePort=30090 \
     --set prometheus.service.targetPort=9090 \
     --set prometheus.service.port=9090 \
-    prometheus prometheus-community/kube-prometheus-stack 
+    prometheus prometheus-community/kube-prometheus-stack
