@@ -1,0 +1,154 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: default
+  name: perona-account
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: kubestone
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: perona-role-cluster
+rules:
+  - apiGroups: [kopf.dev]
+    resources: [clusterkopfpeerings]
+    verbs: [list, watch, patch, get]
+  - apiGroups: [apiextensions.k8s.io]
+    resources: [customresourcedefinitions]
+    verbs: [list, watch]
+  - apiGroups: [""]
+    resources: [namespaces]
+    verbs: [list, watch]
+  - apiGroups: [admissionregistration.k8s.io/v1, admissionregistration.k8s.io/v1beta1]
+    resources: [validatingwebhookconfigurations, mutatingwebhookconfigurations]
+    verbs: [create, patch]
+  - apiGroups: [kopf.dev]
+    resources: [peronas]
+    verbs: [list, watch]
+  # kubestone
+  - apiGroups: [perf.kubestone.xridge.io]
+    resources: ["*"]
+    verbs: ["*"]
+  # allow access to nodes
+  - apiGroups: [""]
+    resources: [nodes]
+    verbs: [list, watch, get]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: perona-role-namespaced
+rules:
+  - apiGroups: [kopf.dev]
+    resources: [kopfpeerings]
+    verbs: [list, watch, patch, get]
+  - apiGroups: [""]
+    resources: [events]
+    verbs: [create]
+  - apiGroups: [kopf.dev]
+    resources: [peronas]
+    verbs: [list, watch, patch]
+  - apiGroups: [batch, extensions]
+    resources: [jobs]
+    verbs: [create]
+  - apiGroups: [""]
+    resources: [pods, persistentvolumeclaims]
+    verbs: [create]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: kubestone
+  name: kubestone-role-namespaced
+rules:
+  # kubestone
+  - apiGroups: [perf.kubestone.xridge.io]
+    resources: ["*"]
+    verbs: ["*"]
+  - apiGroups: [""]
+    resources: ["*"]
+    verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: perona-rolebinding-cluster
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: perona-role-cluster
+subjects:
+  - kind: ServiceAccount
+    name: perona-account
+    namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  namespace: default
+  name: perona-rolebinding-namespaced
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: perona-role-namespaced
+subjects:
+  - kind: ServiceAccount
+    name: perona-account
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  namespace: kubestone
+  name: kubestone-rolebinding-namespaced
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kubestone-role-namespaced
+subjects:
+  - kind: ServiceAccount
+    name: perona-account
+    namespace: default
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: perona-service
+spec:
+  type: NodePort
+  ports:
+  - name: perona-api
+    nodePort: 31313
+    port: 8000
+    targetPort: perona-api
+  selector:
+    app: perona-operator
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: perona-operator
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: perona-operator
+  template:
+    metadata:
+      labels:
+        app: perona-operator
+    spec:
+      serviceAccountName: perona-account
+      containers:
+      - name: perona-operator
+        image: perona-operator:dev
+        ports:
+        - containerPort: 8000
+          name: perona-api

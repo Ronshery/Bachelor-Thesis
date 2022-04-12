@@ -3,7 +3,7 @@ import asyncio
 import kopf
 
 # use config file as desired
-from . import operator_config
+#from . import operator_config
 
 
 @kopf.on.startup()
@@ -14,4 +14,4 @@ async def startup(logger, **_):
 
 @kopf.on.login()
 async def login(logger, **_):
-    return kopf.login_with_kubeconfig(**_)
+    return kopf.login_via_pykube(logger=logger)
