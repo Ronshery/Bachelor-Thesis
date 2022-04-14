@@ -1,5 +1,6 @@
 ci_dev
 create_dev_cluster.sh
+README.md
 test.sqlite
 
 # Git
