@@ -46,8 +46,5 @@ def read_benchmark_metrics(cls: Type[TMetricClass], lines: Iterable[str]) -> TMe
                 else:
                     field.value = val
 
-                # break since we do not want to collect multiple metrics per row for now
-                break
-
     return result
 

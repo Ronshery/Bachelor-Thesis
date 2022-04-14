@@ -1,16 +1,37 @@
 import datetime
 import time
 import uuid
-from typing import Type, Optional
+from typing import Dict, List, TypeVar, Type
 
 import pykube
 from pykube import Pod
 from pykube.objects import APIObject
 from sqlalchemy.orm import Session
+from common.metrics.common import BMMetricField
+
+from orm import engine
 
 from common.clients.k8s import get_k8s_client, K8sClient
 from common.metrics import get_benchmark_metrics, TMetricClass
+from orm.models import Benchmark, BenchmarkMetric
 
+# Extracts metrics from a metrics container and converts them to BenchmarkMetric
+# entries.
+def to_metrics_list(benchmark_id: str, o: any) -> List[BenchmarkMetric]:
+    metric_fields: Dict[str, BMMetricField] = {
+        k: v for k, v in vars(o).items() if isinstance(v, BMMetricField)
+    }
+
+    result = []
+
+    for k, v in metric_fields.items():
+        result.append(BenchmarkMetric(
+            benchmark_id=benchmark_id,
+            name=k,
+            value=v.value
+        ))
+
+    return result
 
 def handle_benchmarking(namespace: str,
                         name: str,
@@ -20,8 +41,6 @@ def handle_benchmarking(namespace: str,
                         body: dict,
                         metrics_cls: Optional[Type[TMetricClass]] = None,  # make this later no longer optional
                         **_):
-    # from orm import engine
-    # from orm.models import Benchmark
 
     logger.info(f"{name}: started: {started}, {body['spec']}")
 
@@ -40,28 +59,26 @@ def handle_benchmarking(namespace: str,
             pd: Pod = p
             bm_values = get_benchmark_metrics(metrics_cls, p)
 
-            print(pd.metadata)
+            with Session(engine) as session:
+                bm_id = str(uuid.uuid4())
 
-            # TODO - find information as needed
-            # with Session(engine) as session:
-            #     bm = Benchmark(
-            #         id=str(uuid.uuid4()),
-            #         node_id=pd.metadata["nodeName"],
-            #         pod_id="unknown",
-            #         started=pd.status.startTime,
-            #         duration=0,
-            #         image=spec["image"],
-            #         options=spec["options"],
-            #         logs=p.logs()
-            #     )
-            #
-            #     session.add(bm)
-            #     session.commit()
+                bm = Benchmark(
+                    id=bm_id,
+                    node_id=pd.obj["spec"]["nodeName"],
+                    name=pd.metadata["ownerReferences"][0]["name"],
+                    pod_id=pd.name,
+                    started=datetime.datetime.strptime(pd.obj["status"]["startTime"], "%Y-%m-%dT%H:%M:%S%z"),
+                    duration=0,
+                    image=pd.obj["spec"]["containers"][0]["image"],
+                    options=' '.join(pd.obj["spec"]["containers"][0]["args"]),
+                    logs=pd.logs()
+                )
 
-            logger.info(bm_values)
-
-            # TODO: after storing its metrics, delete the pod
-            # p.delete()
+                bm_metric_list = to_metrics_list(bm_id, bm_values)
+            
+                session.add(bm)
+                session.add_all(bm_metric_list)
+                session.commit()
 
         obj = factory_instance.objects(k8s_client.api, namespace=namespace).get_by_name(name).obj
 

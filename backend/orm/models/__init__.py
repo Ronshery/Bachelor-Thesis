@@ -14,6 +14,7 @@ class Benchmark(Base):
     __tablename__ = "benchmarks"
 
     id = Column(String, primary_key=True, nullable=False)
+    name = Column(String, nullable=False)
     node_id = Column(String, nullable=False)
     pod_id = Column(String, nullable=False)
     started = Column(TIMESTAMP, nullable=False)

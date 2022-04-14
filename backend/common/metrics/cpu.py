@@ -14,7 +14,7 @@ class SysbenchCpuMetrics:
         = BMMetricField(r"Prime numbers limit: (\d+)")
 
     events_per_second: BMMetricField\
-        = BMMetricField(r"events per second: (\d+(\.\d+)?)")
+        = BMMetricField(r"events per second:\s*(\d+(\.\d+)?)")
 
     total_time: BMMetricField\
         = BMMetricField(r"total time:\s*(\d+(\.\d+)s)")
@@ -37,8 +37,14 @@ class SysbenchCpuMetrics:
     latency_sum: BMMetricField\
         = BMMetricField(r"sum:\s*(\d+(\.\d+))")
 
-    fairness_events: BMMetricField\
-        = BMMetricField(r"events \(avg/stddev\):\s*(\d+(\.\d+)/\d+(\.\d+))")
+    fairness_events_avg: BMMetricField\
+        = BMMetricField(r"events \(avg/stddev\):\s*(\d+\.\d+)")
 
-    fairness_exctime: BMMetricField\
-        = BMMetricField(r"execution time \(avg/stddev\):\s*(\d+(\.\d+)/\d+(\.\d+))")
+    fairness_events_stddev: BMMetricField\
+        = BMMetricField(r"events \(avg/stddev\):\s*\d+\.\d+/(\d+\.\d+)")
+
+    fairness_exctime_avg: BMMetricField\
+        = BMMetricField(r"execution time \(avg/stddev\):\s*(\d+\.\d+)")
+
+    fairness_exctime_stddev: BMMetricField\
+        = BMMetricField(r"execution time \(avg/stddev\):\s*\d+\.\d+/(\d+\.\d+)")
