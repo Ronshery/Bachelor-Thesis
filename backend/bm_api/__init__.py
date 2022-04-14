@@ -1,11 +1,9 @@
 from typing import List, Dict, Type
 
-import pykube
-from fastapi import FastAPI, HTTPException, responses
+from fastapi import FastAPI, HTTPException, responses, Depends
 
-
-from . import api_config
-from bm_api.k8s_client import K8sClient
+from common.clients.k8s import get_k8s_client
+from common.clients.k8s.client import K8sClient
 from bm_api.models.node import NodeModel, NodeMetricsModel
 from bm_api.models.benchmark import BenchmarkResult
 
@@ -13,7 +11,6 @@ import bm_api.benchmarks
 import logging
 
 app = FastAPI()
-k8s_client = K8sClient()
 
 
 benchmark_mappings: Dict[str, Type[bm_api.benchmarks.BaseBenchmark]] = {
@@ -27,9 +24,9 @@ benchmark_mappings: Dict[str, Type[bm_api.benchmarks.BaseBenchmark]] = {
 
 
 @app.get("/version")
-async def get_version():
+async def get_version(k8s_client: K8sClient = Depends(get_k8s_client)):
     return {
-        "version": api_config.BMAPI_VERSION
+        "version": k8s_client.api.version
     }
 
 
@@ -40,7 +37,7 @@ async def redirect():
 
 
 @app.get("/benchmarks")
-async def get_all_benchmarks():
+async def get_all_benchmarks(k8s_client: K8sClient = Depends(get_k8s_client)):
     try:
         return k8s_client.get_benchmarks(list(benchmark_mappings.values()))
     except Exception as e:
@@ -49,7 +46,7 @@ async def get_all_benchmarks():
 
 
 @app.get("/benchmarks/kind={bm_type}")
-async def get_all_benchmarks_by_kind(bm_type: str):
+async def get_all_benchmarks_by_kind(bm_type: str, k8s_client: K8sClient = Depends(get_k8s_client)):
     try:
         return k8s_client.get_benchmarks(list(benchmark_mappings.values()), bm_type=bm_type)
     except Exception as e:
@@ -58,7 +55,7 @@ async def get_all_benchmarks_by_kind(bm_type: str):
 
 
 @app.get("/benchmarks/node={node_id}")
-async def get_all_benchmarks_by_node(node_id: str):
+async def get_all_benchmarks_by_node(node_id: str, k8s_client: K8sClient = Depends(get_k8s_client)):
     try:
         return k8s_client.get_benchmarks(list(benchmark_mappings.values()), node_name=node_id)
     except Exception as e:
@@ -67,16 +64,13 @@ async def get_all_benchmarks_by_node(node_id: str):
 
 
 @app.post("/benchmark/{bm_type}/{node_id}", response_model=BenchmarkResult)
-async def run_benchmark(bm_type: str, node_id: str):
+async def run_benchmark(bm_type: str, node_id: str, k8s_client: K8sClient = Depends(get_k8s_client)):
     bm_type = bm_type.lower()
     if bm_type in benchmark_mappings:
-        # TODO: centrally initialize pykube client
-        pk_api = pykube.HTTPClient(pykube.KubeConfig.from_env())
-
         bm_cls = benchmark_mappings[bm_type]
         bm = bm_cls()
 
-        startup_result = bm.run(pk_api, node_id)
+        startup_result = bm.run(k8s_client.api, node_id)
 
         return startup_result
     else:
@@ -84,7 +78,7 @@ async def run_benchmark(bm_type: str, node_id: str):
 
 
 @app.get("/nodes/{node_name}", response_model=NodeModel)
-async def get_node(node_name: str):
+async def get_node(node_name: str, k8s_client: K8sClient = Depends(get_k8s_client)):
     try:
         node = k8s_client.get_node_by_name(node_name)
         return node
@@ -94,7 +88,7 @@ async def get_node(node_name: str):
 
 
 @app.get("/nodes", response_model=List[NodeModel])
-async def get_all_nodes():
+async def get_all_nodes(k8s_client: K8sClient = Depends(get_k8s_client)):
     try:
         nodes = k8s_client.get_nodes()
         return nodes
@@ -104,7 +98,7 @@ async def get_all_nodes():
 
 
 @app.get("/metrics/{node_name}", response_model=NodeMetricsModel)
-async def get_node_metrics(node_name: str):
+async def get_node_metrics(node_name: str, k8s_client: K8sClient = Depends(get_k8s_client)):
     try:
         metrics: NodeMetricsModel = k8s_client.get_node_metrics_by_name(node_name)
         return metrics
@@ -114,7 +108,7 @@ async def get_node_metrics(node_name: str):
 
 
 @app.get("/metrics", response_model=List[NodeMetricsModel])
-async def get_all_nodes_metrics():
+async def get_all_nodes_metrics(k8s_client: K8sClient = Depends(get_k8s_client)):
     try:
         metrics_list: List[NodeMetricsModel] = k8s_client.get_node_metrics()
         return metrics_list

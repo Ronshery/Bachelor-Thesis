@@ -5,8 +5,7 @@ import pykube
 import logging
 from bm_api.models.node import NodeModel, NodeMetricsModel
 
-from . import api_config
-from .benchmarks import BaseBenchmark
+from bm_api.benchmarks import BaseBenchmark
 
 
 class NodeMetrics(pykube.objects.APIObject):
@@ -77,8 +76,8 @@ class K8sClient:
     def get_nodes(self):
         nodes = pykube.Node.objects(self.api)
         if nodes:
-            return [NodeModel(cluster=api_config.CLUSTER_NAME, **n.obj) for n in nodes]
+            return [NodeModel(**n.obj) for n in nodes]
 
     def get_node_by_name(self, node_name: str):
         node: pykube.objects.Node = pykube.Node.objects(self.api).get(name=node_name)
-        return NodeModel(cluster=api_config.CLUSTER_NAME, **node.obj)
+        return NodeModel(**node.obj)

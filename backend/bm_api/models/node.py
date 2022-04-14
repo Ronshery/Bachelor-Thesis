@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, Optional, Dict
+from typing import Optional, Dict
 
 import pykube
 from pydantic import BaseModel
@@ -11,14 +11,12 @@ from bm_api.models.k8s.io.k8s.apimachinery.pkg.apis.meta.v1 import ObjectMeta
 class NodeLimitations(BaseModel):
     storage_mb: Optional[int]
     memory_mb: Optional[int]
-    num_pods: Optional[int] # like this?
+    num_pods: Optional[int]  # like this?
 
 
 # inherits from k8s OpenAPI specs and can be extended
 # with custom fields, i.e. the name of the current cluster
 class NodeModel(Node):
-    cluster: Optional[str] = None  # name of current k8s cluster
-
     @staticmethod
     def from_pykube(n: pykube.objects.Node) -> NodeModel:
         return NodeModel(

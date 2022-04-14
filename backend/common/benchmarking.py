@@ -8,9 +8,8 @@ from pykube import Pod
 from pykube.objects import APIObject
 from sqlalchemy.orm import Session
 
+from common.clients.k8s import get_k8s_client, K8sClient
 from common.metrics import get_benchmark_metrics, TMetricClass
-
-pk_api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
 
 def handle_benchmarking(namespace: str,
@@ -26,11 +25,13 @@ def handle_benchmarking(namespace: str,
 
     logger.info(f"{name}: started: {started}, {body['spec']}")
 
+    k8s_client: K8sClient = get_k8s_client()
+
     kind: str = body["kind"]
-    factory_instance: Type[APIObject] = pykube.object_factory(pk_api, "perf.kubestone.xridge.io/v1alpha1", kind)
+    factory_instance: Type[APIObject] = pykube.object_factory(k8s_client.api, "perf.kubestone.xridge.io/v1alpha1", kind)
 
     while not stopped:
-        pods = pykube.Pod.objects(pk_api, namespace=namespace) \
+        pods = pykube.Pod.objects(k8s_client.api, namespace=namespace) \
             .filter(selector={"job-name": name}).all()
 
         logger.info(f"{name}: Found {len(pods)} pods")
@@ -62,11 +63,11 @@ def handle_benchmarking(namespace: str,
             # TODO: after storing its metrics, delete the pod
             # p.delete()
 
-        obj = factory_instance.objects(pk_api, namespace=namespace).get_by_name(name).obj
+        obj = factory_instance.objects(k8s_client.api, namespace=namespace).get_by_name(name).obj
 
         # delete if completed
         if obj["status"]["completed"]:
-            factory_instance(pk_api, obj).delete()
+            factory_instance(k8s_client.api, obj).delete()
 
         time.sleep(15)
 
