@@ -1,10 +1,16 @@
 <template>
-  <div id="node-panel-container">{{ props.selectedNode }}</div>
+  <div id="node-panel-container">
+    <Tabs :nodePanelOpen="nodePanelOpen" :node="selectedNode" />
+    <!--
+    {{ props.selectedNode }}
+-->
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, defineProps, watch } from "vue";
 import { useStore } from "vuex";
+import Tabs from "@/components/NodePanel/Tabs.vue";
 
 // vue data
 const props = defineProps(["selectedNode"]);
