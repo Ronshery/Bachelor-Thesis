@@ -15,6 +15,11 @@ export default class Node extends Model {
       id: this.attr(null),
       name: this.attr(""),
       color: this.attr("white"),
+      apiVersion: this.attr(null),
+      kind: this.attr(null),
+      metadata: this.attr(null),
+      spec: this.attr(null),
+      status: this.attr(null),
     };
   }
 }
@@ -62,7 +67,7 @@ const actions: ActionTree<NodeState, RootState> = {
     /*    const { data } = await benchmarkService.get("/nodes");
     console.log("******* data **********");
     console.log(data);
-    data[0] = {
+        data[0] = {
       ...data[0],
       name: data[0].metadata.name,
     };*/

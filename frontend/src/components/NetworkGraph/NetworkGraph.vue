@@ -156,7 +156,7 @@ const reset = async () => {
 
 const eventHandlers: vNG.EventHandlers = {
   "node:click": ({ node }) => {
-    emit("nodeClicked", node);
+    emit("nodeClicked", props.nodes[node]);
   },
   "view:click": () => {
     emit("nodeClicked", null);

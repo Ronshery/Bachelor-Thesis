@@ -55,6 +55,7 @@ const positionGraph = () => {
   background-color: #6753e1;
   transition: width 1500ms;
   width: 0;
+  height: 100vh;
   z-index: 10;
 }
 </style>
