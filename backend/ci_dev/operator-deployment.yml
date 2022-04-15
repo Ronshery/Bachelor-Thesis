@@ -149,6 +149,9 @@ spec:
       containers:
       - name: perona-operator
         image: perona-operator:dev
+        env:
+        - name: PROMETHEUS_ENDPOINT
+          value: http://prometheus-kube-prometheus-prometheus.prometheus.svc.cluster.local:9090
         ports:
         - containerPort: 8000
           name: perona-api

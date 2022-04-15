@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from typing import Optional, Dict
+from typing import Optional
 
 import pykube
 from pydantic import BaseModel
 from bm_api.models.k8s.io.k8s.api.core.v1 import Node
 from bm_api.models.k8s.io.k8s.apimachinery.pkg.apis.meta.v1 import ObjectMeta
+from common.clients.prometheus.schemes import NodeMetricsModel as PrometheusNodeMetricsModel
 
 
 class NodeLimitations(BaseModel):
@@ -27,8 +28,6 @@ class NodeModel(Node):
         )
 
 
-# based on the metrics-server API
-# https://github.com/kubernetes-sigs/metrics-server
-class NodeMetricsModel(BaseModel):
-    name: str
-    usage: Dict[str, str]
+# based on our prometheus node metrics model
+class NodeMetricsModel(PrometheusNodeMetricsModel):
+    pass
