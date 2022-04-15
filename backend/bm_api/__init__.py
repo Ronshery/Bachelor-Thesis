@@ -2,6 +2,7 @@ import datetime
 from typing import List, Dict, Type, Optional
 
 from fastapi import FastAPI, HTTPException, responses, Depends
+from fastapi.middleware.cors import CORSMiddleware
 
 from common.clients.k8s import get_k8s_client
 from common.clients.k8s.client import K8sClient
@@ -15,6 +16,14 @@ import logging
 from common.clients.prometheus import PrometheusClient, get_prometheus_client
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 benchmark_mappings: Dict[str, Type[bm_api.benchmarks.BaseBenchmark]] = {
     "cpu-sysbench": bm_api.benchmarks.CpuSysbenchBenchmark,
