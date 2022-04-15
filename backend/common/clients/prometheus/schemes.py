@@ -9,7 +9,7 @@ class DataRecordingModel(BaseModel):
 
 
 class NodeMetricsModel(BaseModel):
-    node_id: str = Field(...)
+    node_name: str = Field(...)
     memory_used: List[DataRecordingModel] = Field(default=[])
     cpu_busy: List[DataRecordingModel] = Field(default=[])
     disk_io_util: List[DataRecordingModel] = Field(default=[])

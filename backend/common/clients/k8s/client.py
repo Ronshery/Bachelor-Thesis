@@ -8,12 +8,6 @@ from bm_api.models.node import NodeModel, NodeMetricsModel
 from bm_api.benchmarks import BaseBenchmark
 
 
-class NodeMetrics(pykube.objects.APIObject):
-    version = "metrics.k8s.io/v1beta1"
-    endpoint = "nodes"
-    kind = "NodeMetrics"
-
-
 class K8sClient:
     api: pykube.HTTPClient
 
@@ -53,25 +47,6 @@ class K8sClient:
                     _get_value(lambda d: d["spec"]["serverConfiguration"]["podScheduling"]["nodeName"], el, node_name),
                 ])]
         return unique_elements
-
-    def get_node_metrics(self):
-        metrics = NodeMetrics.objects(self.api)
-        metrics_list = []
-        for node in metrics:
-            metrics_dict = {
-                'name': node.name,
-                'usage': node.obj.get("usage", {})
-            }
-            metrics_list.append(NodeMetricsModel(**metrics_dict))
-        return metrics_list
-
-    def get_node_metrics_by_name(self, node_name: str):
-        metrics: NodeMetrics = NodeMetrics.objects(self.api).get(name=node_name)
-        metrics_dict = {
-            'name': metrics.name,
-            'usage': metrics.obj.get("usage", {})
-        }
-        return NodeMetricsModel(**metrics_dict)
 
     def get_nodes(self):
         nodes = pykube.Node.objects(self.api)

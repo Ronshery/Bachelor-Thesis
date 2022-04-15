@@ -1,17 +1,20 @@
-from typing import List, Dict, Type
+import datetime
+from typing import List, Dict, Type, Optional
 
 from fastapi import FastAPI, HTTPException, responses, Depends
 
 from common.clients.k8s import get_k8s_client
 from common.clients.k8s.client import K8sClient
 from bm_api.models.node import NodeModel, NodeMetricsModel
+from common.clients.prometheus.schemes import NodeMetricsModel as PrometheusNodeMetricsModel
 from bm_api.models.benchmark import BenchmarkResult
 
 import bm_api.benchmarks
 import logging
 
-app = FastAPI()
+from common.clients.prometheus import PrometheusClient, get_prometheus_client
 
+app = FastAPI()
 
 benchmark_mappings: Dict[str, Type[bm_api.benchmarks.BaseBenchmark]] = {
     "cpu-sysbench": bm_api.benchmarks.CpuSysbenchBenchmark,
@@ -97,21 +100,42 @@ async def get_all_nodes(k8s_client: K8sClient = Depends(get_k8s_client)):
         raise HTTPException(status_code=404, detail="Node not found")
 
 
-@app.get("/metrics/{node_name}", response_model=NodeMetricsModel)
-async def get_node_metrics(node_name: str, k8s_client: K8sClient = Depends(get_k8s_client)):
+@app.get("/metrics/{node_name}/{time_delta}", response_model=NodeMetricsModel)
+async def get_node_metrics(node_name: str, time_delta: int,
+                           k8s_client: K8sClient = Depends(get_k8s_client),
+                           prometheus_client: PrometheusClient = Depends(get_prometheus_client)):
     try:
-        metrics: NodeMetricsModel = k8s_client.get_node_metrics_by_name(node_name)
+        metrics: NodeMetricsModel = next((m for m in await get_all_nodes_metrics(time_delta,
+                                                                                 k8s_client,
+                                                                                 prometheus_client)
+                                          if m.node_name == node_name), None)
         return metrics
     except Exception as e:
         logging.error(e)
         raise HTTPException(status_code=404, detail="Node metrics not found")
 
 
-@app.get("/metrics", response_model=List[NodeMetricsModel])
-async def get_all_nodes_metrics(k8s_client: K8sClient = Depends(get_k8s_client)):
+@app.get("/metrics/{time_delta}", response_model=List[NodeMetricsModel])
+async def get_all_nodes_metrics(time_delta: int,
+                                k8s_client: K8sClient = Depends(get_k8s_client),
+                                prometheus_client: PrometheusClient = Depends(get_prometheus_client)):
     try:
-        metrics_list: List[NodeMetricsModel] = k8s_client.get_node_metrics()
-        return metrics_list
+        time_delta = max(time_delta, 5)
+        now_time: datetime.datetime = datetime.datetime.now()
+        prometheus_models: List[PrometheusNodeMetricsModel] = await prometheus_client.get_node_metrics(
+            now_time - datetime.timedelta(seconds=time_delta), now_time)
+
+        node_infos: List[Dict[str, str]] = [{ad_obj.type: ad_obj.address for ad_obj in node.status.addresses}
+                                            for node in await get_all_nodes(k8s_client)]
+
+        metric_models: List[NodeMetricsModel] = []
+        for prom_model in prometheus_models:
+            node_info: Dict[str, str] = next((node_info for node_info in node_infos
+                                              if prom_model.node_name.startswith(node_info['InternalIP'])), {})
+            metric_models.append(NodeMetricsModel(**prom_model.dict(exclude={"node_name"}),
+                                                  node_name=node_info.get("Hostname", None)))
+        return metric_models
+
     except Exception as e:
         logging.error(e)
         raise HTTPException(status_code=404, detail="No node metrics found")

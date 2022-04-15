@@ -41,20 +41,20 @@ class PrometheusClient:
 
         for metric_name, api_response in result_list:
             for data_instance in api_response.data.result:
-                node_id: str = data_instance.metric.get("instance", None)
-                if node_id:
+                node_name: str = data_instance.metric.get("instance", None)
+                if node_name:
                     data_list: List[DataRecordingModel] = [DataRecordingModel(time=float(tup[0]), value=float(tup[1]))
                                                            for tup in data_instance.values]
-                    new_aggregations = {metric_name: data_list, "node_id": node_id}
-                    aggregation_element: Optional[NodeMetricsModel] = node_aggregation_dict.get(node_id, None)
+                    new_aggregations = {metric_name: data_list, "node_name": node_name}
+                    aggregation_element: Optional[NodeMetricsModel] = node_aggregation_dict.get(node_name, None)
                     aggregation_dict: dict = aggregation_element.dict() if aggregation_element is not None else {}
                     aggregation_dict.update(new_aggregations)
-                    node_aggregation_dict[node_id] = NodeMetricsModel(**aggregation_dict)
+                    node_aggregation_dict[node_name] = NodeMetricsModel(**aggregation_dict)
 
-        return node_aggregation_dict
+        return list(node_aggregation_dict.values())
 
     @staticmethod
-    def __get_metrics__(query_list: List[Tuple[str, str]], start: datetime, end: datetime):
+    async def __get_metrics__(query_list: List[Tuple[str, str]], start: datetime, end: datetime):
         new_query_list: List[Tuple[str, dict]] = []
         for metric_name, query_string in query_list:
             query_specs: dict = {
@@ -65,22 +65,15 @@ class PrometheusClient:
             }
             new_query_list.append((metric_name, query_specs))
         results: List[Tuple[str, PrometheusApiResponseModel]] = []
-        asyncio.run(PrometheusClient.__gather__(new_query_list, results))
+        await PrometheusClient.__gather__(new_query_list, results)
         return PrometheusClient.__transform_metrics__(results)
 
     @staticmethod
-    def get_node_metrics(start: datetime, end: datetime):
+    async def get_node_metrics(start: datetime, end: datetime):
         query_list: List[tuple] = [
             ("memory_used", PrometheusQuery.MEMORY_USED),
             ("cpu_busy", PrometheusQuery.CPU_BUSY),
             ("disk_io_util", PrometheusQuery.DISK_IO_UTIL)
         ]
 
-        return PrometheusClient.__get_metrics__(query_list, start, end)
-
-
-if __name__ == "__main__":
-    test_res = PrometheusClient().get_node_metrics(datetime.datetime.now() - datetime.timedelta(seconds=5),
-                                                   datetime.datetime.now())
-    for k, v in list(test_res.items())[:5]:
-        print(k, v)
+        return await PrometheusClient.__get_metrics__(query_list, start, end)
