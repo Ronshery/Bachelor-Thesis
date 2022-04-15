@@ -14,7 +14,7 @@ export default class Node extends Model {
     return {
       id: this.attr(null),
       name: this.attr(""),
-      color: this.attr(""),
+      color: this.attr("white"),
     };
   }
 }
@@ -60,7 +60,7 @@ const actions: ActionTree<NodeState, RootState> = {
     await benchmarkService.get("nodes", { params });*/
     commit("setLoading", true);
     /*    const { data } = await benchmarkService.get("/nodes");
-    //console.log("******* data **********");
+    console.log("******* data **********");
     console.log(data);
     data[0] = {
       ...data[0],
@@ -71,11 +71,6 @@ const actions: ActionTree<NodeState, RootState> = {
       { id: 2, name: "node2", color: "white" },
       { id: 3, name: "node3", color: "white" },
       { id: 4, name: "node4", color: "white" },
-      { id: 5, name: "node5", color: "white" },
-      { id: 6, name: "node6", color: "white" },
-      { id: 7, name: "node7", color: "white" },
-      { id: 8, name: "node8", color: "white" },
-      { id: 9, name: "node9", color: "white" },
     ];
     // insert fetched data into vuex store
     commit("insertNodes", bmData);

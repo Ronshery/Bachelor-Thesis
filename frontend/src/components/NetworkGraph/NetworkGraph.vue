@@ -21,7 +21,59 @@
       :event-handlers="eventHandlers"
       :layers="layers"
       v-model:layouts="layouts"
-    />
+    >
+      <template #badge="{}">
+        <!--        <circle
+          v-for="(pos, node) in layoutsComputed.nodes"
+          :key="node"
+          :cx="pos.x + 9 * scale"
+          :cy="pos.y - 9 * scale"
+          :test="pos.bmScore"
+          :r="4 * scale"
+          :fill="'red'"
+          style="pointer-events: none"
+        />-->
+        <circle
+          v-for="(pos, node) in layoutsComputed.nodes"
+          :key="node"
+          :show="node"
+          r="50"
+          :cx="pos.x"
+          :cy="pos.y"
+          :stroke-dasharray="2 * Math.PI * 50"
+          stroke-dashoffset="0"
+          stroke="gray"
+          fill="none"
+          stroke-width="15"
+          style="pointer-events: none"
+        />
+        <circle
+          v-for="(pos, node) in layoutsComputed.nodes"
+          :key="node"
+          :show="node"
+          r="50"
+          :cx="pos.x"
+          :cy="pos.y"
+          :stroke-dasharray="2 * Math.PI * 50"
+          stroke-dashoffset="-15"
+          stroke="yellow"
+          fill="none"
+          stroke-width="16"
+          style="pointer-events: none"
+        />
+        <text
+          v-for="(pos, node) in layoutsComputed.nodes"
+          :key="node"
+          :x="pos.x"
+          :y="pos.y"
+          text-anchor="middle"
+          alignment-baseline="central"
+          style="pointer-events: none"
+        >
+          6/10
+        </text>
+      </template>
+    </v-network-graph>
   </div>
 </template>
 
@@ -39,6 +91,19 @@ import {
 } from "vue";
 import * as vNG from "v-network-graph";
 import { useStore } from "vuex";
+import { VNetworkGraph } from "v-network-graph";
+
+// interfaces
+interface Layouts extends vNG.Layouts {
+  nodes: {
+    [x: string]: {
+      fixed?: boolean | undefined;
+      x: number;
+      y: number;
+      bmScore: number;
+    };
+  };
+}
 
 // vue data
 const props = defineProps(["nodes", "configs", "layers"]);
@@ -49,21 +114,30 @@ const store = useStore();
 let zoomLevel = ref(1);
 const selectedNodes = ref<string[]>([]);
 const graph = ref<vNG.Instance>();
-const layouts = ref<vNG.Layouts>();
+const layouts = ref<Layouts>({ nodes: {} });
 const layoutsBackup = ref<vNG.Layouts>();
 let layoutsBackupSet = false;
-
+const color = ["green", "green", "green", "green", "green"];
+let data = [1, 2, 3, 4];
+const layoutsComputed = computed(() => {
+  console.log("computed");
+  const keys = Object.keys(layouts.value.nodes);
+  console.log(keys);
+  Object.entries(layouts.value.nodes).forEach((node, index) => {
+    layouts.value.nodes[keys[index]].bmScore = data[index];
+  });
+  console.log(layouts.value);
+  return layouts.value;
+});
 // methods
 onMounted(() => {
+  console.log("NetworkGraph mounted");
   store.dispatch("initializeGraph", graph);
   graph.value?.panToCenter();
   graph.value?.fitToContents();
-  zoomLevel.value = 0.5;
 });
 
 const reset = async () => {
-  console.log(zoomLevel.value);
-  zoomLevel.value = 0.1;
   if (layouts.value && layoutsBackupSet && layoutsBackup.value) {
     for (const [key] of Object.entries(layouts.value.nodes)) {
       // assignment without reference

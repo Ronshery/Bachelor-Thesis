@@ -2,7 +2,6 @@
   <NetworkGraph
     :nodes="nodes"
     :configs="configs"
-    :layouts="layouts"
     :layers="layers"
     @node-clicked="nodeClicked"
   />
@@ -12,7 +11,7 @@
 <script lang="ts" setup>
 import { reactive, ref, onMounted, computed } from "vue";
 import NetworkGraph from "@/components/NetworkGraph/NetworkGraph.vue";
-import NodePanel from "@/components/NodePanel.vue";
+import NodePanel from "@/components/NodePanel/NodePanel.vue";
 import * as vNG from "v-network-graph"; // @ is an alias to /src
 import { useStore } from "vuex";
 
@@ -96,6 +95,7 @@ const configs: vNG.UserConfigs = reactive(
         width: 150,
         height: 150,
         color: (node) => node.color,
+        borderRadius: 15,
       },
       hover: {
         color: "white",
