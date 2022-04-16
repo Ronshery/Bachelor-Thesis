@@ -23,11 +23,12 @@ const nodePanelOpen = ref(false);
 watch(props, () => {
   const nodePanelContainer = document.getElementById("node-panel-container");
   if (nodePanelContainer != null) {
-    if (props.selectedNode) {
+    console.log(props.selectedNode);
+    if (props.selectedNode.show) {
       nodePanelContainer.style.width = "70%";
       positionGraph();
       nodePanelOpen.value = true;
-    } else if (props.selectedNode == null) {
+    } else if (!props.selectedNode.show) {
       nodePanelOpen.value = false;
       nodePanelContainer.style.width = "0";
       positionGraph();

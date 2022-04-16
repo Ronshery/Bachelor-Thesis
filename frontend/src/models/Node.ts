@@ -20,6 +20,7 @@ export default class Node extends Model {
       metadata: this.attr(null),
       spec: this.attr(null),
       status: this.attr(null),
+      show: this.attr(false),
     };
   }
 }
