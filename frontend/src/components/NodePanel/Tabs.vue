@@ -2,27 +2,35 @@
   <div id="tab-header-container">
     <div v-for="(tab, index) in tabList" :key="tab.title" class="tab-container">
       <div
-        @click="changeTab($event, index)"
-        :class="
-          index == 0
-            ? 'tab selected'
-            : index == 1
-            ? 'tab first-is-selected'
-            : 'tab'
-        "
+        @click="nodePanelAnimationDone ? changeTab($event, index) : () => {}"
+        class="tab"
+        :class="{
+          selected: index == 0,
+          'first-is-selected': index == 1,
+          disabled: !nodePanelAnimationDone,
+        }"
       >
         {{ tab.title }}
       </div>
     </div>
   </div>
-  <Tab ref="OverviewComponent">{{ node }} Overview Content</Tab>
-  <Tab ref="BenchmarkComponent">{{ node }} Benchmark Content</Tab>
-  <Tab ref="SettingsComponent">{{ node }} Settings Content</Tab>
+  <div v-if="!nodePanelAnimationDone">Loading ...</div>
+  <div v-else>
+    <Tab ref="OverviewComponent"
+      >{{ node }}
+      Overview Content
+      <div style="height: 600px; width: 80%; border: 2px solid red"></div>
+      <div style="height: 600px; width: 80%; border: 2px solid red"></div>
+    </Tab>
+    <Tab ref="BenchmarkComponent">{{ node }} Benchmark Content</Tab>
+    <Tab ref="SettingsComponent">{{ node }} Settings Content</Tab>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, defineProps, watch } from "vue";
+import { ref, defineProps, watch, nextTick } from "vue";
 import Tab from "@/components/NodePanel/Tab.vue";
+import LoadingAnimation from "@/components/LoadingAnimation.vue";
 
 interface ITab {
   element: HTMLElement;
@@ -31,7 +39,7 @@ interface ITab {
 }
 
 // vue data
-const props = defineProps(["node", "nodePanelOpen"]);
+const props = defineProps(["node", "nodePanelOpen", "nodePanelAnimationDone"]);
 
 // data
 const tabHeight = "50px";
@@ -44,7 +52,7 @@ const tabList = ref([
   { title: "Benchmark", ref: BenchmarkComponent },
   { title: "Settings", ref: SettingsComponent },
 ]);
-
+let animationDoneSet = false;
 //methods
 let timer: number;
 watch(props, () => {
@@ -52,29 +60,31 @@ watch(props, () => {
     console.log("close");
     timer = setTimeout(() => {
       resetTabClasses(null);
+      changeTab(document.getElementsByClassName("tab")[0], 0);
     }, 1500);
   } else if (props.nodePanelOpen) {
     console.log("open");
     clearTimeout(timer);
   }
-});
-
-onMounted(() => {
-  tabList.value[0].ref.isActive = true;
+  if (props.nodePanelAnimationDone && !animationDoneSet) {
+    animationDoneSet = true;
+    nextTick(() => {
+      tabList.value[0].ref.isActive = true;
+    });
+  }
 });
 
 const changeTab = (event: any, index: number) => {
-  updateBorderRadius(index, event.target);
+  const tabElement = event.target ? event.target : event;
+  updateBorderRadius(index, tabElement);
   tabList.value.forEach((tab, i) => {
-    console.log(tab.ref.isActive);
     tab.ref.isActive = index === i;
   });
   selectedTab.value = {
-    element: event.target,
+    element: tabElement,
     index: index,
-    title: event.target.innerText,
+    title: tabElement.innerText,
   };
-  console.log(tabList.value);
 };
 
 const updateBorderRadius = (
@@ -136,6 +146,10 @@ const resetTabClasses = (selectedElement: HTMLElement | null) => {
 .selected {
   background-color: #6753e1;
   color: white;
+}
+
+.disabled {
+  cursor: unset;
 }
 
 .first-is-selected {

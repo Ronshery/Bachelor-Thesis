@@ -31,6 +31,7 @@ console.log(NodeModel.query().where("name", "myfirstnode").get());
 <style>
 * {
   margin: 0;
+  overflow: hidden;
 }
 
 .v-canvas {
@@ -55,5 +56,18 @@ nav a {
 
 nav a.router-link-exact-active {
   color: #42b983;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: white;
+  border-radius: 100px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: lightgray;
 }
 </style>

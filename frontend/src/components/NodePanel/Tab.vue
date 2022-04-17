@@ -1,5 +1,5 @@
 <template>
-  <div v-show="isActive">
+  <div class="tab-content-container" v-show="isActive">
     <slot></slot>
   </div>
 </template>
@@ -12,4 +12,8 @@ const isActive = ref(false);
 defineExpose({ isActive });
 </script>
 
-<style scoped></style>
+<style scoped>
+.tab-content-container {
+  overflow: auto;
+}
+</style>
