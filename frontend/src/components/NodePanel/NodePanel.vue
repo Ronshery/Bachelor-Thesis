@@ -85,7 +85,7 @@ const setTabContentWidth = () => {
   nodePanelHeight.value = nodePanelContainer.value.clientHeight;
   const tabContents = document.getElementsByClassName("tab-content-container");
   for (let i = 0; i < tabContents.length; i++) {
-    tabContents[i].classList.add("mytest");
+    tabContents[i].classList.add("contentSize");
     /*    tabContents[i].setAttribute(
       "style",
       `${tabContents[i].getAttribute("style")}; width: ${
@@ -108,7 +108,7 @@ const setTabContentWidth = () => {
 </style>
 
 <style>
-.mytest {
+.contentSize {
   width: v-bind(nodePanelWidth + "px");
   height: v-bind(nodePanelHeight - 50 + "px");
 }

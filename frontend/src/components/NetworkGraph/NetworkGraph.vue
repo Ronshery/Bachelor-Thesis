@@ -33,7 +33,7 @@
           :fill="'red'"
           style="pointer-events: none"
         />-->
-        <circle
+        <!--        <circle
           v-for="(pos, node) in layoutsComputed.nodes"
           :key="node"
           :show="node"
@@ -41,8 +41,8 @@
           :cx="pos.x"
           :cy="pos.y"
           :stroke-dasharray="2 * Math.PI * 50"
-          stroke-dashoffset="0"
-          stroke="gray"
+          :stroke-dashoffset="0"
+          stroke="PaleVioletRed"
           fill="none"
           stroke-width="15"
           style="pointer-events: none"
@@ -55,8 +55,8 @@
           :cx="pos.x"
           :cy="pos.y"
           :stroke-dasharray="2 * Math.PI * 50"
-          stroke-dashoffset="-15"
-          stroke="yellow"
+          :stroke-dashoffset="pos.bmScore * -31.4"
+          stroke="lightgray"
           fill="none"
           stroke-width="16"
           style="pointer-events: none"
@@ -71,7 +71,13 @@
           style="pointer-events: none"
         >
           {{ pos.bmScore }}/10
-        </text>
+        </text> -->
+        <DonutChart
+          :layouts-nodes="layoutsComputed.nodes"
+          :radius="50"
+          :max-value="10"
+          :loadedView="loadedView"
+        />
       </template>
     </v-network-graph>
   </div>
@@ -92,6 +98,7 @@ import {
 import * as vNG from "v-network-graph";
 import { useStore } from "vuex";
 import { VNetworkGraph } from "v-network-graph";
+import DonutChart from "@/components/utils/DonutChart.vue";
 
 // interfaces
 interface Layouts extends vNG.Layouts {
@@ -118,17 +125,18 @@ const layouts = ref<Layouts>({ nodes: {} });
 const layoutsBackup = ref<vNG.Layouts>();
 let layoutsBackupSet = false;
 const color = ["green", "green", "green", "green", "green"];
-let data = [1, 2, 3, 4];
+let data = ref([1, 2, 3, 6]);
 const layoutsComputed = computed(() => {
   console.log("computed");
   const keys = Object.keys(layouts.value.nodes);
   console.log(keys);
   Object.entries(layouts.value.nodes).forEach((node, index) => {
-    layouts.value.nodes[keys[index]].bmScore = data[index];
+    layouts.value.nodes[keys[index]].bmScore = data.value[index];
   });
   console.log(layouts.value);
   return layouts.value;
 });
+const loadedView = ref(false);
 // methods
 onMounted(() => {
   console.log("NetworkGraph mounted");
@@ -140,6 +148,7 @@ onMounted(() => {
 });
 
 const reset = async () => {
+  data.value[0] = 7;
   if (layouts.value && layoutsBackupSet && layoutsBackup.value) {
     for (const [key] of Object.entries(layouts.value.nodes)) {
       // assignment without reference
@@ -169,6 +178,9 @@ const eventHandlers: vNG.EventHandlers = {
       layoutsBackup.value = JSON.parse(JSON.stringify(layouts.value));
       layoutsBackupSet = true;
     }
+  },
+  "view:load": () => {
+    loadedView.value = true;
   },
 };
 </script>

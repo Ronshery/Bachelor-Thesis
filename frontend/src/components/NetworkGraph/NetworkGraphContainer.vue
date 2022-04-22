@@ -28,6 +28,7 @@ const nodes = computed(() => {
   nodesList.forEach((node: Record<string, any>) => {
     convertedNodesList[node.name] = node;
   });
+  console.log(convertedNodesList);
   return convertedNodesList;
 });
 let lastSelectedNode = ref();
@@ -46,12 +47,16 @@ const nodeClicked = (params: any) => {
       lastSelectedNode.value.show = false;
     }
     params.show = true;
+    lastSelectedNode.value.color = "white";
+    params.color = "#6753e1";
     selectedNode.value = params;
+    lastSelectedNode.value = params;
   } else {
     if (lastSelectedNode.value == null) {
       return;
     }
     lastSelectedNode.value.show = false;
+    lastSelectedNode.value.color = "white";
     selectedNode.value = JSON.parse(JSON.stringify(lastSelectedNode.value));
   }
 };
@@ -107,7 +112,7 @@ const configs: vNG.UserConfigs = reactive(
         borderRadius: 15,
       },
       hover: {
-        color: "white",
+        color: (node) => node.color,
       },
       focusring: {
         color: "black",
