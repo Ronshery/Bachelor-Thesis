@@ -23,55 +23,6 @@
       v-model:layouts="layouts"
     >
       <template #badge="{}">
-        <!--        <circle
-          v-for="(pos, node) in layoutsComputed.nodes"
-          :key="node"
-          :cx="pos.x + 9 * scale"
-          :cy="pos.y - 9 * scale"
-          :test="pos.bmScore"
-          :r="4 * scale"
-          :fill="'red'"
-          style="pointer-events: none"
-        />-->
-        <!--        <circle
-          v-for="(pos, node) in layoutsComputed.nodes"
-          :key="node"
-          :show="node"
-          r="50"
-          :cx="pos.x"
-          :cy="pos.y"
-          :stroke-dasharray="2 * Math.PI * 50"
-          :stroke-dashoffset="0"
-          stroke="PaleVioletRed"
-          fill="none"
-          stroke-width="15"
-          style="pointer-events: none"
-        />
-        <circle
-          v-for="(pos, node) in layoutsComputed.nodes"
-          :key="node"
-          :show="node"
-          r="50"
-          :cx="pos.x"
-          :cy="pos.y"
-          :stroke-dasharray="2 * Math.PI * 50"
-          :stroke-dashoffset="pos.bmScore * -31.4"
-          stroke="lightgray"
-          fill="none"
-          stroke-width="16"
-          style="pointer-events: none"
-        />
-        <text
-          v-for="(pos, node) in layoutsComputed.nodes"
-          :key="node"
-          :x="pos.x"
-          :y="pos.y"
-          text-anchor="middle"
-          alignment-baseline="central"
-          style="pointer-events: none"
-        >
-          {{ pos.bmScore }}/10
-        </text> -->
         <DonutChart
           :layouts-nodes="layoutsComputed.nodes"
           :radius="50"
@@ -91,9 +42,6 @@ import {
   defineProps,
   onMounted,
   computed,
-  reactive,
-  watch,
-  watchEffect,
 } from "vue";
 import * as vNG from "v-network-graph";
 import { useStore } from "vuex";
@@ -124,7 +72,6 @@ const graph = ref<vNG.Instance>();
 const layouts = ref<Layouts>({ nodes: {} });
 const layoutsBackup = ref<vNG.Layouts>();
 let layoutsBackupSet = false;
-const color = ["green", "green", "green", "green", "green"];
 let data = ref([1, 2, 3, 6]);
 const layoutsComputed = computed(() => {
   console.log("computed");

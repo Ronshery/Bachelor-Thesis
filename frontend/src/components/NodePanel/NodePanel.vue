@@ -23,6 +23,7 @@ const store = useStore();
 // data
 const nodePanelOpen = ref(false);
 const nodePanelAnimationDone = ref(false);
+let firstTimeAnimation = true;
 const nodePanelContainer = ref();
 let nodePanelWidth = ref();
 let nodePanelHeight = ref();
@@ -50,11 +51,12 @@ watch(props, () => {
       if (!nodePanelAnimationDone.value) {
         setTimeout(() => {
           nodePanelAnimationDone.value = true;
+          firstTimeAnimation = false;
         }, 1500);
       }
       positionGraph();
       nodePanelOpen.value = true;
-    } else if (!props.selectedNode.show) {
+    } else if (!props.selectedNode.show && !firstTimeAnimation) {
       nodePanelOpen.value = false;
       nodePanelContainer.value.style.width = "0";
       positionGraph();
@@ -84,6 +86,11 @@ const setTabContentWidth = () => {
   nodePanelWidth.value = nodePanelContainer.value.clientWidth;
   nodePanelHeight.value = nodePanelContainer.value.clientHeight;
   const tabContents = document.getElementsByClassName("tab-content-container");
+  const tabHeaderContainer = document.getElementById("tab-header-container");
+  if (tabHeaderContainer) {
+    tabHeaderContainer.classList.add("tabHeaderSize");
+  }
+  nodePanelWidth.value;
   for (let i = 0; i < tabContents.length; i++) {
     tabContents[i].classList.add("contentSize");
     /*    tabContents[i].setAttribute(
@@ -111,5 +118,9 @@ const setTabContentWidth = () => {
 .contentSize {
   width: v-bind(nodePanelWidth + "px");
   height: v-bind(nodePanelHeight - 50 + "px");
+}
+
+.tabHeaderSize {
+  width: v-bind(nodePanelWidth + "px");
 }
 </style>

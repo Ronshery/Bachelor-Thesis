@@ -43,8 +43,6 @@ const nodeClicked = (params: any) => {
   if (params != null) {
     if (lastSelectedNode.value == null) {
       lastSelectedNode.value = params;
-    } else {
-      lastSelectedNode.value.show = false;
     }
     params.show = true;
     lastSelectedNode.value.color = "white";
