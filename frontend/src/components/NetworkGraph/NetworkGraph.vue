@@ -70,7 +70,7 @@
           alignment-baseline="central"
           style="pointer-events: none"
         >
-          6/10
+          {{ pos.bmScore }}/10
         </text>
       </template>
     </v-network-graph>
@@ -133,8 +133,10 @@ const layoutsComputed = computed(() => {
 onMounted(() => {
   console.log("NetworkGraph mounted");
   store.dispatch("initializeGraph", graph);
-  graph.value?.panToCenter();
-  graph.value?.fitToContents();
+  nextTick(() => {
+    graph.value?.panToCenter();
+    graph.value?.fitToContents();
+  });
 });
 
 const reset = async () => {
@@ -156,7 +158,7 @@ const reset = async () => {
 
 const eventHandlers: vNG.EventHandlers = {
   "node:click": ({ node }) => {
-    emit("nodeClicked", node);
+    emit("nodeClicked", props.nodes[node]);
   },
   "view:click": () => {
     emit("nodeClicked", null);

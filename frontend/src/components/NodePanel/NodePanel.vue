@@ -1,6 +1,10 @@
 <template>
-  <div id="node-panel-container">
-    <Tabs :nodePanelOpen="nodePanelOpen" :node="selectedNode" />
+  <div ref="nodePanelContainer" id="node-panel-container">
+    <Tabs
+      :nodePanelOpen="nodePanelOpen"
+      :node="selectedNode"
+      :nodePanelAnimationDone="nodePanelAnimationDone"
+    />
     <!--
     {{ props.selectedNode }}
 -->
@@ -8,7 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineProps, watch } from "vue";
+import { ref, defineProps, watch, onMounted } from "vue";
 import { useStore } from "vuex";
 import Tabs from "@/components/NodePanel/Tabs.vue";
 
@@ -18,18 +22,41 @@ const store = useStore();
 
 // data
 const nodePanelOpen = ref(false);
-
+const nodePanelAnimationDone = ref(false);
+const nodePanelContainer = ref();
+let nodePanelWidth = ref();
+let nodePanelHeight = ref();
 // methods
+let resizeStarted = false;
+onMounted(() => {
+  window.addEventListener("resize", () => {
+    if (resizeStarted) {
+      const intervalID = setInterval(() => {
+        setTabContentWidth();
+      });
+      setTimeout(() => {
+        clearInterval(intervalID);
+      }, 1500);
+    }
+
+    resizeStarted = true;
+  });
+});
 watch(props, () => {
-  const nodePanelContainer = document.getElementById("node-panel-container");
-  if (nodePanelContainer != null) {
-    if (props.selectedNode) {
-      nodePanelContainer.style.width = "70%";
+  if (nodePanelContainer.value != null) {
+    if (props.selectedNode.show) {
+      nodePanelContainer.value.style.width = "70%";
+      // is needed for loading in Tabs.vue
+      if (!nodePanelAnimationDone.value) {
+        setTimeout(() => {
+          nodePanelAnimationDone.value = true;
+        }, 1500);
+      }
       positionGraph();
       nodePanelOpen.value = true;
-    } else if (props.selectedNode == null) {
+    } else if (!props.selectedNode.show) {
       nodePanelOpen.value = false;
-      nodePanelContainer.style.width = "0";
+      nodePanelContainer.value.style.width = "0";
       positionGraph();
     }
   }
@@ -37,24 +64,52 @@ watch(props, () => {
 
 const positionGraph = () => {
   if (nodePanelOpen.value) {
-    return 0;
+    return;
   }
   const graph = store.getters["graph"];
+  // position graph while opening/closing NodePanel
   const intervalID = setInterval(() => {
     graph.panToCenter();
     graph.fitToContents();
   });
   setTimeout(() => {
     clearInterval(intervalID);
+    if (!nodePanelWidth.value && !nodePanelHeight.value) {
+      setTabContentWidth();
+    }
   }, 1500);
+};
+
+const setTabContentWidth = () => {
+  nodePanelWidth.value = nodePanelContainer.value.clientWidth;
+  nodePanelHeight.value = nodePanelContainer.value.clientHeight;
+  const tabContents = document.getElementsByClassName("tab-content-container");
+  for (let i = 0; i < tabContents.length; i++) {
+    tabContents[i].classList.add("mytest");
+    /*    tabContents[i].setAttribute(
+      "style",
+      `${tabContents[i].getAttribute("style")}; width: ${
+        nodePanelWidth.value
+      }px; height: ${nodePanelHeight.value - 50}px`
+    );*/
+  }
 };
 </script>
 
 <style scoped>
 #node-panel-container {
   background-color: #6753e1;
-  transition: width 1500ms;
+  transition: all 1500ms;
   width: 0;
+  height: 100vh;
   z-index: 10;
+  overflow: hidden;
+}
+</style>
+
+<style>
+.mytest {
+  width: v-bind(nodePanelWidth + "px");
+  height: v-bind(nodePanelHeight - 50 + "px");
 }
 </style>

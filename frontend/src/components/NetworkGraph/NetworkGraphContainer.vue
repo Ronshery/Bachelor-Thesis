@@ -15,12 +15,6 @@ import NodePanel from "@/components/NodePanel/NodePanel.vue";
 import * as vNG from "v-network-graph"; // @ is an alias to /src
 import { useStore } from "vuex";
 
-interface Node extends vNG.Node {
-  size?: number;
-  color: string;
-  label?: boolean;
-}
-
 // vue data
 const store = useStore();
 // data
@@ -36,15 +30,30 @@ const nodes = computed(() => {
   });
   return convertedNodesList;
 });
-
+let lastSelectedNode = ref();
+lastSelectedNode.value = null;
 // methods
 onMounted(async () => {
   console.log("NetworkGraphContainer mounted");
   await NodeModel.value.dispatch("fetchNodes");
 });
 
-const nodeClicked = (params: string) => {
-  selectedNode.value = params;
+const nodeClicked = (params: any) => {
+  if (params != null) {
+    if (lastSelectedNode.value == null) {
+      lastSelectedNode.value = params;
+    } else {
+      lastSelectedNode.value.show = false;
+    }
+    params.show = true;
+    selectedNode.value = params;
+  } else {
+    if (lastSelectedNode.value == null) {
+      return;
+    }
+    lastSelectedNode.value.show = false;
+    selectedNode.value = JSON.parse(JSON.stringify(lastSelectedNode.value));
+  }
 };
 
 // *** v-network-graph config ***
