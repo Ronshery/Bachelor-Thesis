@@ -28,6 +28,7 @@
           :radius="50"
           :max-value="10"
           :loadedView="loadedView"
+          :without-svg-tag="true"
         />
       </template>
     </v-network-graph>

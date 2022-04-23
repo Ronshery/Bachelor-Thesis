@@ -18,6 +18,7 @@
   <div v-else>
     <Tab ref="OverviewComponent"
       >{{ node }}
+      <OverviewContainer />
       Overview Content
       <div style="height: 600px; width: 80%; border: 2px solid red"></div>
       <div style="height: 600px; width: 80%; border: 2px solid red"></div>
@@ -31,6 +32,8 @@
 import { ref, defineProps, watch, nextTick } from "vue";
 import Tab from "@/components/NodePanel/Tab.vue";
 import LoadingAnimation from "@/components/LoadingAnimation.vue";
+import Overview from "@/components/NodePanel/tabContents/Overview/Overview.vue";
+import OverviewContainer from "@/components/NodePanel/tabContents/Overview/OverviewContainer.vue";
 
 interface ITab {
   element: HTMLElement;

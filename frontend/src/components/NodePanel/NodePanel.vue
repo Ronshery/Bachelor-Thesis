@@ -28,10 +28,13 @@ const nodePanelContainer = ref();
 let nodePanelWidth = ref();
 let nodePanelHeight = ref();
 // methods
+// too avoid first time calculation
 let resizeStarted = false;
 onMounted(() => {
   window.addEventListener("resize", () => {
-    if (resizeStarted) {
+    // !firstTimeAnimation: otherwise it would set width and height to zero
+    if (resizeStarted && !firstTimeAnimation) {
+      console.log("resize ");
       const intervalID = setInterval(() => {
         setTabContentWidth();
       });
@@ -54,9 +57,11 @@ watch(props, () => {
           firstTimeAnimation = false;
         }, 1500);
       }
+      console.log("wtf");
       positionGraph();
       nodePanelOpen.value = true;
     } else if (!props.selectedNode.show && !firstTimeAnimation) {
+      //firstTimeAnimation is needed to avoid canceling the animation during the first time
       nodePanelOpen.value = false;
       nodePanelContainer.value.style.width = "0";
       positionGraph();
@@ -74,6 +79,7 @@ const positionGraph = () => {
     graph.panToCenter();
     graph.fitToContents();
   });
+
   setTimeout(() => {
     clearInterval(intervalID);
     if (!nodePanelWidth.value && !nodePanelHeight.value) {
@@ -106,7 +112,7 @@ const setTabContentWidth = () => {
 <style scoped>
 #node-panel-container {
   background-color: #6753e1;
-  transition: all 1500ms;
+  transition: width 1500ms;
   width: 0;
   height: 100vh;
   z-index: 10;
