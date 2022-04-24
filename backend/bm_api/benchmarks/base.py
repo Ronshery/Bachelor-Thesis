@@ -51,29 +51,35 @@ class BaseBenchmark(ABC):
                 tgt[key] = val
         return tgt
 
-    def run(self, client: pykube.HTTPClient, *args, **kwargs):
+    def run(self, client: pykube.HTTPClient, *args, **kwargs) -> BenchmarkStartupResult:
         if os.path.exists(self.config_path):
-            with open(self.config_path, "r") as f:
-                spec = yaml.safe_load(f)
-                # make sure to execute in 'kubestone' namespace
-                spec = self.merge_dicts(spec, {"metadata": {"namespace": "kubestone"}})
-                # add suffix to 'name', so that they are different and
-                # one can schedule multiple benchmarks of one kind simultaneously
-                spec['metadata']['name'] = f"{spec['metadata'].get('name', None)}-{generate_suffix(10)}"
-                # now: run custom logic
-                self._run(client, spec, *args, **kwargs)
+            try:
+                with open(self.config_path, "r") as f:
+                    spec = yaml.safe_load(f)
+                    # make sure to execute in 'kubestone' namespace
+                    spec = self.merge_dicts(spec, {"metadata": {"namespace": "kubestone"}})
+                    # add suffix to 'name', so that they are different and
+                    # one can schedule multiple benchmarks of one kind simultaneously
+                    spec['metadata']['name'] = f"{spec['metadata'].get('name', None)}-{generate_suffix(10)}"
+                    # now: run custom logic
+                    return self._run(client, spec, *args, **kwargs)
+            except Exception as e:
+                return BenchmarkStartupResult(success=False, error=str(e))
+        else:
+            return BenchmarkStartupResult(success=False, error="Job specification configuration file could not be found")
 
     def _run(self, client: pykube.HTTPClient, spec: Dict,
              *args, **kwargs) -> BenchmarkStartupResult:
         node_name: str = args[0].split("@@@")[0]
         spec = self.merge_dicts(spec, {"spec": {"podConfig": {"podScheduling": {"nodeName": node_name}}}})
-        self.get_factory(client, self.kind)(client, spec).create()
+        result = self.get_factory(client, self.kind)(client, spec).create()
         # TODO add pod
-        return BenchmarkStartupResult(success=True, pod=None, benchmark_spec=self)
+        return BenchmarkStartupResult(success=True, id=spec['metadata']['name'], benchmark_spec=spec)
 
 
 @dataclasses.dataclass
 class BenchmarkStartupResult:
     success: bool
-    pod: Optional[str]
-    benchmark_spec: BaseBenchmark
+    id: Optional[str] = None
+    benchmark_spec: Optional[Dict] = None
+    error: Optional[str] = None

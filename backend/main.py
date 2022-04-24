@@ -13,6 +13,9 @@ from bm_api import app
 # this thread will start kopf, i.e. our custom kubernetes operator that listens to kubernetes events, acts accordingly
 def kopf_thread(stop_me: threading.Event) -> None:
     try:
+        # import needed to active kopf operator
+        import bm_operator
+        
         kopf_loop = uvloop.new_event_loop()
         asyncio.set_event_loop(kopf_loop)
 

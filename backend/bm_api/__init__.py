@@ -2,6 +2,7 @@ import datetime
 from typing import List, Dict, Type, Optional
 
 from fastapi import FastAPI, HTTPException, responses, Depends
+from bm_api.benchmarks.base import BaseBenchmark
 
 from common.clients.k8s import get_k8s_client
 from common.clients.k8s.client import K8sClient
@@ -14,9 +15,13 @@ import logging
 
 from common.clients.prometheus import PrometheusClient, get_prometheus_client
 
+from sqlalchemy.orm import Session
+from orm import engine
+from orm.models import BenchmarkMetric
+
 app = FastAPI()
 
-benchmark_mappings: Dict[str, Type[bm_api.benchmarks.BaseBenchmark]] = {
+benchmark_mappings: Dict[str, Type[BaseBenchmark]] = {
     "cpu-sysbench": bm_api.benchmarks.CpuSysbenchBenchmark,
     "memory-sysbench": bm_api.benchmarks.MemorySysbenchBenchmark,
     "network-iperf3": bm_api.benchmarks.NetworkIperf3Benchmark,
@@ -65,8 +70,22 @@ async def get_all_benchmarks_by_node(node_id: str, k8s_client: K8sClient = Depen
         logging.error(e)
         raise HTTPException(status_code=404, detail=f"Benchmarks for node '{node_id}' not found")
 
+@app.get("/benchmarks/name={bm_name}/results", response_model=Dict[str, str])
+async def get_benchmark_results(bm_name: str, k8s_client: K8sClient = Depends(get_k8s_client)):
+    try:
+        with Session(engine) as session:
+            metrics = session \
+                .query(BenchmarkMetric) \
+                .filter(BenchmarkMetric.benchmark_id == bm_name) \
+                .all()
+            return {
+                m.name: m.value for m in metrics
+            }
+    except Exception as e:
+        logging.error(e)
+        raise HTTPException(status_code=404, detail=f"Benchmark '{bm_name}' not found")
 
-@app.post("/benchmark/{bm_type}/{node_id}", response_model=BenchmarkResult)
+@app.post("/benchmark/{bm_type}/{node_id}")
 async def run_benchmark(bm_type: str, node_id: str, k8s_client: K8sClient = Depends(get_k8s_client)):
     bm_type = bm_type.lower()
     if bm_type in benchmark_mappings:
@@ -75,7 +94,13 @@ async def run_benchmark(bm_type: str, node_id: str, k8s_client: K8sClient = Depe
 
         startup_result = bm.run(k8s_client.api, node_id)
 
-        return startup_result
+        if startup_result.success:
+            return {
+                "id": startup_result.id,
+                "spec": startup_result.benchmark_spec
+            }
+        else:
+            raise HTTPException(status_code=500, detail=f"Failed to start benchmark '{bm_type}': {startup_result.error}")
     else:
         raise HTTPException(status_code=404, detail=f"Benchmark '{bm_type}' not found")
 

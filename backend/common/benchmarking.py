@@ -1,7 +1,7 @@
 import datetime
 import time
 import uuid
-from typing import Dict, List, TypeVar, Type
+from typing import Dict, List, Optional, TypeVar, Type
 
 import pykube
 from pykube import Pod
@@ -60,12 +60,12 @@ def handle_benchmarking(namespace: str,
             bm_values = get_benchmark_metrics(metrics_cls, p)
 
             with Session(engine) as session:
-                bm_id = str(uuid.uuid4())
+                # assuming pod owner is a job, we use the job's name as benchmark id
+                bm_id = pd.metadata["ownerReferences"][0]["name"]
 
                 bm = Benchmark(
                     id=bm_id,
                     node_id=pd.obj["spec"]["nodeName"],
-                    name=pd.metadata["ownerReferences"][0]["name"],
                     pod_id=pd.name,
                     started=datetime.datetime.strptime(pd.obj["status"]["startTime"], "%Y-%m-%dT%H:%M:%S%z"),
                     duration=0,
@@ -76,14 +76,17 @@ def handle_benchmarking(namespace: str,
 
                 bm_metric_list = to_metrics_list(bm_id, bm_values)
             
-                session.add(bm)
-                session.add_all(bm_metric_list)
+                session.merge(bm)
+
+                for bm_metric in bm_metric_list:
+                    session.merge(bm_metric)
+                
                 session.commit()
 
         obj = factory_instance.objects(k8s_client.api, namespace=namespace).get_by_name(name).obj
 
         # delete if completed
-        if obj["status"]["completed"]:
+        if "status" in obj and obj["status"]["completed"]:
             factory_instance(k8s_client.api, obj).delete()
 
         time.sleep(15)
