@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div class="v-network-graph-container">
     <div class="graph-panel">
       <button @click="graph?.zoomIn()">Zoom In</button>
       <button @click="graph?.zoomOut()">Zoom Out</button>
@@ -23,13 +23,53 @@
       v-model:layouts="layouts"
     >
       <template #badge="{}">
-        <DonutChart
+        <circle
+          v-for="(pos, node) in layoutsComputed.nodes"
+          :key="node"
+          :show="node"
+          :r="radius"
+          :cx="pos.x"
+          :cy="pos.y"
+          :stroke-dasharray="0"
+          :stroke-dashoffset="0"
+          stroke="lightgray"
+          fill="none"
+          stroke-width="15"
+          style="pointer-events: none"
+        />
+        <circle
+          class="circle"
+          v-for="(pos, node) in layoutsComputed.nodes"
+          :key="node"
+          :show="node"
+          :r="radius"
+          :cx="pos.x"
+          :cy="pos.y"
+          :stroke-dasharray="strokeDashArray(pos.bmScore)"
+          :stroke-dashoffset="percentToScore(25)"
+          stroke="PaleVioletRed"
+          fill="none"
+          stroke-width="15"
+          style="pointer-events: none"
+        />
+        <text
+          v-for="(pos, node) in layoutsComputed.nodes"
+          :key="node"
+          :x="pos.x"
+          :y="pos.y"
+          text-anchor="middle"
+          alignment-baseline="central"
+          style="pointer-events: none"
+        >
+          {{ pos.bmScore }}/{{ maxValue }}
+        </text>
+        <!--         <DonutChart
           :layouts-nodes="layoutsComputed.nodes"
           :radius="50"
           :max-value="10"
           :loadedView="loadedView"
           :without-svg-tag="true"
-        />
+        />-->
       </template>
     </v-network-graph>
   </div>
@@ -43,6 +83,7 @@ import {
   defineProps,
   onMounted,
   computed,
+  watch,
 } from "vue";
 import * as vNG from "v-network-graph";
 import { useStore } from "vuex";
@@ -62,7 +103,7 @@ interface Layouts extends vNG.Layouts {
 }
 
 // vue data
-const props = defineProps(["nodes", "configs", "layers"]);
+const props = defineProps(["nodes", "configs", "layers", "nodePanel"]);
 const emit = defineEmits(["nodeClicked"]);
 const store = useStore();
 
@@ -131,9 +172,28 @@ const eventHandlers: vNG.EventHandlers = {
     loadedView.value = true;
   },
 };
+
+/// donutchart
+// data
+const maxValue = 10;
+const radius = 50;
+const circumference = 2 * radius * Math.PI;
+const strokeDashArray = (score: number) => {
+  if (loadedView.value) {
+    return `${convertedScore(score)} ${circumference - convertedScore(score)}`;
+  } else {
+    return `0 ${circumference}`;
+  }
+};
+// circumference  === 100%
+// x              === 60
+// methods
+const scoreToPercent = (score: number) => (100 * score) / circumference;
+const percentToScore = (percent: number) => (circumference * percent) / 100;
+const convertedScore = (score: number) => (score * circumference) / maxValue;
 </script>
 <style scoped>
-.container {
+.v-network-graph-container {
   background-color: #27293d;
   height: 100vh;
   flex-grow: 1;

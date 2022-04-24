@@ -12,14 +12,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineProps, watch, onMounted } from "vue";
+import { ref, defineProps, watch, onMounted, defineEmits } from "vue";
 import { useStore } from "vuex";
 import Tabs from "@/components/NodePanel/Tabs.vue";
 
 // vue data
 const props = defineProps(["selectedNode"]);
 const store = useStore();
-
+const emit = defineEmits(["nodePanel"]);
 // data
 const nodePanelOpen = ref(false);
 const nodePanelAnimationDone = ref(false);
@@ -27,10 +27,11 @@ let firstTimeAnimation = true;
 const nodePanelContainer = ref();
 let nodePanelWidth = ref();
 let nodePanelHeight = ref();
+const loadAgain = ref(false);
 // methods
 // too avoid first time calculation
 let resizeStarted = false;
-onMounted(() => {
+/*onMounted(() => {
   window.addEventListener("resize", () => {
     // !firstTimeAnimation: otherwise it would set width and height to zero
     if (resizeStarted && !firstTimeAnimation) {
@@ -45,7 +46,18 @@ onMounted(() => {
 
     resizeStarted = true;
   });
+});*/
+const listener = () => {
+  loadAgain.value = true;
+  setTabContentWidth();
+};
+
+watch(nodePanelOpen, () => {
+  if (nodePanelOpen.value) {
+    window.addEventListener("resize", listener);
+  }
 });
+
 watch(props, () => {
   if (nodePanelContainer.value != null) {
     if (props.selectedNode.show) {
@@ -57,7 +69,6 @@ watch(props, () => {
           firstTimeAnimation = false;
         }, 1500);
       }
-      console.log("wtf");
       positionGraph();
       nodePanelOpen.value = true;
     } else if (!props.selectedNode.show && !firstTimeAnimation) {
@@ -82,8 +93,14 @@ const positionGraph = () => {
 
   setTimeout(() => {
     clearInterval(intervalID);
-    if (!nodePanelWidth.value && !nodePanelHeight.value) {
+    if (
+      (!nodePanelWidth.value && !nodePanelHeight.value) ||
+      (loadAgain.value && nodePanelOpen.value) ||
+      nodePanelWidth.value == 0
+    ) {
+      console.log("do it ");
       setTabContentWidth();
+      loadAgain.value = false;
     }
   }, 1500);
 };
@@ -96,7 +113,6 @@ const setTabContentWidth = () => {
   if (tabHeaderContainer) {
     tabHeaderContainer.classList.add("tabHeaderSize");
   }
-  nodePanelWidth.value;
   for (let i = 0; i < tabContents.length; i++) {
     tabContents[i].classList.add("contentSize");
     /*    tabContents[i].setAttribute(

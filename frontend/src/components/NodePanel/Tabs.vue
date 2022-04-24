@@ -1,31 +1,37 @@
 <template>
-  <div id="tab-header-container">
-    <div v-for="(tab, index) in tabList" :key="tab.title" class="tab-container">
+  <div v-if="!nodePanelAnimationDone">Loading ...</div>
+  <template v-else>
+    <div id="tab-header-container">
       <div
-        @click="nodePanelAnimationDone ? changeTab($event, index) : () => {}"
-        class="tab"
-        :class="{
-          selected: index == 0,
-          'first-is-selected': index == 1,
-          disabled: !nodePanelAnimationDone,
-        }"
+        v-for="(tab, index) in tabList"
+        :key="tab.title"
+        class="tab-container"
       >
-        {{ tab.title }}
+        <div
+          @click="nodePanelAnimationDone ? changeTab($event, index) : () => {}"
+          class="tab"
+          :class="{
+            selected: index == 0,
+            'first-is-selected': index == 1,
+            disabled: !nodePanelAnimationDone,
+          }"
+        >
+          {{ tab.title }}
+        </div>
       </div>
     </div>
-  </div>
-  <div v-if="!nodePanelAnimationDone">Loading ...</div>
-  <div v-else>
-    <Tab ref="OverviewComponent"
-      >{{ node }}
-      <OverviewContainer />
-      Overview Content
-      <div style="height: 600px; width: 80%; border: 2px solid red"></div>
-      <div style="height: 600px; width: 80%; border: 2px solid red"></div>
-    </Tab>
-    <Tab ref="BenchmarkComponent">{{ node }} Benchmark Content</Tab>
-    <Tab ref="SettingsComponent">{{ node }} Settings Content</Tab>
-  </div>
+    <div>
+      <Tab ref="OverviewComponent"
+        >{{ node }}
+        <OverviewContainer />
+        Overview Content
+        <div style="height: 600px; width: 80%; border: 2px solid red"></div>
+        <div style="height: 600px; width: 80%; border: 2px solid red"></div>
+      </Tab>
+      <Tab ref="BenchmarkComponent">{{ node }} Benchmark Content</Tab>
+      <Tab ref="SettingsComponent">{{ node }} Settings Content</Tab>
+    </div>
+  </template>
 </template>
 
 <script setup lang="ts">
