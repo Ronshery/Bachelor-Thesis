@@ -1,9 +1,5 @@
 import asyncio
-
 import kopf
-
-# use config file as desired
-#from . import operator_config
 
 # needed to load kopf operators for benchmark handling
 from . import benchmark_handlers
