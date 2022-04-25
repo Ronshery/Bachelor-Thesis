@@ -3,6 +3,7 @@ from typing import List, Dict, Type, Optional
 
 from fastapi import FastAPI, HTTPException, responses, Depends
 from bm_api.benchmarks.base import BaseBenchmark
+from fastapi.middleware.cors import CORSMiddleware
 
 from common.clients.k8s import get_k8s_client
 from common.clients.k8s.client import K8sClient
@@ -20,6 +21,14 @@ from orm import engine
 from orm.models import BenchmarkMetric
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 benchmark_mappings: Dict[str, Type[BaseBenchmark]] = {
     "cpu-sysbench": bm_api.benchmarks.CpuSysbenchBenchmark,

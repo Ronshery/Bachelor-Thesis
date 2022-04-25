@@ -1,6 +1,8 @@
 import { Model } from "@vuex-orm/core";
 import { ActionTree, MutationTree, GetterTree, Module } from "vuex";
 import { RootState } from "@/store";
+import * as vNG from "v-network-graph";
+import benchmarkService from "@/services/benchmark-service";
 //import benchmarkService from "@/services/benchmark-service";
 
 export default class Node extends Model {
@@ -12,6 +14,13 @@ export default class Node extends Model {
     return {
       id: this.attr(null),
       name: this.attr(""),
+      color: this.attr("white"),
+      apiVersion: this.attr(null),
+      kind: this.attr(null),
+      metadata: this.attr(null),
+      spec: this.attr(null),
+      status: this.attr(null),
+      show: this.attr(false),
     };
   }
 }
@@ -56,7 +65,19 @@ const actions: ActionTree<NodeState, RootState> = {
     };
     await benchmarkService.get("nodes", { params });*/
     commit("setLoading", true);
-    const bmData = [{ id: 1, name: "myfirstnode" }];
+    /*    const { data } = await benchmarkService.get("/nodes");
+    console.log("******* data **********");
+    console.log(data);
+        data[0] = {
+      ...data[0],
+      name: data[0].metadata.name,
+    };*/
+    const bmData = [
+      { id: 1, name: "node1", color: "white" },
+      { id: 2, name: "node2", color: "white" },
+      { id: 3, name: "node3", color: "white" },
+      { id: 4, name: "node4", color: "white" },
+    ];
     // insert fetched data into vuex store
     commit("insertNodes", bmData);
     commit("setLoading", false);
