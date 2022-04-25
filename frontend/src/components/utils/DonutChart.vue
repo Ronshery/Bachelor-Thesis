@@ -1,9 +1,8 @@
 <template>
-  <g v-if="withoutSvgTag">
+  <svg>
     <circle
       v-for="(pos, node) in layoutsNodes"
       :key="node"
-      :show="node"
       :r="radius"
       :cx="pos.x"
       :cy="pos.y"
@@ -18,7 +17,6 @@
       class="circle"
       v-for="(pos, node) in layoutsNodes"
       :key="node"
-      :show="node"
       :r="radius"
       :cx="pos.x"
       :cy="pos.y"
@@ -40,57 +38,13 @@
     >
       {{ pos.bmScore }}/{{ maxValue }}
     </text>
-  </g>
-  <template v-else>
-    <svg>
-      <circle
-        v-for="(pos, node) in layoutsNodes"
-        :key="node"
-        :show="node"
-        :r="radius"
-        :cx="pos.x"
-        :cy="pos.y"
-        :stroke-dasharray="0"
-        :stroke-dashoffset="0"
-        stroke="lightgray"
-        fill="none"
-        stroke-width="15"
-        style="pointer-events: none"
-      />
-      <circle
-        class="circle"
-        v-for="(pos, node) in layoutsNodes"
-        :key="node"
-        :show="node"
-        :r="radius"
-        :cx="pos.x"
-        :cy="pos.y"
-        :stroke-dasharray="strokeDashArray(pos.bmScore)"
-        :stroke-dashoffset="percentToScore(25)"
-        stroke="PaleVioletRed"
-        fill="none"
-        stroke-width="15"
-        style="pointer-events: none"
-      />
-      <text
-        v-for="(pos, node) in layoutsNodes"
-        :key="node"
-        :x="pos.x"
-        :y="pos.y"
-        text-anchor="middle"
-        alignment-baseline="central"
-        style="pointer-events: none"
-      >
-        {{ pos.bmScore }}/{{ maxValue }}
-      </text>
-    </svg>
-  </template>
+  </svg>
 </template>
 
 <script setup lang="ts">
-import { defineProps, ref, withDefaults } from "vue";
+import { defineProps } from "vue";
 
-interface Props {
+/*interface Props {
   layoutsNodes: {
     [x: string]: {
       fixed?: boolean | undefined;
@@ -101,10 +55,13 @@ interface Props {
   radius: number;
   maxValue: number;
   loadedView: boolean;
-  withoutSvgTag?: boolean;
 }
 // vue data
-const props = withDefaults(defineProps<Props>(), { withoutSvgTag: false });
+const props = withDefaults(defineProps<Props>(), {});
+*/
+
+// vue data
+const props = defineProps(["layoutsNodes", "radius", "maxValue", "loadedView"]);
 
 // data
 const circumference = 2 * props.radius * Math.PI;
@@ -124,7 +81,7 @@ const convertedScore = (score: number) =>
   (score * circumference) / props.maxValue;
 </script>
 
-<style scoped>
+<style>
 .circle {
   transition: stroke-dasharray 1200ms;
 }

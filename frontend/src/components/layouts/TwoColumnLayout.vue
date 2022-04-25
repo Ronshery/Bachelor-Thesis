@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div class="two-column-layout-container">
     <div class="left">My Page Layout Column 1</div>
     <div class="right">My Page Layout Column 2</div>
   </div>
@@ -8,7 +8,7 @@
 <script setup lang="ts"></script>
 
 <style scoped>
-.container {
+.two-column-layout-container {
   display: flex;
   flex-direction: row;
 }
