@@ -3,17 +3,23 @@
     :nodes="nodes"
     :configs="configs"
     :layers="layers"
+    :networkGraphRight="networkGraphRight"
     @node-clicked="nodeClicked"
+    @close-panel="triggerClosePanel"
   />
-  <NodePanel :selectedNode="selectedNode" />
+  <NodePanel
+    :selectedNode="selectedNode"
+    :closePanel="closePanel"
+    @updatePanelRight="triggerNetworkGraphRight"
+  />
 </template>
 
 <script lang="ts" setup>
 import { reactive, ref, onMounted, computed } from "vue";
 import NetworkGraph from "@/components/NetworkGraph/NetworkGraph.vue";
-import NodePanel from "@/components/NodePanel/NodePanel.vue";
 import * as vNG from "v-network-graph"; // @ is an alias to /src
 import { useStore } from "vuex";
+import NodePanel from "@/components/NodePanel/NodePanel.vue";
 
 // vue data
 const store = useStore();
@@ -33,6 +39,7 @@ const nodes = computed(() => {
 });
 let lastSelectedNode = ref();
 lastSelectedNode.value = null;
+
 // methods
 onMounted(async () => {
   console.log("NetworkGraphContainer mounted");
@@ -57,6 +64,16 @@ const nodeClicked = (params: any) => {
     lastSelectedNode.value.color = "white";
     selectedNode.value = JSON.parse(JSON.stringify(lastSelectedNode.value));
   }
+};
+
+const networkGraphRight = ref();
+const triggerNetworkGraphRight = (nodePanelRightPercent: number) => {
+  networkGraphRight.value = nodePanelRightPercent;
+};
+
+const closePanel = ref();
+const triggerClosePanel = (close: boolean) => {
+  closePanel.value = close;
 };
 
 // *** v-network-graph config ***

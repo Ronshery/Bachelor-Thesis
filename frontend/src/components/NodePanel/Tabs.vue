@@ -2,35 +2,38 @@
   <div id="tab-header-container">
     <div v-for="(tab, index) in tabList" :key="tab.title" class="tab-container">
       <div
-        @click="nodePanelAnimationDone ? changeTab($event, index) : () => {}"
+        @click="changeTab($event, index)"
         class="tab"
         :class="{
           selected: index == 0,
           'first-is-selected': index == 1,
-          disabled: !nodePanelAnimationDone,
         }"
       >
         {{ tab.title }}
       </div>
     </div>
   </div>
-  <div v-if="!nodePanelAnimationDone">Loading ...</div>
-  <div v-else>
-    <Tab ref="OverviewComponent"
+  <div>
+    <Tab ref="OverviewComponent" :nodePanelOpen="nodePanelOpen"
       >{{ node }}
+      <OverviewContainer />
       Overview Content
       <div style="height: 600px; width: 80%; border: 2px solid red"></div>
       <div style="height: 600px; width: 80%; border: 2px solid red"></div>
     </Tab>
-    <Tab ref="BenchmarkComponent">{{ node }} Benchmark Content</Tab>
-    <Tab ref="SettingsComponent">{{ node }} Settings Content</Tab>
+    <Tab ref="BenchmarkComponent" :nodePanelOpen="nodePanelOpen"
+      >{{ node }} Benchmark Content</Tab
+    >
+    <Tab ref="SettingsComponent" :nodePanelOpen="nodePanelOpen"
+      >{{ node }} Settings Content</Tab
+    >
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, defineProps, watch, nextTick } from "vue";
 import Tab from "@/components/NodePanel/Tab.vue";
-import LoadingAnimation from "@/components/LoadingAnimation.vue";
+import OverviewContainer from "@/components/NodePanel/tabContents/Overview/OverviewContainer.vue";
 
 interface ITab {
   element: HTMLElement;
@@ -39,7 +42,7 @@ interface ITab {
 }
 
 // vue data
-const props = defineProps(["node", "nodePanelOpen", "nodePanelAnimationDone"]);
+const props = defineProps(["node", "nodePanelOpen"]);
 
 // data
 const tabHeight = "50px";
@@ -52,22 +55,24 @@ const tabList = ref([
   { title: "Benchmark", ref: BenchmarkComponent },
   { title: "Settings", ref: SettingsComponent },
 ]);
-let animationDoneSet = false;
 //methods
 let timer: number;
+let firstTime = false;
 watch(props, () => {
   if (!props.nodePanelOpen) {
     console.log("close");
+    // only reset when NodePanel is fully closed
     timer = setTimeout(() => {
       resetTabClasses(null);
       changeTab(document.getElementsByClassName("tab")[0], 0);
     }, 1500);
   } else if (props.nodePanelOpen) {
     console.log("open");
+    // don't close if interrupt closing NodePanel
     clearTimeout(timer);
   }
-  if (props.nodePanelAnimationDone && !animationDoneSet) {
-    animationDoneSet = true;
+  if (!firstTime) {
+    firstTime = true;
     nextTick(() => {
       tabList.value[0].ref.isActive = true;
     });
@@ -146,10 +151,6 @@ const resetTabClasses = (selectedElement: HTMLElement | null) => {
 .selected {
   background-color: #6753e1;
   color: white;
-}
-
-.disabled {
-  cursor: unset;
 }
 
 .first-is-selected {

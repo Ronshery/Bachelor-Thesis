@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div class="v-network-graph-container">
     <div class="graph-panel">
       <button @click="graph?.zoomIn()">Zoom In</button>
       <button @click="graph?.zoomOut()">Zoom Out</button>
@@ -23,12 +23,44 @@
       v-model:layouts="layouts"
     >
       <template #badge="{}">
-        <DonutChart
-          :layouts-nodes="layoutsComputed.nodes"
-          :radius="50"
-          :max-value="10"
-          :loadedView="loadedView"
+        <circle
+          v-for="(pos, node) in layoutsComputed.nodes"
+          :key="node"
+          :r="radius"
+          :cx="pos.x"
+          :cy="pos.y"
+          :stroke-dasharray="0"
+          :stroke-dashoffset="0"
+          stroke="lightgray"
+          fill="none"
+          stroke-width="15"
+          style="pointer-events: none"
         />
+        <circle
+          class="circle"
+          v-for="(pos, node) in layoutsComputed.nodes"
+          :key="node"
+          :r="radius"
+          :cx="pos.x"
+          :cy="pos.y"
+          :stroke-dasharray="strokeDashArray(pos.bmScore)"
+          :stroke-dashoffset="percentToScore(25)"
+          stroke="palevioletred"
+          fill="none"
+          stroke-width="15"
+          style="pointer-events: none"
+        />
+        <text
+          v-for="(pos, node) in layoutsComputed.nodes"
+          :key="node"
+          :x="pos.x"
+          :y="pos.y"
+          text-anchor="middle"
+          alignment-baseline="central"
+          style="pointer-events: none"
+        >
+          {{ pos.bmScore }}/{{ maxValue }}
+        </text>
       </template>
     </v-network-graph>
   </div>
@@ -42,11 +74,11 @@ import {
   defineProps,
   onMounted,
   computed,
+  watch,
 } from "vue";
 import * as vNG from "v-network-graph";
 import { useStore } from "vuex";
 import { VNetworkGraph } from "v-network-graph";
-import DonutChart from "@/components/utils/DonutChart.vue";
 
 // interfaces
 interface Layouts extends vNG.Layouts {
@@ -61,8 +93,14 @@ interface Layouts extends vNG.Layouts {
 }
 
 // vue data
-const props = defineProps(["nodes", "configs", "layers"]);
-const emit = defineEmits(["nodeClicked"]);
+const props = defineProps([
+  "nodes",
+  "configs",
+  "layers",
+  "nodePanel",
+  "networkGraphRight",
+]);
+const emit = defineEmits(["nodeClicked", "closePanel"]);
 const store = useStore();
 
 // data
@@ -72,7 +110,7 @@ const graph = ref<vNG.Instance>();
 const layouts = ref<Layouts>({ nodes: {} });
 const layoutsBackup = ref<vNG.Layouts>();
 let layoutsBackupSet = false;
-let data = ref([1, 2, 3, 6]);
+let data = ref([1, 9, 5, 6]);
 const layoutsComputed = computed(() => {
   console.log("computed");
   const keys = Object.keys(layouts.value.nodes);
@@ -85,14 +123,65 @@ const layoutsComputed = computed(() => {
 });
 const loadedView = ref(false);
 // methods
+let setTabContentHeight = () => {
+  const tabContentContainerList = document.getElementsByClassName(
+    "tab-content-container"
+  );
+  const nodePanelContainer = document.getElementById("node-panel-container");
+  for (let i = 0; i <= tabContentContainerList.length; i++) {
+    if (nodePanelContainer && tabContentContainerList[i]) {
+      tabContentContainerList[i].style.height = `${
+        nodePanelContainer.clientHeight - 50
+      }px`;
+    }
+  }
+};
 onMounted(() => {
   console.log("NetworkGraph mounted");
   store.dispatch("initializeGraph", graph);
   nextTick(() => {
-    graph.value?.panToCenter();
-    graph.value?.fitToContents();
+    graphCenterAndFit();
+  });
+  window.addEventListener("resize", () => {
+    graphCenterAndFit();
+    setTabContentHeight();
+    console.log(window.innerWidth);
+    if (window.innerWidth < 800) {
+      emit("closePanel", true);
+    } else {
+      emit("closePanel", false);
+    }
   });
 });
+
+watch(props, () => {
+  if (props.networkGraphRight == 0) {
+    // NodePanel is open
+    setGraphWrapperWidth(50);
+  } else if (props.networkGraphRight != 0) {
+    // NodePanel is closed
+    setGraphWrapperWidth(100);
+  }
+});
+
+const setGraphWrapperWidth = (widthValue: number) => {
+  const graphWrapperElement = document.getElementById("graph-wrapper");
+  if (graphWrapperElement != null) {
+    graphWrapperElement.style.width = `${widthValue}%`;
+
+    const intervalID = setInterval(() => {
+      graphCenterAndFit();
+    });
+    setTimeout(() => {
+      clearInterval(intervalID);
+    }, 1500);
+  }
+};
+
+const graphCenterAndFit = () => {
+  graph.value?.panToCenter();
+  graph.value?.fitToContents();
+};
 
 const reset = async () => {
   data.value[0] = 7;
@@ -107,8 +196,7 @@ const reset = async () => {
     }
   }
   nextTick().then(() => {
-    graph.value?.panToCenter();
-    graph.value?.fitToContents();
+    graphCenterAndFit();
   });
 };
 
@@ -130,9 +218,28 @@ const eventHandlers: vNG.EventHandlers = {
     loadedView.value = true;
   },
 };
+
+/// Node DonutChart
+// data
+const maxValue = 10;
+const radius = 50;
+const circumference = 2 * radius * Math.PI;
+const strokeDashArray = (score: number) => {
+  if (loadedView.value) {
+    return `${convertedScore(score)} ${circumference - convertedScore(score)}`;
+  } else {
+    return `0 ${circumference}`;
+  }
+};
+// circumference  === 100%
+// x              === 60
+// methods
+const scoreToPercent = (score: number) => (100 * score) / circumference;
+const percentToScore = (percent: number) => (circumference * percent) / 100;
+const convertedScore = (score: number) => (score * circumference) / maxValue;
 </script>
 <style scoped>
-.container {
+.v-network-graph-container {
   background-color: #27293d;
   height: 100vh;
   flex-grow: 1;

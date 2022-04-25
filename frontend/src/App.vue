@@ -31,9 +31,11 @@ console.log(NodeModel.query().where("name", "myfirstnode").get());
 <style>
 * {
   margin: 0;
-  overflow: hidden;
 }
 
+body {
+  overflow: hidden;
+}
 .v-canvas {
 }
 
