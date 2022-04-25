@@ -4,7 +4,13 @@
 import kopf
 
 from common.benchmarking import handle_benchmarking
-from common.metrics import SysbenchCpuMetrics, SysbenchMemoryMetrics, NetworkIperf3Metrics
+from common.metrics import \
+    SysbenchCpuMetrics, \
+    SysbenchMemoryMetrics, \
+    NetworkIperf3Metrics, \
+    FiosMetrics, \
+    IopingsMetrics, \
+    QpervesMetrics
 
 
 def cpu_sysbench_filter(spec, meta, **_):
@@ -27,21 +33,21 @@ def handle_memory_sysbench_benchmarking(namespace, name, logger, started, stoppe
 
 @kopf.daemon("fios")
 def handle_fio_benchmarking(namespace, name, logger, started, stopped, body, **_):
-    handle_benchmarking(namespace, name, logger, started, stopped, body)
+    handle_benchmarking(namespace, name, logger, started, stopped, body, FiosMetrics)
 
 
 @kopf.daemon("iopings")
 def handle_ioping_benchmarking(namespace, name, logger, started, stopped, body, **_):
-    handle_benchmarking(namespace, name, logger, started, stopped, body)
+    handle_benchmarking(namespace, name, logger, started, stopped, body, IopingsMetrics)
 
 
 @kopf.daemon("iperf3s")
 def handle_iperf3_benchmarking(namespace, name, logger, started, stopped, body, **_):
     # TODO: only use client version for now
-    name = "network-iperf3-client"
+    # name = "network-iperf3-client"
     handle_benchmarking(namespace, name, logger, started, stopped, body, NetworkIperf3Metrics)
 
 
 @kopf.daemon("qperves")
 def handle_qperf_benchmarking(namespace, name, logger, started, stopped, body, **_):
-    handle_benchmarking(namespace, name, logger, started, stopped, body)
+    handle_benchmarking(namespace, name, logger, started, stopped, body, QpervesMetrics)

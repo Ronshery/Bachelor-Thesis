@@ -28,7 +28,7 @@ class NetworkIperf3Benchmark(BaseBenchmark):
         }})
         self.get_factory(client, self.kind)(client, spec).create()
         # TODO add pod
-        return BenchmarkStartupResult(success=True, pod=None, benchmark_spec=self)
+        return BenchmarkStartupResult(success=True, id=spec['metadata']['name'], benchmark_spec=spec)
 
 
 class NetworkQperfBenchmark(NetworkIperf3Benchmark):

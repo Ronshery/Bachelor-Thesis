@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 from typing import TypeVar, Optional, Type, Dict, Iterable, List, Union
 
@@ -12,6 +14,14 @@ class BMMetricField:
     def __init__(self, pattern: Optional[str], collect_list: bool = False):
         self.pattern = pattern
         self.collect_list = collect_list
+
+    def copy(self) -> BMMetricField:
+        f = BMMetricField(
+            pattern=self.pattern,
+            collect_list=self.collect_list
+        )
+        f.value=self.value.copy() if type(self.value) == list else self.value
+        return f
 
     def __str__(self):
         return self.value or repr(self)
@@ -36,7 +46,7 @@ def read_benchmark_metrics(cls: Type[TMetricClass], lines: Iterable[str]) -> TMe
             m = re.match(msmt_field.pattern, line.strip(), re.IGNORECASE)
             if m:
                 val = m.group(1).strip()
-                field: BMMetricField = getattr(result, msmt)
+                field: BMMetricField = getattr(result, msmt).copy()
 
                 if field.collect_list:
                     if field.value is None:
@@ -46,8 +56,7 @@ def read_benchmark_metrics(cls: Type[TMetricClass], lines: Iterable[str]) -> TMe
                 else:
                     field.value = val
 
-                # break since we do not want to collect multiple metrics per row for now
-                break
+                setattr(result, msmt, field)
 
     return result
 
