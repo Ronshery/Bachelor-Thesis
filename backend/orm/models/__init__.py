@@ -31,5 +31,14 @@ class BenchmarkMetric(Base):
     value = Column(String)
 
 
+class NodeMetric(Base):
+    __tablename__ = "node_metrics"
+
+    node_name = Column(String, primary_key=True, nullable=False)
+    metric = Column(String, primary_key=True, nullable=False)
+    timestamp = Column(TIMESTAMP, primary_key=True, nullable=False)
+    value = Column(String, nullable=False)
+
 benchmarks_table = Benchmark.__table__
 metrics_table = BenchmarkMetric.__table__
+node_metrics_table = NodeMetric.__table__
