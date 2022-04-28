@@ -28,3 +28,13 @@ helm install \
     --set prometheus.service.targetPort=9090 \
     --set prometheus.service.port=9090 \
     prometheus prometheus-community/kube-prometheus-stack
+
+# deploy Kubernetes dashboard
+helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
+helm install dashboard kubernetes-dashboard/kubernetes-dashboard -n kubernetes-dashboard --create-namespace
+
+# create service account for dashboard
+kubectl apply -f ci_dev/service_account.yml
+kubectl describe secret $(kubectl describe serviceaccount admin-user -n kubernetes-dashboard | grep -oP "Tokens:\s*\K.+") -n kubernetes-dashboard 
+
+echo "Run 'kubectl proxy', access http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:dashboard-kubernetes-dashboard:https/proxy/#/login in your browser and use the token from above to access the Kubernetes dashboard"
