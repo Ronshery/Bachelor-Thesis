@@ -9,6 +9,7 @@ import uvloop
 from uvloop.loop import Loop
 from bm_api import app
 
+import argparse
 
 # this thread will start kopf, i.e. our custom kubernetes operator that listens to kubernetes events, acts accordingly
 def kopf_thread(stop_me: threading.Event) -> None:
@@ -27,7 +28,7 @@ def kopf_thread(stop_me: threading.Event) -> None:
 
 
 # this thread will start a fastapi-backend, which can process requests from the frontend
-def api_thread(stop_me: threading.Event) -> None:
+def api_thread(stop_me: threading.Event, host: str, port: int) -> None:
     api_loop: Optional[Loop] = None
     pending: Any = None
     try:
@@ -36,7 +37,7 @@ def api_thread(stop_me: threading.Event) -> None:
 
         # monitor the flag and stop it somehow. here, disgracefully.
         with contextlib.closing(api_loop):
-            config = uvicorn.Config(app=app, loop=api_loop, host="0.0.0.0")
+            config = uvicorn.Config(app=app, loop=api_loop, host=host, port=port)
             server = uvicorn.Server(config)
             server_task = asyncio.gather(server.serve())
             waiter_task = asyncio.gather(api_loop.run_in_executor(None, stop_me.wait))
@@ -53,13 +54,24 @@ def api_thread(stop_me: threading.Event) -> None:
 
 
 if __name__ == '__main__':
-    import orm
+    parser = argparse.ArgumentParser(description="Benchmarking Framework HTTP API server")
+    parser.add_argument("--host", dest="host", action="store", type=str, default="0.0.0.0")
+    parser.add_argument("--port", dest="port", action="store", type=int, default=8000)
 
+    cli_namespace = parser.parse_args()
+
+    api_host = cli_namespace.host
+    api_port = cli_namespace.port
+
+    import orm
     orm.create_tables()
 
     stop_me_event: threading.Event = threading.Event()
     t_kopf: threading.Thread = threading.Thread(target=kopf_thread, args=(stop_me_event,))
-    t_api: threading.Thread = threading.Thread(target=api_thread, args=(stop_me_event,))
+    t_api: threading.Thread = threading.Thread(target=api_thread, args=(stop_me_event,), kwargs={
+        "host": api_host,
+        "port": api_port
+    })
 
     t_kopf.start()
     t_api.start()
