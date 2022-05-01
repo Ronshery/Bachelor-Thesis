@@ -2,8 +2,8 @@ import datetime
 from typing import List, Dict, Type
 
 from fastapi import FastAPI, HTTPException, responses, Depends
-from common.benchmarks import BaseBenchmark
 import common.benchmarks as benchmarks
+from fastapi.middleware.cors import CORSMiddleware
 
 from common.clients.k8s import get_k8s_client
 from common.clients.k8s.client import K8sClient
@@ -21,7 +21,15 @@ from orm.models import BenchmarkMetric
 
 app = FastAPI()
 
-benchmark_mappings: Dict[str, Type[BaseBenchmark]] = {
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+benchmark_mappings: Dict[str, Type[benchmarks.BaseBenchmark]] = {
     "cpu-sysbench": benchmarks.CpuSysbenchBenchmark,
     "memory-sysbench": benchmarks.MemorySysbenchBenchmark,
     "network-iperf3": benchmarks.NetworkIperf3Benchmark,

@@ -1,18 +1,21 @@
 <template>
-  <div class="home">
+  <!--  <div class="home">
     <img alt="Vue logo" src="../assets/logo.png" />
     <HelloWorld msg="Welcome to Your Vue.js + TypeScript App" />
+  </div>-->
+  <div id="graph-wrapper">
+    <NetworkGraphContainer />
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from "vue";
-import HelloWorld from "@/components/HelloWorld.vue"; // @ is an alias to /src
-
-export default defineComponent({
-  name: "HomeView",
-  components: {
-    HelloWorld,
-  },
-});
+<script setup lang="ts">
+import NetworkGraphContainer from "@/components/NetworkGraph/NetworkGraphContainer.vue";
 </script>
+
+<style scoped>
+#graph-wrapper {
+  transition: width 1500ms;
+  width: 100%;
+  min-width: 390px;
+}
+</style>
