@@ -3,6 +3,8 @@ import kopf
 
 # needed to load kopf operators for benchmark handling
 from . import benchmark_handlers
+# needed to load kopf operators for workload handling
+from . import workload_handlers
 
 
 @kopf.on.startup()

@@ -1,4 +1,4 @@
-from bm_api.benchmarks import BaseBenchmark
+from common.benchmarks import BaseBenchmark
 
 
 class DiskIopingBenchmark(BaseBenchmark):

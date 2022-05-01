@@ -1,9 +1,8 @@
-from typing import Type, Dict
+from typing import Dict
 
 import pykube
-from pykube.objects import APIObject
 
-from bm_api.benchmarks.base import BaseBenchmark, BenchmarkStartupResult
+from common.benchmarks.base import BaseBenchmark, BenchmarkStartupResult
 
 
 class NetworkIperf3Benchmark(BaseBenchmark):

@@ -3,9 +3,9 @@ from typing import List, Type, Dict, Optional, Callable
 
 import pykube
 import logging
-from bm_api.models.node import NodeModel, NodeMetricsModel
+from bm_api.models.node import NodeModel
 
-from bm_api.benchmarks import BaseBenchmark
+from common.benchmarks import BaseBenchmark
 
 
 class K8sClient:

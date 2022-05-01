@@ -1,0 +1,150 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: spark-podmonitor
+  labels:
+    release:  prometheus
+spec:
+  selector:
+    matchLabels:
+      spark-role: driver
+  namespaceSelector:
+    matchNames:
+      - spark-operator
+  podTargetLabels:
+    - spark-role
+  podMetricsEndpoints:
+  - port: spark-ui
+    interval: 10s
+    path: "/metrics/prometheus/"
+    relabelings:
+      - sourceLabels: [ __address__ ]
+        action: keep
+        regex: '^.*:4040$'
+      - sourceLabels: [ __meta_kubernetes_pod_annotation_prometheus_io_scrape ]
+        action: keep
+        regex: '(.*)'
+      # fetch only spark app drivers
+      - sourceLabels: [ __meta_kubernetes_pod_name ]
+        action: keep
+        regex: ([\w-]+)-driver
+      # only fetch running pods
+      - sourceLabels: [ __meta_kubernetes_pod_phase ]
+        separator: ;
+        regex: (Pending)|(Running)
+        action: keep
+      - sourceLabels: [ __meta_kubernetes_pod_label_sparkoperator_k8s_io_launched_by_spark_operator ]
+        action: keep
+        regex: '(.*)'
+      - sourceLabels: [ __address__, __meta_kubernetes_pod_annotation_prometheus_io_port ]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        targetLabel: __address__
+      - sourceLabels: [ __meta_kubernetes_pod_name ]
+        action: replace
+        targetLabel: kubernetes_pod_name
+      - sourceLabels: [ __meta_kubernetes_pod_node_name ]
+        action: replace
+        targetLabel: kubernetes_node_name
+      - sourceLabels: [ __meta_kubernetes_pod_label_sparkoperator_k8s_io_submission_id ]
+        action: replace
+        targetLabel: spark_submission_id
+      - sourceLabels: [ __meta_kubernetes_pod_label_spark_role ]
+        action: replace
+        targetLabel: spark_role
+      - sourceLabels: [ __meta_kubernetes_namespace ]
+        action: replace
+        targetLabel: namespace
+      - sourceLabels: [ __meta_kubernetes_pod_label_version ]
+        action: replace
+        targetLabel: spark_version
+      - sourceLabels: [ __meta_kubernetes_pod_annotation_prometheus_io_path ]
+        action: replace
+        targetLabel: prometheus_endpoint
+    metricRelabelings:
+      # renaming metrics and add prefix spark_driver
+      - sourceLabels: [ __name__ ]
+        action: replace
+        regex: '^metrics_(\w*)_(\w*)_driver_(.*)'
+        replacement: 'spark_driver_${3}'
+        targetLabel: __name__
+  - port: spark-ui
+    interval: 10s
+    path: "/metrics/executors/prometheus/"
+    relabelings:
+      - sourceLabels: [__address__]
+        action: keep
+        regex: '^.*:4040$'
+      - sourceLabels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: '(.*)'
+      # only fetch spark app drivers
+      - sourceLabels: [__meta_kubernetes_pod_name]
+        action: keep
+        regex: ([\w-]+)-driver
+      # only fetch running pods
+      - sourceLabels: [__meta_kubernetes_pod_phase]
+        separator: ;
+        regex: (Pending)|(Running)
+        action: keep
+      - sourceLabels: [__meta_kubernetes_namespace]
+        action: replace
+        targetLabel: namespace
+      - sourceLabels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        targetLabel: prometheus_endpoint
+      - sourceLabels: [__meta_kubernetes_pod_label_sparkoperator_k8s_io_submission_id]
+        action: replace
+        targetLabel: spark_submission_id
+    metricRelabelings:
+      # renaming metrics with prefix spark_executor
+      - sourceLabels: [ __name__ ]
+        action: replace
+        regex: '^metrics_executor_(.*)'
+        replacement: 'spark_executor_${1}'
+        targetLabel: __name__
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: flink-podmonitor-taskmanager
+  labels:
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      type: flink-native-kubernetes
+      component: taskmanager
+  namespaceSelector:
+    matchNames:
+      - flink-operator
+  podTargetLabels:
+    - type
+    - component
+  podMetricsEndpoints:
+    - port: metrics
+      interval: 10s
+      path: "/"
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: flink-podmonitor-jobmanager
+  labels:
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      type: flink-native-kubernetes
+      component: jobmanager
+  namespaceSelector:
+    matchNames:
+      - flink-operator
+  podTargetLabels:
+    - type
+    - component
+  podMetricsEndpoints:
+    - port: metrics
+      interval: 10s
+      path: "/"
