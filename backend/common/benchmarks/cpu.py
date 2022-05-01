@@ -1,4 +1,4 @@
-from bm_api.benchmarks.base import BaseBenchmark
+from common.benchmarks.base import BaseBenchmark
 
 
 class CpuSysbenchBenchmark(BaseBenchmark):

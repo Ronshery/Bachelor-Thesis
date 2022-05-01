@@ -1,8 +1,9 @@
 import datetime
-from typing import List, Dict, Type, Optional
+from typing import List, Dict, Type
 
 from fastapi import FastAPI, HTTPException, responses, Depends
-from bm_api.benchmarks.base import BaseBenchmark
+from common.benchmarks import BaseBenchmark
+import common.benchmarks as benchmarks
 
 from common.clients.k8s import get_k8s_client
 from common.clients.k8s.client import K8sClient
@@ -10,7 +11,6 @@ from bm_api.models.node import NodeModel, NodeMetricsModel
 from common.clients.prometheus.schemes import NodeMetricsModel as PrometheusNodeMetricsModel
 from bm_api.models.benchmark import BenchmarkResult
 
-import bm_api.benchmarks
 import logging
 
 from common.clients.prometheus import PrometheusClient, get_prometheus_client
@@ -22,12 +22,12 @@ from orm.models import BenchmarkMetric
 app = FastAPI()
 
 benchmark_mappings: Dict[str, Type[BaseBenchmark]] = {
-    "cpu-sysbench": bm_api.benchmarks.CpuSysbenchBenchmark,
-    "memory-sysbench": bm_api.benchmarks.MemorySysbenchBenchmark,
-    "network-iperf3": bm_api.benchmarks.NetworkIperf3Benchmark,
-    "network-qperf": bm_api.benchmarks.NetworkQperfBenchmark,
-    "disk-ioping": bm_api.benchmarks.DiskIopingBenchmark,
-    "disk-fio": bm_api.benchmarks.DiskFioBenchmark
+    "cpu-sysbench": benchmarks.CpuSysbenchBenchmark,
+    "memory-sysbench": benchmarks.MemorySysbenchBenchmark,
+    "network-iperf3": benchmarks.NetworkIperf3Benchmark,
+    "network-qperf": benchmarks.NetworkQperfBenchmark,
+    "disk-ioping": benchmarks.DiskIopingBenchmark,
+    "disk-fio": benchmarks.DiskFioBenchmark
 }
 
 
@@ -70,6 +70,7 @@ async def get_all_benchmarks_by_node(node_id: str, k8s_client: K8sClient = Depen
         logging.error(e)
         raise HTTPException(status_code=404, detail=f"Benchmarks for node '{node_id}' not found")
 
+
 @app.get("/benchmarks/name={bm_name}/results", response_model=Dict[str, str])
 async def get_benchmark_results(bm_name: str, k8s_client: K8sClient = Depends(get_k8s_client)):
     try:
@@ -84,6 +85,7 @@ async def get_benchmark_results(bm_name: str, k8s_client: K8sClient = Depends(ge
     except Exception as e:
         logging.error(e)
         raise HTTPException(status_code=404, detail=f"Benchmark '{bm_name}' not found")
+
 
 @app.post("/benchmark/{bm_type}/{node_id}")
 async def run_benchmark(bm_type: str, node_id: str, k8s_client: K8sClient = Depends(get_k8s_client)):

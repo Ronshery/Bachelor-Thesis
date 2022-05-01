@@ -2,54 +2,27 @@ from __future__ import annotations
 
 import dataclasses
 import os.path
-import string
 from abc import ABC
-import random
 from typing import Optional, Type, Dict
 
 import pykube
 import yaml
 from pykube.objects import APIObject
 
-
-def generate_suffix(length: int):
-    return ''.join(random.SystemRandom().choice(string.ascii_lowercase + string.digits) for _ in range(length))
+from common import BaseRun
 
 
-class BaseBenchmark(ABC):
-    @property
-    def name(self):
-        raise NotImplementedError
-
-    @property
-    def kind(self):
-        raise NotImplementedError
-
+class BaseBenchmark(BaseRun, ABC):
     @property
     def config_path(self):
         raise NotImplementedError
 
-    @staticmethod
-    def get_factory(client: pykube.HTTPClient, kind: str) -> Type[APIObject]:
+    @classmethod
+    def get_factory(cls, client: pykube.HTTPClient, kind: str) -> Type[APIObject]:
         # use object factory:
         # - all kubestone benchmarks use api_version = 'perf.kubestone.xridge.io/v1alpha1'
         # - specify 'kind', e.g. 'Sysbench'
         return pykube.object_factory(client, "perf.kubestone.xridge.io/v1alpha1", kind)
-
-    @staticmethod
-    def merge_dicts(tgt, enhancer):
-        for key, val in enhancer.items():
-            if key not in tgt:
-                tgt[key] = val
-                continue
-
-            if isinstance(val, dict):
-                if not isinstance(tgt[key], dict):
-                    tgt[key] = dict()
-                BaseBenchmark.merge_dicts(tgt[key], val)
-            else:
-                tgt[key] = val
-        return tgt
 
     def run(self, client: pykube.HTTPClient, *args, **kwargs) -> BenchmarkStartupResult:
         if os.path.exists(self.config_path):
@@ -60,7 +33,7 @@ class BaseBenchmark(ABC):
                     spec = self.merge_dicts(spec, {"metadata": {"namespace": "kubestone"}})
                     # add suffix to 'name', so that they are different and
                     # one can schedule multiple benchmarks of one kind simultaneously
-                    spec['metadata']['name'] = f"{spec['metadata'].get('name', None)}-{generate_suffix(10)}"
+                    spec['metadata']['name'] = f"{spec['metadata'].get('name', None)}-{self.generate_suffix(10)}"
                     # now: run custom logic
                     return self._run(client, spec, *args, **kwargs)
             except Exception as e:

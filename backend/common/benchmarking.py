@@ -86,7 +86,7 @@ def handle_benchmarking(namespace: str,
         obj = factory_instance.objects(k8s_client.api, namespace=namespace).get_by_name(name).obj
 
         # delete if completed
-        if "status" in obj and obj["status"]["completed"]:
+        if obj.get("status", {}).get("completed", False):
             factory_instance(k8s_client.api, obj).delete()
 
         time.sleep(15)
