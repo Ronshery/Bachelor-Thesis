@@ -62,6 +62,7 @@ const nodeClicked = (params: any) => {
     }
     lastSelectedNode.value.show = false;
     lastSelectedNode.value.color = "white";
+    // trigger events again with copy of object
     selectedNode.value = JSON.parse(JSON.stringify(lastSelectedNode.value));
   }
 };

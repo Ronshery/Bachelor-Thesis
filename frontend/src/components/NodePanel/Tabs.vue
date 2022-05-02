@@ -16,7 +16,7 @@
   <div>
     <Tab ref="OverviewComponent" :nodePanelOpen="nodePanelOpen"
       >{{ node }}
-      <OverviewContainer />
+      <OverviewContainer :node="node" />
       Overview Content
       <div style="height: 600px; width: 80%; border: 2px solid red"></div>
       <div style="height: 600px; width: 80%; border: 2px solid red"></div>
