@@ -1,9 +1,7 @@
 import { Model } from "@vuex-orm/core";
 import { ActionTree, MutationTree, GetterTree, Module } from "vuex";
 import { RootState } from "@/store";
-import * as vNG from "v-network-graph";
 import benchmarkService from "@/services/benchmark-service";
-//import benchmarkService from "@/services/benchmark-service";
 
 export default class Node extends Model {
   static entity = "nodes";
@@ -21,6 +19,7 @@ export default class Node extends Model {
       spec: this.attr(null),
       status: this.attr(null),
       show: this.attr(false),
+      bmScore: this.attr(5),
     };
   }
 }
@@ -72,12 +71,14 @@ const actions: ActionTree<NodeState, RootState> = {
       ...data[0],
       name: data[0].metadata.name,
     };*/
+
     const bmData = [
-      { id: 1, name: "node1", color: "white" },
-      { id: 2, name: "node2", color: "white" },
-      { id: 3, name: "node3", color: "white" },
-      { id: 4, name: "node4", color: "white" },
+      { id: 1, name: "node1", color: "white", bmScore: 2.75 },
+      { id: 2, name: "node2", color: "white", bmScore: 8 },
+      { id: 3, name: "node3", color: "white", bmScore: 4 },
+      { id: 4, name: "node4", color: "white", bmScore: 6 },
     ];
+
     // insert fetched data into vuex store
     commit("insertNodes", bmData);
     commit("setLoading", false);

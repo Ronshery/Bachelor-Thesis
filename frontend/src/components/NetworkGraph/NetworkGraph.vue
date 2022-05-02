@@ -112,13 +112,10 @@ const layoutsBackup = ref<vNG.Layouts>();
 let layoutsBackupSet = false;
 let data = ref([1, 9, 5, 6]);
 const layoutsComputed = computed(() => {
-  console.log("computed");
   const keys = Object.keys(layouts.value.nodes);
-  console.log(keys);
   Object.entries(layouts.value.nodes).forEach((node, index) => {
-    layouts.value.nodes[keys[index]].bmScore = data.value[index];
+    layouts.value.nodes[keys[index]].bmScore = props.nodes[node[0]].bmScore;
   });
-  console.log(layouts.value);
   return layouts.value;
 });
 const loadedView = ref(false);
