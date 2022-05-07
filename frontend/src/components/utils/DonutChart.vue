@@ -2,13 +2,13 @@
   <svg v-if="props.isSegmented">
     <circle
       :r="props.radius"
-      :cx="60"
-      :cy="60"
+      :cx="props.x"
+      :cy="props.y"
       :stroke-dasharray="0"
       :stroke-dashoffset="0"
       stroke="lightgray"
       fill="none"
-      stroke-width="15"
+      :stroke-width="props.strokeWidth"
       style="pointer-events: none"
     />
     <circle
@@ -16,20 +16,20 @@
       v-for="(segment, index) in props.segments"
       :key="segment"
       :id="'segment-' + index"
-      :cx="60"
-      :cy="60"
+      :cx="props.x"
+      :cy="props.y"
       :stroke-dasharray="strokeDashArray(scaledScore(segment.score))"
       stroke-dashoffset="0"
       :stroke="segment.color"
       fill="none"
-      stroke-width="15"
+      :stroke-width="props.strokeWidth"
       style="pointer-events: none"
       :r="props.radius"
     />
 
     <text
-      :x="60"
-      :y="60"
+      :x="props.x"
+      :y="props.y"
       text-anchor="middle"
       alignment-baseline="central"
       style="pointer-events: none"
@@ -40,30 +40,30 @@
   <svg v-else>
     <circle
       :r="props.radius"
-      :cx="60"
-      :cy="60"
+      :cx="props.x"
+      :cy="props.y"
       :stroke-dasharray="0"
       :stroke-dashoffset="0"
       stroke="lightgray"
       fill="none"
-      stroke-width="15"
+      :stroke-width="props.strokeWidth"
       style="pointer-events: none"
     />
     <circle
       class="circle"
       :r="props.radius"
-      :cx="60"
-      :cy="60"
+      :cx="props.x"
+      :cy="props.y"
       :stroke-dasharray="strokeDashArray(props.score)"
       :stroke-dashoffset="percentToScore(25)"
       :stroke="props.strokeColor"
       fill="none"
-      stroke-width="15"
+      :stroke-width="props.strokeWidth"
       style="pointer-events: none"
     />
     <text
-      :x="60"
-      :y="60"
+      :x="props.x"
+      :y="props.y"
       text-anchor="middle"
       alignment-baseline="central"
       style="pointer-events: none"
@@ -84,6 +84,9 @@ interface Segment {
 interface Props {
   score: number;
   radius: number;
+  x: number;
+  y: number;
+  strokeWidth: number;
   maxValue: number;
   loadedView: boolean;
   isSegmented?: boolean;
