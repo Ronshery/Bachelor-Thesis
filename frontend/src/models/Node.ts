@@ -2,7 +2,6 @@ import { Model } from "@vuex-orm/core";
 import { ActionTree, MutationTree, GetterTree, Module } from "vuex";
 import { RootState } from "@/store";
 import benchmarkService from "@/services/benchmark-service";
-import { INode } from "./INode";
 export default class Node extends Model {
   static entity = "nodes";
 
@@ -20,6 +19,7 @@ export default class Node extends Model {
       status: this.attr(null),
       show: this.attr(false),
       bmScore: this.attr(10),
+      metrics: this.attr(null),
     };
   }
 }
@@ -64,18 +64,19 @@ const actions: ActionTree<NodeState, RootState> = {
     };
     await benchmarkService.get("nodes", { params });
     commit("setLoading", true);
-    const { data } = await benchmarkService.get("/nodes");
+    const nodesResponse = await benchmarkService.get("/nodes");
     console.log("******* data **********");
-    console.log(data);
-
-    data.forEach((node: INode, index: number) => {
-      data[index] = {
+    console.log(nodesResponse.data);
+    const nodes = nodesResponse.data;
+    for (const node of nodes) {
+      const index: number = nodes.indexOf(node);
+      nodes[index] = {
         ...node,
+        id: node.metadata.name,
         name: node.metadata.name,
         bmScore: index + 2,
       };
-    });
-
+    }
     /*    const bmData = [
       { id: 1, name: "node1", color: "white", bmScore: 2.75 },
       { id: 2, name: "node2", color: "white", bmScore: 8 },
@@ -84,9 +85,17 @@ const actions: ActionTree<NodeState, RootState> = {
     ];*/
 
     // insert fetched data into vuex store
-    commit("insertNodes", data);
+    commit("insertNodes", nodes);
     commit("setLoading", false);
     return "action get Node worked";
+  },
+  async fetchMetricsById({ commit }, { node, timeDelta }) {
+    const metricsResponse = await benchmarkService
+      .get(`/metrics/${node.id}/${timeDelta}`)
+      .then((data) => {
+        const updatedNode = { ...node, metrics: data.data };
+        commit("updateNode", updatedNode);
+      });
   },
 };
 
@@ -96,11 +105,18 @@ const mutations: MutationTree<NodeState> = {
   },
   insertNodes(state, payload) {
     console.log("mutation start - insertNodes");
+    console.log(payload);
     Node.insert({
       data: payload,
     }).then(() => {
       console.log("mutation end - store filled");
     });
+  },
+  updateNode(state, payload) {
+    console.log(`mutation start - update node '${payload.id}'`);
+    Node.update(payload).then((r) =>
+      console.log(`mutation end - node '${payload.id}' updated`)
+    );
   },
 };
 

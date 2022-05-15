@@ -14,16 +14,12 @@
     </div>
   </div>
   <div>
-    <Tab ref="OverviewComponent" :nodePanelOpen="nodePanelOpen"
-      >{{ node }}
-      <OverviewContainer :node="node" />
-      Overview Content
-      <div style="height: 600px; width: 80%; border: 2px solid red"></div>
-      <div style="height: 600px; width: 80%; border: 2px solid red"></div>
+    <Tab ref="OverviewComponent" :nodePanelOpen="nodePanelOpen">
+      <OverviewContainer :node="node" :nodePanelOpen="nodePanelOpen" />
     </Tab>
     <Tab ref="BenchmarkComponent" :nodePanelOpen="nodePanelOpen"
-      >{{ node }} Benchmark Content</Tab
-    >
+      >{{ node }} Benchmark Content
+    </Tab>
     <Tab ref="SettingsComponent" :nodePanelOpen="nodePanelOpen"
       >{{ node }} Settings Content</Tab
     >
@@ -135,9 +131,10 @@ const resetTabClasses = (selectedElement: HTMLElement | null) => {
 }
 
 .tab-container {
-  background-color: #6753e1;
+  background-color: #393b54;
   color: black;
   font-weight: bold;
+  width: 100%;
 }
 
 .tab {
@@ -149,7 +146,7 @@ const resetTabClasses = (selectedElement: HTMLElement | null) => {
 }
 
 .selected {
-  background-color: #6753e1;
+  background-color: #393b54;
   color: white;
 }
 
