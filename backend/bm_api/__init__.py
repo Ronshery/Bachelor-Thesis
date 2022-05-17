@@ -16,6 +16,8 @@ import logging
 from common.clients.prometheus import PrometheusClient, get_prometheus_client
 
 from sqlalchemy.orm import Session
+
+from common.fingerprint_engine import BaseFingerprintEngine, NodeScores, NodeScore, get_fingerprint_engine
 from orm import engine
 from orm.models import BenchmarkMetric
 
@@ -113,6 +115,24 @@ async def run_benchmark(bm_type: str, node_id: str, k8s_client: K8sClient = Depe
             raise HTTPException(status_code=500, detail=f"Failed to start benchmark '{bm_type}': {startup_result.error}")
     else:
         raise HTTPException(status_code=404, detail=f"Benchmark '{bm_type}' not found")
+
+
+@app.get("/fingerprint/{node_name}")
+async def get_node_fingerprint(node_name: str, fingerprint_engine: BaseFingerprintEngine = Depends(get_fingerprint_engine)):
+    try:
+        fp = await fingerprint_engine.get_fingerprint_for_node(node_name)
+        return fp.serialize()
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=str(ex))
+
+
+@app.get("/scores/{node_name}", response_model=NodeScores)
+async def get_node_scores(node_name: str, fingerprint_engine: BaseFingerprintEngine = Depends(get_fingerprint_engine)):
+    try:
+        scores = await fingerprint_engine.get_scores_for_node(node_name)
+        return scores
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=str(ex))
 
 
 @app.get("/nodes/{node_name}", response_model=NodeModel)

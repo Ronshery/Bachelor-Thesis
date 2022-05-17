@@ -39,6 +39,7 @@ def handle_benchmarking(namespace: str,
                         started: datetime.datetime,
                         stopped,
                         body: dict,
+                        job_name: Optional[str] = None,
                         metrics_cls: Optional[Type[TMetricClass]] = None,  # make this later no longer optional
                         **_):
 
@@ -62,9 +63,11 @@ def handle_benchmarking(namespace: str,
             with Session(engine) as session:
                 # assuming pod owner is a job, we use the job's name as benchmark id
                 bm_id = pd.metadata["ownerReferences"][0]["name"]
+                bm_type = pd.labels.get("resourceKind", "unknown")
 
                 bm = Benchmark(
                     id=bm_id,
+                    type=bm_type,
                     node_id=pd.obj["spec"]["nodeName"],
                     pod_id=pd.name,
                     started=datetime.datetime.strptime(pd.obj["status"]["startTime"], "%Y-%m-%dT%H:%M:%S%z"),
@@ -83,7 +86,7 @@ def handle_benchmarking(namespace: str,
                 
                 session.commit()
 
-        obj = factory_instance.objects(k8s_client.api, namespace=namespace).get_by_name(name).obj
+        obj = factory_instance.objects(k8s_client.api, namespace=namespace).get_by_name(job_name or name).obj
 
         # delete if completed
         if obj.get("status", {}).get("completed", False):

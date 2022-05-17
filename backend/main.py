@@ -71,7 +71,7 @@ async def prometheus_thread(stop_me: threading.Event):
 
             metrics = await pm_client.get_node_metrics(prev_end, now)
 
-            print(metrics)
+            # print(metrics)
 
             with Session(orm.engine) as db_session:
                 for node_metrics_obj in metrics:

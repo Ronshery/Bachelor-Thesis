@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
+import enum
 import os.path
 from abc import ABC
 from typing import Optional, Type, Dict
@@ -12,9 +13,22 @@ from pykube.objects import APIObject
 from common import BaseRun
 
 
+class BenchmarkedResourceKind(enum.Enum):
+    CPU_SYSBENCH = "cpu"
+    DISK_FIO = "disk-fio"
+    DISK_IOPING = "disk-ioping"
+    MEMORY_SYSBENCH = "memory-sysbench"
+    NETWORK_IPERF3 = "network-iperf3"
+    NETWORK_QPERF = "network-qperf"
+
+
 class BaseBenchmark(BaseRun, ABC):
     @property
     def config_path(self):
+        raise NotImplementedError
+
+    @property
+    def resource_kind(self) -> BenchmarkedResourceKind:
         raise NotImplementedError
 
     @classmethod
@@ -44,9 +58,8 @@ class BaseBenchmark(BaseRun, ABC):
     def _run(self, client: pykube.HTTPClient, spec: Dict,
              *args, **kwargs) -> BenchmarkStartupResult:
         node_name: str = args[0].split("@@@")[0]
-        spec = self.merge_dicts(spec, {"spec": {"podConfig": {"podScheduling": {"nodeName": node_name}}}})
+        spec = self.merge_dicts(spec, {"spec": {"podConfig": {"podScheduling": {"nodeName": node_name}, "podLabels": {"resourceKind": self.resource_kind.value}}}})
         result = self.get_factory(client, self.kind)(client, spec).create()
-        # TODO add pod
         return BenchmarkStartupResult(success=True, id=spec['metadata']['name'], benchmark_spec=spec)
 
 

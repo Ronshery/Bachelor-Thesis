@@ -9,6 +9,8 @@ class PrometheusQuery:
     CPU_BUSY: str = '100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[1m])) * 100)'
     DISK_IO_UTIL: str = '100 * (sum by (instance) (rate(node_disk_io_time_seconds_total[1m])))'
 
+    JOIN_NODE_INFO: str = "on(instance) group_right() node_uname_info"
+
 
 class PrometheusSettings(BaseSettings):
     prometheus_endpoint: Optional[str] = "http://localhost:9090"
