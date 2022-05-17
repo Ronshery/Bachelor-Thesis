@@ -4,9 +4,25 @@ import dataclasses
 
 @dataclasses.dataclass
 class QpervesMetrics:
-    pass
-    # transfer_bitrates: BMMetricField\
-    #     = BMMetricField(r".*(\d+\.\d+\s+Gbits\/sec).*", collect_list=True)
+    tcp_bw_bandwidth: BMMetricField\
+        = BMMetricField(r".*bw\s*=\s*(\d+\.\d+\s+GB\/sec)")
+    tcp_bw_msg_rate: BMMetricField\
+        = BMMetricField(r".*msg_rate\s*=\s*([\d\.]+\s+K\/sec)")
+    tcp_bw_send_cost: BMMetricField\
+        = BMMetricField(r".*send_cost\s*=\s*(\d+\.\d+\s+sec/GB)")
+    tcp_bw_recv_cost: BMMetricField\
+        = BMMetricField(r".*recv_cost\s*=\s*(\d+\.\d+\s+sec/GB)")
+    tcp_bw_send_cpus_used: BMMetricField\
+        = BMMetricField(r".*send_cpus_used\s*=\s*(\d+\s+% cpus)")
+    tcp_bw_recv_cpus_used: BMMetricField\
+        = BMMetricField(r".*recv_cpus_used\s*=\s*(\d+\s+% cpus)")
+
+    tcp_lat_latency: BMMetricField\
+        = BMMetricField(r".*latency\s*=\s*(\d+\.\d+\s+us)")
+    tcp_lat_loc_cpus_used: BMMetricField\
+        = BMMetricField(r".*loc_cpus_used\s*=\s*(\d+\s+% cpus)")
+    tcp_lat_rem_cpus_used: BMMetricField\
+        = BMMetricField(r".*rem_cpus_used\s*=\s*(\d+\s+% cpus)")
 
 
 # example pod log

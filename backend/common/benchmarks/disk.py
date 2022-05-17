@@ -1,10 +1,15 @@
 from common.benchmarks import BaseBenchmark
+from common.benchmarks.base import BenchmarkedResourceKind
 
 
 class DiskIopingBenchmark(BaseBenchmark):
     @property
     def kind(self):
         return "Ioping"
+
+    @property
+    def resource_kind(self) -> BenchmarkedResourceKind:
+        return BenchmarkedResourceKind.DISK_IOPING
 
     @property
     def config_path(self):
@@ -19,6 +24,10 @@ class DiskFioBenchmark(BaseBenchmark):
     @property
     def kind(self):
         return "Fio"
+
+    @property
+    def resource_kind(self) -> BenchmarkedResourceKind:
+        return BenchmarkedResourceKind.DISK_FIO
 
     @property
     def config_path(self):
