@@ -41,7 +41,7 @@ class PrometheusClient:
 
         for metric_name, api_response in result_list:
             for data_instance in api_response.data.result:
-                node_name: str = data_instance.metric.get("instance", None)
+                node_name: str = data_instance.metric.get("nodename", None)
                 if node_name:
                     data_list: List[DataRecordingModel] = [DataRecordingModel(time=float(tup[0]), value=float(tup[1]))
                                                            for tup in data_instance.values]
@@ -54,26 +54,30 @@ class PrometheusClient:
         return list(node_aggregation_dict.values())
 
     @staticmethod
-    async def __get_metrics__(query_list: List[Tuple[str, str]], start: datetime, end: datetime):
+    async def __get_metrics__(query_list: List[Tuple[str, str]], start: datetime, end: datetime, node_name: Optional[str]=None):
         new_query_list: List[Tuple[str, dict]] = []
         for metric_name, query_string in query_list:
             query_specs: dict = {
-                "query": query_string,
+                "query": f"{query_string} * {PrometheusQuery.JOIN_NODE_INFO}",
                 "start": start.timestamp(),
                 "end": end.timestamp(),
                 "step": int(prometheus_settings.prometheus_query_step_width)
             }
+
+            if node_name is not None:
+                query_specs["query"] += f" {{nodename=\"{node_name}\"}}"
+
             new_query_list.append((metric_name, query_specs))
         results: List[Tuple[str, PrometheusApiResponseModel]] = []
         await PrometheusClient.__gather__(new_query_list, results)
         return PrometheusClient.__transform_metrics__(results)
 
     @staticmethod
-    async def get_node_metrics(start: datetime, end: datetime):
+    async def get_node_metrics(start: datetime, end: datetime, node_name: Optional[str]=None):
         query_list: List[tuple] = [
             ("memory_used", PrometheusQuery.MEMORY_USED),
             ("cpu_busy", PrometheusQuery.CPU_BUSY),
             ("disk_io_util", PrometheusQuery.DISK_IO_UTIL)
         ]
 
-        return await PrometheusClient.__get_metrics__(query_list, start, end)
+        return await PrometheusClient.__get_metrics__(query_list, start, end, node_name=node_name)
