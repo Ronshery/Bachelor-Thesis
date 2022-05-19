@@ -30,7 +30,7 @@ if (!props.isSVG) {
 }
 </script>
 
-<style scoped>
+<style>
 .card > .card-child {
   padding: v-bind(marginLeft);
 }
@@ -52,5 +52,13 @@ if (!props.isSVG) {
 .card:nth-child(odd) {
   position: relative;
   left: 6px;
+}
+
+@media screen and (max-width: 1427px) {
+  .card {
+    width: 100%;
+    left: 0 !important;
+    margin-right: 0 !important;
+  }
 }
 </style>

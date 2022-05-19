@@ -54,6 +54,7 @@ const tabList = ref([
 //methods
 let timer: number;
 let firstTime = false;
+let lastSelectedNode: typeof props.node;
 watch(props, () => {
   if (!props.nodePanelOpen) {
     console.log("close");
@@ -64,6 +65,7 @@ watch(props, () => {
     }, 1500);
   } else if (props.nodePanelOpen) {
     console.log("open");
+    resetActiveTab();
     // don't close if interrupt closing NodePanel
     clearTimeout(timer);
   }
@@ -74,6 +76,15 @@ watch(props, () => {
     });
   }
 });
+
+const resetActiveTab = () => {
+  if (lastSelectedNode == undefined) {
+    lastSelectedNode = props.node;
+  } else if (lastSelectedNode.id != props.node.id) {
+    changeTab(document.getElementsByClassName("tab")[0], 0);
+    lastSelectedNode = props.node;
+  }
+};
 
 const changeTab = (event: any, index: number) => {
   const tabElement = event.target ? event.target : event;
