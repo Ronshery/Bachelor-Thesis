@@ -14,16 +14,12 @@
     </div>
   </div>
   <div>
-    <Tab ref="OverviewComponent" :nodePanelOpen="nodePanelOpen"
-      >{{ node }}
-      <OverviewContainer :node="node" />
-      Overview Content
-      <div style="height: 600px; width: 80%; border: 2px solid red"></div>
-      <div style="height: 600px; width: 80%; border: 2px solid red"></div>
+    <Tab ref="OverviewComponent" :nodePanelOpen="nodePanelOpen">
+      <OverviewContainer :node="node" :nodePanelOpen="nodePanelOpen" />
     </Tab>
     <Tab ref="BenchmarkComponent" :nodePanelOpen="nodePanelOpen"
-      >{{ node }} Benchmark Content</Tab
-    >
+      >{{ node }} Benchmark Content
+    </Tab>
     <Tab ref="SettingsComponent" :nodePanelOpen="nodePanelOpen"
       >{{ node }} Settings Content</Tab
     >
@@ -58,6 +54,7 @@ const tabList = ref([
 //methods
 let timer: number;
 let firstTime = false;
+let lastSelectedNode: typeof props.node;
 watch(props, () => {
   if (!props.nodePanelOpen) {
     console.log("close");
@@ -68,6 +65,7 @@ watch(props, () => {
     }, 1500);
   } else if (props.nodePanelOpen) {
     console.log("open");
+    resetActiveTab();
     // don't close if interrupt closing NodePanel
     clearTimeout(timer);
   }
@@ -78,6 +76,15 @@ watch(props, () => {
     });
   }
 });
+
+const resetActiveTab = () => {
+  if (lastSelectedNode == undefined) {
+    lastSelectedNode = props.node;
+  } else if (lastSelectedNode.id != props.node.id) {
+    changeTab(document.getElementsByClassName("tab")[0], 0);
+    lastSelectedNode = props.node;
+  }
+};
 
 const changeTab = (event: any, index: number) => {
   const tabElement = event.target ? event.target : event;
@@ -135,9 +142,10 @@ const resetTabClasses = (selectedElement: HTMLElement | null) => {
 }
 
 .tab-container {
-  background-color: #6753e1;
+  background-color: #393b54;
   color: black;
   font-weight: bold;
+  width: 100%;
 }
 
 .tab {
@@ -149,7 +157,7 @@ const resetTabClasses = (selectedElement: HTMLElement | null) => {
 }
 
 .selected {
-  background-color: #6753e1;
+  background-color: #393b54;
   color: white;
 }
 

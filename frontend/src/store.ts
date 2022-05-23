@@ -1,5 +1,5 @@
 import { createStore } from "vuex";
-import { ActionTree, MutationTree, GetterTree, Module } from "vuex";
+import { ActionTree, MutationTree, GetterTree } from "vuex";
 import VuexORM from "@vuex-orm/core";
 import database from "@/database";
 
@@ -10,7 +10,6 @@ export interface RootState {
 const state = () =>
   ({
     graph: null,
-    layouts: null,
   } as RootState);
 
 const getters: GetterTree<RootState, RootState> = {

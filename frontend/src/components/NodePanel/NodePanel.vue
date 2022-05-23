@@ -41,7 +41,7 @@ watch(props, () => {
   top: 0;
   right: v-bind(nodePanelRightPercent + "%");
   height: 100vh;
-  background-color: #6753e1;
+  background-color: #393b54;
   width: 50%;
   z-index: 10;
   transition: right 1500ms;
