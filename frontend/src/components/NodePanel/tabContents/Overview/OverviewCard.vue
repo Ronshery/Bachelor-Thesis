@@ -28,10 +28,13 @@ if (!props.isSVG) {
   marginLeft.value = "1em 1.25em 1em 1.25em";
   marginBottomTitle.value = "0.75em";
 }
+if (props.isSVG) {
+  marginLeft.value = "0 0.75em 0 0.25em";
+}
 </script>
 
 <style>
-.card > .card-child {
+.card-child {
   padding: v-bind(marginLeft);
 }
 .card {

@@ -21,7 +21,7 @@
       </template>
     </OverviewCard>
     <OverviewCard
-      v-for="graph in graphList"
+      v-for="graph in graphListApex"
       :key="graph.title"
       :cssStyle="{ backgroundColor: '#4c4f69' }"
       :isSVG="true"
@@ -30,7 +30,7 @@
         <div class="graph-card-title">{{ graph.title }}</div>
       </template>
       <template v-slot:default>
-        <LineChart :data="graph.data.value" :size="LineChartSVGSize" />
+        <ApexLineChart :series="graph.data" />
       </template>
     </OverviewCard>
   </OverviewLayout>
@@ -38,11 +38,11 @@
 
 <script setup lang="ts">
 import { computed, defineProps, ref, watch } from "vue";
-import LineChart from "@/components/utils/LineChart.vue";
 import benchmarkService from "@/services/benchmark-service";
 import DonutCard from "@/components/NodePanel/tabContents/Overview/DonutCard.vue";
 import OverviewCard from "@/components/NodePanel/tabContents/Overview/OverviewCard.vue";
 import OverviewLayout from "@/components/NodePanel/tabContents/Overview/OverviewLayout.vue";
+import ApexLineChart from "@/components/utils/ApexLineChart.vue";
 
 interface Segment {
   benchmark: string;
@@ -56,8 +56,20 @@ interface ChartData {
   value: string;
 }
 
-interface ILatestDatas {
-  [key: string]: ChartData[];
+interface ApexDataPoint {
+  x: Date;
+  y: string;
+}
+
+interface ApexData {
+  name: string;
+  data: ApexDataPoint[];
+}
+
+interface GraphList {
+  id: string;
+  title: string;
+  data: ApexData[];
 }
 
 // vue data
@@ -75,28 +87,8 @@ const nodeComp = computed(() => {
     return props.node;
   }
 });
-const cpuBusyData = ref<ChartData[]>([]);
-const memoryUsedData = ref<ChartData[]>([]);
-const diskIoUtilData = ref<ChartData[]>([]);
 
-/*const cpuBusyDataComp = computed(() => cpuBusyData.value);
-const memoryUsedDataComp = computed(() => memoryUsedData.value);
-const diskIoUtilDataComp = computed(() => diskIoUtilData.value);*/
-
-let graphList = [
-  {
-    title: "CPU busy",
-    data: cpuBusyData,
-  },
-  {
-    title: "Memory used",
-    data: memoryUsedData,
-  },
-  {
-    title: "Disk IO util",
-    data: diskIoUtilData,
-  },
-];
+let graphListApex = ref<GraphList[]>([]);
 
 const segments: Array<Segment> = [
   {
@@ -184,181 +176,83 @@ const nodeInfoComp = computed(() => {
   return list;
 });
 
-const setLineChartSVGSize = () => {
-  for (let card of document.getElementsByClassName("chart")) {
-    let lineChartSVG = card.firstElementChild;
-    if (lineChartSVG) {
-      lineChartSVG.setAttribute("width", "100%");
-      lineChartSVG.setAttribute("height", "100%");
-      LineChartSVGSize.value = {
-        width: lineChartSVG.clientWidth,
-        height: lineChartSVG.clientHeight,
-      };
-    }
-  }
-};
-
-watch(props, () => {
-  if (props.nodePanelOpen) {
-    setTimeout(() => {
-      setLineChartSVGSize();
-    });
-  }
-});
-
-window.addEventListener("resize", () => {
-  setLineChartSVGSize();
-});
-
-const LineChartSVGSize = ref<{ width: number; height: number }>({
-  width: 420,
-  height: 300,
-});
-
-setInterval(() => {
-  fetchData(nodeComp.value.id);
-}, 60000);
-
 watch(props, () => {
   if (props.nodePanelOpen) {
     // fetch full data when clicking on node
-    resetLatestDatas();
     fetchData(nodeComp.value.id);
+    setInterval(() => {
+      fetchData(nodeComp.value.id);
+    }, 30000);
   }
 });
 
-const resetLatestDatas = () => {
-  latestDatas.cpu_busy = [];
-  latestDatas.memory_used = [];
-  latestDatas.disk_io_util = [];
+const dataNameMapper = (dataName: string): string => {
+  switch (dataName) {
+    case "memory_used":
+      return "Memory used";
+    case "disk_io_util":
+      return "Disk IO util";
+    case "cpu_busy":
+      return "CPU busy";
+  }
+  return "";
 };
 
-const fetchData = (nodeID: string) => {
-  let timeDelta = 480;
+let firstCall = true;
+const fetchData = async (nodeID: string) => {
+  let timeDelta = 420;
 
   if (nodeID) {
     benchmarkService.get(`/metrics/${nodeID}/${timeDelta}`).then((response) => {
-      let dataNames = Object.keys(response.data);
+      const responseData: { node_name: string } & {
+        [key: string]: ChartData[];
+      } = response.data;
+      let dataNames = Object.keys(responseData);
       dataNames = dataNames.filter((key) => key != "node_name");
+      console.log(dataNames);
+
+      //initialize graphList
+      if (firstCall) {
+        firstCall = false;
+        dataNames.forEach((dataName) => {
+          graphListApex.value.push({
+            id: dataName,
+            title: dataNameMapper(dataName),
+            data: [],
+          });
+        });
+      }
       dataNames.forEach((dataName) => {
         let data = response.data[dataName];
 
-        if (dataName == "memory_used") {
-          memoryUsedData.value = avg(dataName, data, 7);
-        } else if (dataName == "cpu_busy") {
-          cpuBusyData.value = avg(dataName, data, 7);
-        } else if (dataName == "disk_io_util") {
-          diskIoUtilData.value = avg(dataName, data, 7);
+        for (let i = 0; i < graphListApex.value.length; i++) {
+          if (graphListApex.value[i].id == dataName) {
+            graphListApex.value[i].data = [
+              { name: "value", data: convertDataToApex(data) },
+            ];
+          }
         }
       });
+      console.log(graphListApex);
     });
   }
 };
 
-let latestDatas: ILatestDatas = {
-  cpu_busy: [],
-  memory_used: [],
-  disk_io_util: [],
-};
-
-const avg = (
-  dataName: string,
-  data: { time: string; value: string }[],
-  size: number
-) => {
-  let newData: ChartData[] = [];
-
-  switch (dataName) {
-    case "cpu_busy":
-      if (latestDatas.cpu_busy.length > 0) {
-        newData = onlyLastData(dataName, data, size);
-      }
-      break;
-    case "memory_used":
-      if (latestDatas.memory_used.length > 0) {
-        newData = onlyLastData(dataName, data, size);
-      }
-      break;
-    case "disk_io_util":
-      if (latestDatas.disk_io_util.length > 0) {
-        newData = onlyLastData(dataName, data, size);
-      }
-      break;
-  }
-
-  if (newData.length == 0) {
-    newData = fullData(dataName, data, size);
-  }
-
-  setLatestDatas(dataName, newData);
-  return newData;
-};
-
-const onlyLastData = (
-  dataName: string,
-  data: ChartData[],
-  size: number
-): ChartData[] => {
-  let sum = 0;
-  let date = new Date(data[data.length - 1].time);
-  let minutes = convertMinutes(date.getMinutes());
-  let latestData = latestDatas[dataName];
-  if (latestData[latestData.length - 1].time.split(":")[1] == minutes) {
-    console.log("same minute");
-    return latestData;
-  }
-
-  for (let i = data.length - size; i < data.length; i++) {
-    sum += parseInt(data[i].value);
-  }
-  let avg = sum / size;
-
-  let newPoint = {
-    time: `${date.getHours()}:${minutes}`,
-    value: avg.toString(),
-  };
-  latestData.push(newPoint);
-  latestData = latestData.slice(1, latestData.length);
-  return latestData;
-};
-
-const fullData = (
-  dataName: string,
-  data: ChartData[],
-  size: number
-): ChartData[] => {
-  let sum = 0;
-  let newData = [];
+const convertDataToApex = (
+  data: { time: string; value: string }[]
+): ApexDataPoint[] => {
+  let newData: ApexDataPoint[] = [];
   for (let i = 0; i < data.length; i++) {
-    sum += parseInt(data[i].value);
     let date = new Date(data[i].time);
-    if (i % size == size - 1 && i != 0) {
-      let avg = sum / size;
-      let minutes = convertMinutes(date.getMinutes());
-      let newPoint = {
-        time: `${date.getHours()}:${minutes}`,
-        value: avg.toString(),
-      };
-      newData.push(newPoint);
-      sum = 0;
-    }
+    let point = {
+      x: date,
+      y: Number(data[i].value).toFixed(2),
+    };
+    newData.push(point);
   }
   return newData;
 };
 
-const setLatestDatas = (dataName: string, newData: ChartData[]) => {
-  switch (dataName) {
-    case "cpu_busy":
-      latestDatas.cpu_busy = newData;
-      break;
-    case "memory_used":
-      latestDatas.memory_used = newData;
-      break;
-    case "disk_io_util":
-      latestDatas.disk_io_util = newData;
-      break;
-  }
-};
 const convertMinutes = (minutes: number) => {
   let convertedMinute;
   if (minutes < 10) {
