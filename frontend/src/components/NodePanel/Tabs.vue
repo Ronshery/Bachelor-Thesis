@@ -65,6 +65,7 @@ watch(props, () => {
     }, 1500);
   } else if (props.nodePanelOpen) {
     console.log("open");
+    blinkNodeName();
     resetActiveTab();
     // don't close if interrupt closing NodePanel
     clearTimeout(timer);
@@ -77,6 +78,14 @@ watch(props, () => {
   }
 });
 
+const blinkNodeName = () => {
+  const nodeNameWrapper =
+    document.getElementsByClassName("node-name-wrapper")[0];
+  nodeNameWrapper.classList.add("blink_me");
+  setTimeout(() => {
+    nodeNameWrapper.classList.remove("blink_me");
+  }, 900);
+};
 const resetActiveTab = () => {
   if (lastSelectedNode == undefined) {
     lastSelectedNode = props.node;

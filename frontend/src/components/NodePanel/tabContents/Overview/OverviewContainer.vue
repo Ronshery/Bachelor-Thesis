@@ -1,4 +1,9 @@
 <template>
+  <div class="node-name-wrapper">
+    <span class="node-name">
+      {{ nodeName }}
+    </span>
+  </div>
   <Overview :node="updatedNode" :nodePanelOpen="nodePanelOpen" />
 </template>
 
@@ -22,6 +27,38 @@ watch(props, async () => {
   });
   updatedNode.value = NodeModel.value.find(props.node.id);
 });
+
+// methods
+const nodeName = computed(() => {
+  if (props.node) {
+    return props.node.name;
+  } else {
+    return "";
+  }
+});
 </script>
 
-<style scoped></style>
+<style scoped>
+.node-name-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 1em;
+}
+
+.node-name {
+  background-color: white;
+  border-radius: 8px;
+  padding: 5px;
+  font-weight: bold;
+}
+
+.blink_me {
+  animation: blinker 1s linear infinite;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
+}
+</style>
