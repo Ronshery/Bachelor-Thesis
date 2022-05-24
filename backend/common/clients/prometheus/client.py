@@ -2,7 +2,7 @@ import asyncio
 import json
 import logging
 import os
-import datetime
+from datetime import datetime
 from typing import List, Tuple, Dict, Optional
 
 import aiohttp
@@ -54,7 +54,8 @@ class PrometheusClient:
         return list(node_aggregation_dict.values())
 
     @staticmethod
-    async def __get_metrics__(query_list: List[Tuple[str, str]], start: datetime, end: datetime, node_name: Optional[str]=None):
+    async def __get_metrics__(query_list: List[Tuple[str, str]], start: datetime, end: datetime,
+                              node_name: Optional[str] = None):
         new_query_list: List[Tuple[str, dict]] = []
         for metric_name, query_string in query_list:
             query_specs: dict = {
@@ -73,7 +74,7 @@ class PrometheusClient:
         return PrometheusClient.__transform_metrics__(results)
 
     @staticmethod
-    async def get_node_metrics(start: datetime, end: datetime, node_name: Optional[str]=None):
+    async def get_node_metrics(start: datetime, end: datetime, node_name: Optional[str] = None):
         query_list: List[tuple] = [
             ("memory_used", PrometheusQuery.MEMORY_USED),
             ("cpu_busy", PrometheusQuery.CPU_BUSY),

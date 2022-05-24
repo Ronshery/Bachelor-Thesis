@@ -16,12 +16,13 @@ from bm_api import app
 from common.clients.prometheus import get_prometheus_client
 from orm.models import NodeMetric
 
+
 # this thread will start kopf, i.e. our custom kubernetes operator that listens to kubernetes events, acts accordingly
 def kopf_thread(stop_me: threading.Event) -> None:
     try:
         # import needed to active kopf operator
         import bm_operator
-        
+
         kopf_loop = uvloop.new_event_loop()
         asyncio.set_event_loop(kopf_loop)
 
@@ -57,10 +58,11 @@ def api_thread(stop_me: threading.Event, host: str, port: int) -> None:
         if api_loop is not None and pending is not None:
             api_loop.run_until_complete(asyncio.gather(pending))
 
+
 # this thread will persist prometheus metrics
 async def prometheus_thread(stop_me: threading.Event):
     pm_client = get_prometheus_client()
-    
+
     try:
         interval = datetime.timedelta(seconds=5)
 
@@ -85,10 +87,10 @@ async def prometheus_thread(stop_me: threading.Event):
                     for metric_group, metric_entries in node_metric_groups.items():
                         for metric_entry in metric_entries:
                             nm = NodeMetric(
-                                node_name = node_name,
-                                metric = metric_group,
-                                timestamp = metric_entry.time,
-                                value = metric_entry.value
+                                node_name=node_name,
+                                metric=metric_group,
+                                timestamp=metric_entry.time,
+                                value=metric_entry.value
                             )
 
                             db_session.merge(nm)
@@ -101,6 +103,7 @@ async def prometheus_thread(stop_me: threading.Event):
         print(e)
     finally:
         stop_me.set()
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Benchmarking Framework HTTP API server")

@@ -82,7 +82,7 @@ async def get_all_benchmarks_by_node(node_id: str, k8s_client: K8sClient = Depen
 
 
 @app.get("/benchmarks/name={bm_name}/results", response_model=Dict[str, str])
-async def get_benchmark_results(bm_name: str, k8s_client: K8sClient = Depends(get_k8s_client)):
+async def get_benchmark_results(bm_name: str):
     try:
         with Session(engine) as session:
             metrics = session \
@@ -157,11 +157,9 @@ async def get_all_nodes(k8s_client: K8sClient = Depends(get_k8s_client)):
 
 @app.get("/metrics/{node_name}/{time_delta}", response_model=NodeMetricsModel)
 async def get_node_metrics(node_name: str, time_delta: int,
-                           k8s_client: K8sClient = Depends(get_k8s_client),
                            prometheus_client: PrometheusClient = Depends(get_prometheus_client)):
     try:
         metrics: NodeMetricsModel = next((m for m in await get_all_nodes_metrics(time_delta,
-                                                                                 k8s_client,
                                                                                  prometheus_client)
                                           if m.node_name == node_name), None)
         return metrics
@@ -172,24 +170,14 @@ async def get_node_metrics(node_name: str, time_delta: int,
 
 @app.get("/metrics/{time_delta}", response_model=List[NodeMetricsModel])
 async def get_all_nodes_metrics(time_delta: int,
-                                k8s_client: K8sClient = Depends(get_k8s_client),
                                 prometheus_client: PrometheusClient = Depends(get_prometheus_client)):
     try:
-        time_delta = max(time_delta, 5)
+        time_delta = max(time_delta, -1)
+        time_delta = time_delta if time_delta > -1 else 60 * 60 * 24 * 1  # max 1 day
         now_time: datetime.datetime = datetime.datetime.now()
         prometheus_models: List[PrometheusNodeMetricsModel] = await prometheus_client.get_node_metrics(
             now_time - datetime.timedelta(seconds=time_delta), now_time)
-
-        node_infos: List[Dict[str, str]] = [{ad_obj.type: ad_obj.address for ad_obj in node.status.addresses}
-                                            for node in await get_all_nodes(k8s_client)]
-
-        metric_models: List[NodeMetricsModel] = []
-        for prom_model in prometheus_models:
-            node_info: Dict[str, str] = next((node_info for node_info in node_infos
-                                              if prom_model.node_name.startswith(node_info['InternalIP'])), {})
-            metric_models.append(NodeMetricsModel(**prom_model.dict(exclude={"node_name"}),
-                                                  node_name=node_info.get("Hostname", None)))
-        return metric_models
+        return [NodeMetricsModel(**prom_model.dict()) for prom_model in prometheus_models]
 
     except Exception as e:
         logging.error(e)
