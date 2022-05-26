@@ -119,8 +119,7 @@ const configs: vNG.UserConfigs = reactive(
     node: {
       selectable: 2,
       label: {
-        color: "white",
-        fontSize: 20,
+        visible: false,
       },
       normal: {
         type: "rect",

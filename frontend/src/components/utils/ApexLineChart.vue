@@ -1,4 +1,13 @@
 <template>
+  <div v-if="errorMsg != ''" class="error">
+    {{ errorMsg }}
+    <div class="lds-ring">
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+  </div>
   <apexchart
     width="100%"
     height="auto"
@@ -11,7 +20,7 @@
 import { defineProps } from "vue";
 
 // vue data
-const props = defineProps(["options", "series"]);
+const props = defineProps(["options", "series", "errorMsg"]);
 
 // data
 const options = {
@@ -75,4 +84,14 @@ const options = {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+.error {
+  display: inline-block;
+  color: #ef4343;
+  padding: 3px;
+  background-color: #fdc4c4;
+  border-radius: 5px;
+  margin-left: 1.25em;
+  margin-top: 1em;
+}
+</style>
