@@ -30,7 +30,7 @@
         <div class="graph-card-title">{{ graph.title }}</div>
       </template>
       <template v-slot:default>
-        <ApexLineChart :series="graph.data" />
+        <ApexLineChart :series="graph.data" :errorMsg="metricsError" />
       </template>
     </OverviewCard>
   </OverviewLayout>
@@ -88,7 +88,13 @@ const nodeComp = computed(() => {
   }
 });
 
-let graphListApex = ref<GraphList[]>([]);
+const metricsError = ref<string>("");
+
+let graphListApex = ref<GraphList[]>([
+  { id: "cpu_busy", title: "CPU busy", data: [] },
+  { id: "memory_used", title: "Memory used", data: [] },
+  { id: "disk_io_util", title: "Disk IO util", data: [] },
+]);
 
 const segments: Array<Segment> = [
   {
@@ -181,8 +187,9 @@ watch(props, () => {
     // fetch full data when clicking on node
     fetchData(nodeComp.value.id);
     setInterval(() => {
+      metricsError.value = "";
       fetchData(nodeComp.value.id);
-    }, 30000);
+    }, 60000);
   }
 });
 
@@ -201,40 +208,45 @@ const dataNameMapper = (dataName: string): string => {
 let firstCall = true;
 const fetchData = async (nodeID: string) => {
   let timeDelta = 420;
-
   if (nodeID) {
-    benchmarkService.get(`/metrics/${nodeID}/${timeDelta}`).then((response) => {
-      const responseData: { node_name: string } & {
-        [key: string]: ChartData[];
-      } = response.data;
-      let dataNames = Object.keys(responseData);
-      dataNames = dataNames.filter((key) => key != "node_name");
-      console.log(dataNames);
+    benchmarkService
+      .get(`/metrics/${nodeID}/${timeDelta}`)
+      .then((response) => {
+        const responseData: { node_name: string } & {
+          [key: string]: ChartData[];
+        } = response.data;
+        let dataNames = Object.keys(responseData);
+        dataNames = dataNames.filter((key) => key != "node_name");
+        console.log(dataNames);
 
-      //initialize graphList
-      if (firstCall) {
-        firstCall = false;
-        dataNames.forEach((dataName) => {
-          graphListApex.value.push({
-            id: dataName,
-            title: dataNameMapper(dataName),
-            data: [],
+        //initialize graphList
+        /*        if (firstCall) {
+          firstCall = false;
+          dataNames.forEach((dataName) => {
+            graphListApex.value.push({
+              id: dataName,
+              title: dataNameMapper(dataName),
+              data: [],
+            });
           });
-        });
-      }
-      dataNames.forEach((dataName) => {
-        let data = response.data[dataName];
+        }*/
+        dataNames.forEach((dataName) => {
+          let data = response.data[dataName];
 
-        for (let i = 0; i < graphListApex.value.length; i++) {
-          if (graphListApex.value[i].id == dataName) {
-            graphListApex.value[i].data = [
-              { name: "value", data: convertDataToApex(data) },
-            ];
+          for (let i = 0; i < graphListApex.value.length; i++) {
+            if (graphListApex.value[i].id == dataName) {
+              graphListApex.value[i].data = [
+                { name: "value", data: convertDataToApex(data) },
+              ];
+            }
           }
-        }
+        });
+        console.log(graphListApex);
+      })
+      .catch((error) => {
+        console.log(error);
+        metricsError.value = error.response.data.detail;
       });
-      console.log(graphListApex);
-    });
   }
 };
 

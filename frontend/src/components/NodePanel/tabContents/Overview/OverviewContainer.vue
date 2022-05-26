@@ -4,7 +4,7 @@
       {{ nodeName }}
     </span>
   </div>
-  <Overview :node="updatedNode" :nodePanelOpen="nodePanelOpen" />
+  <Overview :node="node" :nodePanelOpen="nodePanelOpen" />
 </template>
 
 <script setup lang="ts">
@@ -20,13 +20,13 @@ const store = useStore();
 const NodeModel = computed(() => store.$db().model("nodes"));
 const updatedNode = ref();
 
-watch(props, async () => {
+/*watch(props, async () => {
   await NodeModel.value.dispatch("fetchMetricsById", {
     node: props.node,
     timeDelta: 100,
   });
   updatedNode.value = NodeModel.value.find(props.node.id);
-});
+});*/
 
 // methods
 const nodeName = computed(() => {
@@ -51,7 +51,9 @@ const nodeName = computed(() => {
   padding: 5px;
   font-weight: bold;
 }
+</style>
 
+<style>
 .blink_me {
   animation: blinker 1s linear infinite;
 }
