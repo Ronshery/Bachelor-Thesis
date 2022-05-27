@@ -1,39 +1,41 @@
 <template>
-  <OverviewLayout>
-    <DonutCard :segments="segments" :score="nodeComp.bmScore" />
-    <OverviewCard>
-      <template v-slot:title> Node info </template>
-      <template v-slot:default>
-        <div class="wrapper">
-          <div
-            class="row"
-            v-for="(value, index) in nodeInfoComp[0]"
-            :key="value"
-          >
-            <div class="row-element">
-              {{ nodeInfoComp[0][index] }}
-            </div>
-            <div class="row-element row-element-right">
-              {{ nodeInfoComp[1][index] }}
+  <TabLayout>
+    <OverviewLayout>
+      <DonutCard :segments="segments" :score="nodeComp.bmScore" />
+      <OverviewCard>
+        <template v-slot:title> Node info </template>
+        <template v-slot:default>
+          <div class="wrapper">
+            <div
+              class="row"
+              v-for="(value, index) in nodeInfoComp[0]"
+              :key="value"
+            >
+              <div class="row-element">
+                {{ nodeInfoComp[0][index] }}
+              </div>
+              <div class="row-element row-element-right">
+                {{ nodeInfoComp[1][index] }}
+              </div>
             </div>
           </div>
-        </div>
-      </template>
-    </OverviewCard>
-    <OverviewCard
-      v-for="graph in graphListApex"
-      :key="graph.title"
-      :cssStyle="{ backgroundColor: '#4c4f69' }"
-      :isSVG="true"
-    >
-      <template v-slot:title>
-        <div class="graph-card-title">{{ graph.title }}</div>
-      </template>
-      <template v-slot:default>
-        <ApexLineChart :series="graph.data" :errorMsg="metricsError" />
-      </template>
-    </OverviewCard>
-  </OverviewLayout>
+        </template>
+      </OverviewCard>
+      <OverviewCard
+        v-for="graph in graphListApex"
+        :key="graph.title"
+        :cssStyle="{ backgroundColor: '#4c4f69' }"
+        :isSVG="true"
+      >
+        <template v-slot:title>
+          <div class="graph-card-title">{{ graph.title }}</div>
+        </template>
+        <template v-slot:default>
+          <ApexLineChart :series="graph.data" :errorMsg="metricsError" />
+        </template>
+      </OverviewCard>
+    </OverviewLayout>
+  </TabLayout>
 </template>
 
 <script setup lang="ts">
@@ -43,6 +45,7 @@ import DonutCard from "@/components/NodePanel/tabContents/Overview/DonutCard.vue
 import OverviewCard from "@/components/NodePanel/tabContents/Overview/OverviewCard.vue";
 import OverviewLayout from "@/components/NodePanel/tabContents/Overview/OverviewLayout.vue";
 import ApexLineChart from "@/components/utils/ApexLineChart.vue";
+import TabLayout from "@/components/NodePanel/tabContents/TabLayout.vue";
 
 interface Segment {
   benchmark: string;
@@ -207,7 +210,7 @@ const dataNameMapper = (dataName: string): string => {
 
 let firstCall = true;
 const fetchData = async (nodeID: string) => {
-  let timeDelta = 420;
+  let timeDelta = -1;
   if (nodeID) {
     benchmarkService
       .get(`/metrics/${nodeID}/${timeDelta}`)
@@ -217,7 +220,6 @@ const fetchData = async (nodeID: string) => {
         } = response.data;
         let dataNames = Object.keys(responseData);
         dataNames = dataNames.filter((key) => key != "node_name");
-        console.log(dataNames);
 
         //initialize graphList
         /*        if (firstCall) {

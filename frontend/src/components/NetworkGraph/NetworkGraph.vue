@@ -155,7 +155,7 @@ onMounted(() => {
 watch(props, () => {
   if (props.networkGraphRight == 0) {
     // NodePanel is open
-    setGraphWrapperWidth(50);
+    setGraphWrapperWidth(25);
   } else if (props.networkGraphRight != 0) {
     // NodePanel is closed
     setGraphWrapperWidth(100);

@@ -23,6 +23,10 @@ import { defineProps } from "vue";
 const props = defineProps(["options", "series", "errorMsg"]);
 
 // data
+const max = new Date().getTime(); // Current timestamp
+const min = new Date(max - 5 * 60000).getTime(); // timestamp 90 days before
+
+const range = max - min;
 const options = {
   animations: {
     enabled: true,
@@ -67,6 +71,7 @@ const options = {
         colors: "#FFFFFF",
       },
     },
+    range: range,
   },
   yaxis: {
     labels: {

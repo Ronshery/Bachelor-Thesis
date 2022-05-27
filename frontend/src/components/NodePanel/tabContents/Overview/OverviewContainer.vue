@@ -8,7 +8,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineProps, watch, ref } from "vue";
+import { computed, defineProps, ref } from "vue";
 import Overview from "@/components/NodePanel/tabContents/Overview/Overview.vue";
 import { useStore } from "vuex";
 

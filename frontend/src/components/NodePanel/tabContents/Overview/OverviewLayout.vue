@@ -11,6 +11,5 @@
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  margin: 1em 1.5em 0 1.5em;
 }
 </style>

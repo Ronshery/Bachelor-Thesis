@@ -17,8 +17,8 @@
     <Tab ref="OverviewComponent" :nodePanelOpen="nodePanelOpen">
       <OverviewContainer :node="node" :nodePanelOpen="nodePanelOpen" />
     </Tab>
-    <Tab ref="BenchmarkComponent" :nodePanelOpen="nodePanelOpen"
-      >{{ node }} Benchmark Content
+    <Tab ref="BenchmarkComponent" :nodePanelOpen="nodePanelOpen">
+      <BenchmarkContainer :node="node" :nodePanelOpen="nodePanelOpen" />
     </Tab>
     <Tab ref="SettingsComponent" :nodePanelOpen="nodePanelOpen"
       >{{ node }} Settings Content</Tab
@@ -30,6 +30,7 @@
 import { ref, defineProps, watch, nextTick } from "vue";
 import Tab from "@/components/NodePanel/Tab.vue";
 import OverviewContainer from "@/components/NodePanel/tabContents/Overview/OverviewContainer.vue";
+import BenchmarkContainer from "@/components/NodePanel/tabContents/Benchmark/BenchmarkContainer.vue";
 
 interface ITab {
   element: HTMLElement;
