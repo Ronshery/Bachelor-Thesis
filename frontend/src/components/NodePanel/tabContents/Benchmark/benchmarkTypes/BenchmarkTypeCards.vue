@@ -1,4 +1,5 @@
 <template>
+  {{ benchmarks }}
   <div v-for="bmType in bmTypes" :key="bmType">
     <TabContentCard
       :cssStyle="{
@@ -23,35 +24,26 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps } from "vue";
+import { defineProps, computed } from "vue";
 import TabContentCard from "@/components/NodePanel/tabContents/TabContentCard.vue";
 import CpuSysbench from "@/components/NodePanel/tabContents/Benchmark/benchmarkTypes/CpuSysbench.vue";
-import benchmarkService from "@/services/benchmark-service";
-
-interface RunResponse {
-  id: string;
-  spec: object;
-}
+import { useStore } from "vuex";
 
 // vue data
 const props = defineProps(["bmTypes", "nodeID"]);
+const store = useStore();
 
 // data
-const benchmarkRunResponses: RunResponse[] = [];
-
+const BenchmarkModel = computed(() => store.$db().model("benchmarks"));
+const benchmarks = computed(() =>
+  BenchmarkModel.value.query().where("node", props.nodeID).get()
+);
 // methods
 const runBenchmark = (benchmark: string) => {
-  console.log(benchmark);
-  benchmarkService
-    .post(`/benchmark/${benchmark.split("_").join("-")}/${props.nodeID}`)
-    .then((response) => {
-      console.log(response.data);
-      benchmarkRunResponses.push(response.data);
-      window.localStorage.setItem(
-        "benchmarkRunResponses",
-        JSON.stringify(benchmarkRunResponses)
-      );
-    });
+  BenchmarkModel.value.dispatch("runBenchmark", {
+    benchmarkType: benchmark,
+    nodeID: props.nodeID,
+  });
 };
 </script>
 

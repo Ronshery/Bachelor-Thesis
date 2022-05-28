@@ -6,7 +6,6 @@
 <script setup lang="ts">
 const options = {
   chart: {
-    id: "funny",
     type: "bar",
     stacked: true,
   },
@@ -21,7 +20,7 @@ const options = {
     },
   },
   xaxis: {
-    categories: ["node"],
+    categories: [""],
   },
 };
 

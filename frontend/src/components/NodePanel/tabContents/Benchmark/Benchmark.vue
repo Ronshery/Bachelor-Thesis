@@ -24,13 +24,13 @@ import TabLayout from "@/components/NodePanel/tabContents/TabLayout.vue";
 import Menu from "@/components/utils/Menu.vue";
 import BenchmarkChapter from "@/components/NodePanel/tabContents/Benchmark/BenchmarkChapter.vue";
 import BenchmarkTypeCards from "@/components/NodePanel/tabContents/Benchmark/benchmarkTypes/BenchmarkTypeCards.vue";
-import bmScript from "@/components/NodePanel/tabContents/Benchmark/utils/bm-script";
+import bmScript from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
 
 // vue data
 const props = defineProps(["node", "nodePanelOpen", "availableBenchmarks"]);
 
 // data
-const chapters = {};
+
 // methods
 const menuItems = computed(() => {
   let list = Object.keys(props.availableBenchmarks);

@@ -12,4 +12,15 @@ export default {
     }
     return "";
   },
+  getBMDuration(options: string): string {
+    const optionsList = options.split(" ");
+    let durationInSec = "";
+    for (const option of optionsList) {
+      if (option.includes("--time")) {
+        durationInSec = option.split("=")[1];
+        break;
+      }
+    }
+    return durationInSec;
+  },
 };

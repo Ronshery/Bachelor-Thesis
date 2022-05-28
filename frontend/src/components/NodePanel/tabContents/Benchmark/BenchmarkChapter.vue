@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { defineProps } from "vue";
-import bmScript from "@/components/NodePanel/tabContents/Benchmark/utils/bm-script";
+import bmScript from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
 
 // vue data
 const props = defineProps(["benchmark"]);

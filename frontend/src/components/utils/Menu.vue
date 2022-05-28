@@ -46,6 +46,7 @@ const toggleDisplayCSS = () => {
 <style scoped>
 #menu {
   background-color: rgb(76, 79, 105);
+  border: 1px solid #191824;
   color: white;
   border-radius: 20px;
   padding: 0.75em 1em 1em 1em;
