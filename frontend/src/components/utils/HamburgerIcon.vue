@@ -1,9 +1,5 @@
 <template>
-  <div
-    class="hamburger"
-    @click="hamburgerOpen = !hamburgerOpen"
-    :class="hamburgerOpen ? 'hamburger--is-open' : ''"
-  >
+  <div class="hamburger">
     <div
       class="item item-first"
       :class="{ 'hamburger-is-open': hamburgerOpen }"
@@ -20,19 +16,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { defineProps } from "vue";
 
-// data
-const hamburgerOpen = ref(false);
+// vue data
+const props = defineProps(["hamburgerOpen"]);
 </script>
 
 <style scoped>
 .hamburger {
-  height: 15px;
-  width: 22px;
+  height: 18px;
+  width: 18px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: space-around;
 }
 .hamburger:hover {
   cursor: pointer;

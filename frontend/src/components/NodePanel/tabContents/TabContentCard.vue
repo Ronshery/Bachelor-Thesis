@@ -16,6 +16,7 @@ interface Props {
   cssStyle?: { [key: string]: string };
   isSVG?: boolean;
 }
+
 // vue data
 const props = withDefaults(defineProps<Props>(), {
   isSVG: false,
@@ -42,6 +43,7 @@ if (props.isSVG) {
   margin-bottom: 16px;
   width: 49%;
   background-color: white;
+  min-width: 500px;
 }
 
 .card-title {
@@ -49,12 +51,12 @@ if (props.isSVG) {
   margin-bottom: v-bind(marginBottomTitle);
 }
 
-.card:nth-child(even) {
+.card:nth-child(odd) {
   margin-right: 10px;
 }
-.card:nth-child(odd) {
+.card:nth-child(even) {
   position: relative;
-  left: 6px;
+  left: 15px;
 }
 
 @media screen and (max-width: 1427px) {

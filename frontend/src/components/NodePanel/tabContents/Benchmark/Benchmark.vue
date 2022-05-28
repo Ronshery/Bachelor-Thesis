@@ -1,41 +1,44 @@
 <template>
   <TabLayout>
-    <span style="float: right; margin-right: 2.25em">
-      <span class="icon-wrapper">
-        <HamburgerIcon class="hamburger" />
-      </span>
-    </span>
-
-    <div
-      class="play"
-      v-for="benchmark in availableBenchmarks"
-      :key="benchmark"
-      @click="runBenchmark(benchmark)"
-    >
-      <span style="background-color: blue; color: white"
-        >play {{ benchmark }}</span
-      >
+    <div class="menu-wrapper">
+      <Menu :items="menuItems" />
     </div>
+    <BenchmarkChapter
+      v-for="(bm, key) in availableBenchmarks"
+      :key="key"
+      :benchmark="key"
+    >
+      <div v-if="key == 'cpu'">
+        <BenchmarkTypeCards :bmTypes="bm" :nodeID="props.node.name" />
+      </div>
+      <div v-if="key == 'network'">{{ bm }}</div>
+      <div v-if="key == 'memory'">{{ bm }}</div>
+      <div v-if="key == 'disk'">{{ bm }}</div>
+    </BenchmarkChapter>
   </TabLayout>
 </template>
 
 <script setup lang="ts">
-import { defineProps } from "vue";
-import benchmarkService from "@/services/benchmark-service";
+import { computed, defineProps } from "vue";
 import TabLayout from "@/components/NodePanel/tabContents/TabLayout.vue";
-import HamburgerIcon from "@/components/utils/HamburgerIcon.vue";
+import Menu from "@/components/utils/Menu.vue";
+import BenchmarkChapter from "@/components/NodePanel/tabContents/Benchmark/BenchmarkChapter.vue";
+import BenchmarkTypeCards from "@/components/NodePanel/tabContents/Benchmark/benchmarkTypes/BenchmarkTypeCards.vue";
+import bmScript from "@/components/NodePanel/tabContents/Benchmark/utils/bm-script";
 
+// vue data
 const props = defineProps(["node", "nodePanelOpen", "availableBenchmarks"]);
 
+// data
+const chapters = {};
 // methods
-const runBenchmark = (benchmark: string) => {
-  console.log(benchmark);
-  benchmarkService
-    .post(`/benchmark/${benchmark.split("_").join("-")}/${props.node.name}`)
-    .then((response) => {
-      console.log(response.data);
-    });
-};
+const menuItems = computed(() => {
+  let list = Object.keys(props.availableBenchmarks);
+  for (let i = 0; i < list.length; i++) {
+    list[i] = bmScript.benchmarkNameMapper(list[i]);
+  }
+  return list;
+});
 
 const myfnc = () => {
   document
@@ -45,21 +48,8 @@ const myfnc = () => {
 </script>
 
 <style scoped>
-.play {
-  cursor: pointer;
-}
-.icon-wrapper {
+.menu-wrapper {
   position: absolute;
-  background-color: white;
-  border-radius: 17px;
-  padding: 19px;
-}
-
-.hamburger {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  -webkit-transform: translate(-50%, -50%);
-  transform: translate(-50%, -50%);
+  right: 2em;
 }
 </style>

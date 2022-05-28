@@ -1,26 +1,15 @@
 <template>
   <div v-if="errorMsg != ''" class="error">
     {{ errorMsg }}
-    <div class="lds-ring">
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-    </div>
   </div>
-  <apexchart
-    width="100%"
-    height="auto"
-    :options="options"
-    :series="series"
-  ></apexchart>
+  <apexchart :options="options" :series="series"></apexchart>
 </template>
 
 <script setup lang="ts">
 import { defineProps } from "vue";
 
 // vue data
-const props = defineProps(["options", "series", "errorMsg"]);
+const props = defineProps(["series", "errorMsg"]);
 
 // data
 const max = new Date().getTime(); // Current timestamp
@@ -28,6 +17,9 @@ const min = new Date(max - 5 * 60000).getTime(); // timestamp 90 days before
 
 const range = max - min;
 const options = {
+  chart: {
+    id: "linechart",
+  },
   animations: {
     enabled: true,
     speed: 4000,
@@ -59,9 +51,6 @@ const options = {
     column: {
       colors: ["#F44336", "#E91E63", "#9C27B0"],
     },
-  },
-  chart: {
-    id: "vuechart-example",
   },
   xaxis: {
     type: "datetime",

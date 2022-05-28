@@ -2,38 +2,40 @@
   <TabLayout>
     <OverviewLayout>
       <DonutCard :segments="segments" :score="nodeComp.bmScore" />
-      <OverviewCard>
-        <template v-slot:title> Node info </template>
-        <template v-slot:default>
-          <div class="wrapper">
-            <div
-              class="row"
-              v-for="(value, index) in nodeInfoComp[0]"
-              :key="value"
-            >
-              <div class="row-element">
-                {{ nodeInfoComp[0][index] }}
-              </div>
-              <div class="row-element row-element-right">
-                {{ nodeInfoComp[1][index] }}
+      <TabContentCardsWrapper>
+        <TabContentCard>
+          <template v-slot:title> Node info </template>
+          <template v-slot:default>
+            <div class="wrapper">
+              <div
+                class="row"
+                v-for="(value, index) in nodeInfoComp[0]"
+                :key="value"
+              >
+                <div class="row-element">
+                  {{ nodeInfoComp[0][index] }}
+                </div>
+                <div class="row-element row-element-right">
+                  {{ nodeInfoComp[1][index] }}
+                </div>
               </div>
             </div>
-          </div>
-        </template>
-      </OverviewCard>
-      <OverviewCard
-        v-for="graph in graphListApex"
-        :key="graph.title"
-        :cssStyle="{ backgroundColor: '#4c4f69' }"
-        :isSVG="true"
-      >
-        <template v-slot:title>
-          <div class="graph-card-title">{{ graph.title }}</div>
-        </template>
-        <template v-slot:default>
-          <ApexLineChart :series="graph.data" :errorMsg="metricsError" />
-        </template>
-      </OverviewCard>
+          </template>
+        </TabContentCard>
+        <TabContentCard
+          v-for="graph in graphListApex"
+          :key="graph.title"
+          :cssStyle="{ backgroundColor: '#4c4f69', minHeight: '400px' }"
+          :isSVG="true"
+        >
+          <template v-slot:title>
+            <div class="graph-card-title">{{ graph.title }}</div>
+          </template>
+          <template v-slot:default>
+            <ApexLineChart :series="graph.data" :errorMsg="metricsError" />
+          </template>
+        </TabContentCard>
+      </TabContentCardsWrapper>
     </OverviewLayout>
   </TabLayout>
 </template>
@@ -42,10 +44,11 @@
 import { computed, defineProps, ref, watch } from "vue";
 import benchmarkService from "@/services/benchmark-service";
 import DonutCard from "@/components/NodePanel/tabContents/Overview/DonutCard.vue";
-import OverviewCard from "@/components/NodePanel/tabContents/Overview/OverviewCard.vue";
 import OverviewLayout from "@/components/NodePanel/tabContents/Overview/OverviewLayout.vue";
 import ApexLineChart from "@/components/utils/ApexLineChart.vue";
 import TabLayout from "@/components/NodePanel/tabContents/TabLayout.vue";
+import TabContentCard from "@/components/NodePanel/tabContents/TabContentCard.vue";
+import TabContentCardsWrapper from "@/components/NodePanel/tabContents/TabContentCardsWrapper.vue";
 
 interface Segment {
   benchmark: string;
