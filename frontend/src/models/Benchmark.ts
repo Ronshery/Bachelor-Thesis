@@ -34,6 +34,7 @@ const actions: ActionTree<BenchmarkState, RootState> = {
     benchmarkService
       .post(`/benchmark/${benchmarkType.split("_").join("-")}/${nodeID}`)
       .then((response) => {
+        console.log(response);
         const bmDuration =
           parseInt(bmUtils.getBMDuration(response.data.spec.spec.options)) *
           1000;
@@ -41,7 +42,7 @@ const actions: ActionTree<BenchmarkState, RootState> = {
           id: response.data.id,
           spec: response.data.spec,
           node: nodeID,
-          results: undefined,
+          results: null,
         };
 
         let intervalID = 0;

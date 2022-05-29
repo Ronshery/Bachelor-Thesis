@@ -1,19 +1,25 @@
 <template>
   <TabLayout>
     <div class="menu-wrapper">
-      <Menu :items="menuItems" />
+      <Menu :items="menuItems" @itemClicked="itemClicked" />
     </div>
     <BenchmarkChapter
       v-for="(bm, key) in availableBenchmarks"
       :key="key"
       :benchmark="key"
     >
-      <div v-if="key == 'cpu'">
-        <BenchmarkTypeCards :bmTypes="bm" :nodeID="props.node.name" />
+      <div v-if="key === 'cpu'">
+        <BenchmarkTypeCards :bmTypes="bm" :nodeID="props.node.name" :key="bm" />
       </div>
-      <div v-if="key == 'network'">{{ bm }}</div>
-      <div v-if="key == 'memory'">{{ bm }}</div>
-      <div v-if="key == 'disk'">{{ bm }}</div>
+      <div v-if="key === 'network'">
+        <BenchmarkTypeCards :bmTypes="bm" :nodeID="props.node.name" :key="bm" />
+      </div>
+      <div v-if="key === 'memory'">
+        <BenchmarkTypeCards :bmTypes="bm" :nodeID="props.node.name" :key="bm" />
+      </div>
+      <div v-if="key === 'disk'">
+        <BenchmarkTypeCards :bmTypes="bm" :nodeID="props.node.name" :key="bm" />
+      </div>
     </BenchmarkChapter>
   </TabLayout>
 </template>
@@ -30,7 +36,6 @@ import bmScript from "@/components/NodePanel/tabContents/Benchmark/utils/bm-util
 const props = defineProps(["node", "nodePanelOpen", "availableBenchmarks"]);
 
 // data
-
 // methods
 const menuItems = computed(() => {
   let list = Object.keys(props.availableBenchmarks);
@@ -40,10 +45,12 @@ const menuItems = computed(() => {
   return list;
 });
 
-const myfnc = () => {
-  document
-    .getElementById("cpu-benchmark")
-    .scrollIntoView({ behavior: "smooth" });
+const itemClicked = (param: string) => {
+  let chapterID = param.toLowerCase().split(" ")[0] + "-chapter";
+  const chapterElement = document.getElementById(chapterID);
+  if (chapterElement) {
+    chapterElement.scrollIntoView({ behavior: "smooth" });
+  }
 };
 </script>
 

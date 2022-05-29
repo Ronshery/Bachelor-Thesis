@@ -4,7 +4,12 @@
   </span>
   <div id="menu">
     <div class="menu-items-wrapper">
-      <span class="menu-item" v-for="item in items" :key="item">
+      <span
+        @click="itemClicked(item)"
+        class="menu-item"
+        v-for="item in items"
+        :key="item"
+      >
         {{ item }}
       </span>
     </div>
@@ -12,12 +17,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineProps } from "vue";
+import { ref, defineProps, defineEmits } from "vue";
 import HamburgerIcon from "@/components/utils/HamburgerIcon.vue";
 
 // vue data
 const props = defineProps(["items"]);
-
+const emit = defineEmits(["itemClicked"]);
 // data
 const menuOpen = ref(false);
 
@@ -25,6 +30,10 @@ const menuOpen = ref(false);
 const toggleIcon = () => {
   menuOpen.value = !menuOpen.value;
   toggleDisplayCSS();
+};
+
+const itemClicked = (item: string) => {
+  emit("itemClicked", item);
 };
 
 const toggleDisplayCSS = () => {

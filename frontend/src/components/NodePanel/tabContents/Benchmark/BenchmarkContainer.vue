@@ -1,5 +1,10 @@
 <template>
-  <Benchmark :node="node" :availableBenchmarks="availableBenchmarks" />
+  {{ node.name }}
+  <Benchmark
+    :node="node"
+    :availableBenchmarks="availableBenchmarks"
+    :id="node.name"
+  />
 </template>
 
 <script setup lang="ts">

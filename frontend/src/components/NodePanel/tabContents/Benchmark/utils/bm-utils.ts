@@ -13,6 +13,9 @@ export default {
     return "";
   },
   getBMDuration(options: string): string {
+    if (!options) {
+      return "1";
+    }
     const optionsList = options.split(" ");
     let durationInSec = "";
     for (const option of optionsList) {

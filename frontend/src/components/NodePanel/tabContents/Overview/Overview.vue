@@ -246,7 +246,6 @@ const fetchData = async (nodeID: string) => {
             }
           }
         });
-        console.log(graphListApex);
       })
       .catch((error) => {
         console.log(error);
