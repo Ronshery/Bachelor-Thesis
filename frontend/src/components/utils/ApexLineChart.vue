@@ -1,24 +1,44 @@
 <template>
-  <div v-if="errorMsg != ''" class="error">
+  <div v-if="errorMsg !== ''" class="error">
     {{ errorMsg }}
   </div>
-  <apexchart :options="options" :series="series"></apexchart>
+  <apexchart
+    :options="options"
+    :series="series"
+    @beforeZoom="beforeZoom"
+    @beforeResetZoom="beforeResetZoom"
+  ></apexchart>
 </template>
 
 <script setup lang="ts">
-import { defineProps } from "vue";
+import { defineProps, ref } from "vue";
+
+interface AxisMinMax {
+  min: Date;
+  max: Date;
+}
+
+interface ApexZoomConfig {
+  xaxis: AxisMinMax;
+  yaxis: AxisMinMax;
+}
 
 // vue data
 const props = defineProps(["series", "errorMsg"]);
 
 // data
-const max = new Date().getTime(); // Current timestamp
-const min = new Date(max - 5 * 60000).getTime(); // timestamp 90 days before
+let initmax = new Date().getTime(); // Current timestamp
+let initmin = new Date(initmax - 5 * 60000).getTime(); // timestamp 90 days before
+let initrange = initmax - initmin;
 
-const range = max - min;
-const options = {
+const options = ref({
   chart: {
     id: "linechart",
+    toolbar: {
+      tools: {
+        download: false,
+      },
+    },
   },
   animations: {
     enabled: true,
@@ -60,7 +80,10 @@ const options = {
         colors: "#FFFFFF",
       },
     },
-    range: range,
+    axisTicks: {
+      show: true,
+    },
+    range: initrange,
   },
   yaxis: {
     labels: {
@@ -75,6 +98,45 @@ const options = {
       color: "#FFFFFF",
     },
   },
+});
+
+// methods
+const beforeResetZoom = () => {
+  options.value = {
+    ...options.value,
+    xaxis: {
+      ...options.value.xaxis,
+      axisTicks: {
+        show: true,
+      },
+      range: initrange,
+    },
+  };
+};
+
+const beforeZoom = (chartContext: never, config: ApexZoomConfig) => {
+  let max, min;
+  let now = new Date();
+  let showAxisTicks = true;
+  max = new Date(config.xaxis.max).getTime();
+  min = new Date(config.xaxis.min).getTime();
+
+  // if max is in future zoom fully out
+  if (max > now.getTime()) {
+    max = props.series[0].data[props.series[0].data.length - 1].x.getTime();
+    min = props.series[0].data[0].x.getTime();
+    showAxisTicks = false;
+  }
+  options.value = {
+    ...options.value,
+    xaxis: {
+      ...options.value.xaxis,
+      axisTicks: {
+        show: showAxisTicks,
+      },
+      range: max - min,
+    },
+  };
 };
 </script>
 
