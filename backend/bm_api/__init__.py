@@ -104,15 +104,16 @@ async def get_benchmark_results(bm_name: str):
 async def get_benchmark_results_for_node(node_name: str, bm_history_client: BenchmarkHistoryClient = Depends(get_benchmark_history_client)):
     try:
         results = bm_history_client.get_benchmarks_results(node_name)
-        r = [
+        bm_list = [
             BenchmarkResult(
                 type=r.type,
                 resource=r.type,
+                started=r.started,
                 metrics={ m.name: m.value for m in r.metrics }
             ) for r in results
         ]
 
-        return r
+        return bm_list
     except Exception as e:
         logging.error(e)
         raise HTTPException(status_code=404, detail=f"Benchmarks for node '{node_name}' not found")
