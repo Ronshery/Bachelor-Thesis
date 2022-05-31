@@ -21,6 +21,11 @@ class BenchmarkedResourceKind(enum.Enum):
     NETWORK_IPERF3 = "network-iperf3"
     NETWORK_QPERF = "network-qperf"
 
+class BenchmarkedResource(enum.Enum):
+    CPU = "cpu"
+    DISK = "disk"
+    MEMORY = "memory"
+    NETWORK = "network"
 
 class BaseBenchmark(BaseRun, ABC):
     @property

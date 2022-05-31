@@ -5,12 +5,13 @@ import datetime
 from functools import lru_cache
 from abc import ABC
 import json
+from optparse import Option
 import re
 from statistics import mean
 from typing import Any, Dict, List, Optional, TypeVar
 
 import pydantic
-from common.benchmarks.base import BenchmarkedResourceKind
+from common.benchmarks.base import BenchmarkedResource, BenchmarkedResourceKind
 
 from common.clients.benchmark_history.client import BenchmarkHistoryClient
 from common.clients.prometheus import PrometheusClient, get_prometheus_client
@@ -26,7 +27,7 @@ class BaseFingerprint(ABC):
     def timestamp(self) -> datetime.datetime:
         raise NotImplementedError
 
-    def compare_to(self, ref_fingerprint: BaseFingerprint) -> float:
+    def compare_to(self, ref_fingerprint: BaseFingerprint, for_resource: Optional[BenchmarkedResource]) -> float:
         raise NotImplementedError
 
     def serialize(self) -> str:
@@ -71,23 +72,48 @@ class SimpleFingerprint(BaseFingerprint):
     def timestamp(self) -> datetime.datetime:
         return self._utctimestamp
 
-    def compare_to(self, ref_fingerprint: SimpleFingerprint) -> float:
+    def compare_to(self, ref_fingerprint: SimpleFingerprint, for_resource: Optional[BenchmarkedResource]=None) -> float:
         if type(ref_fingerprint) != SimpleFingerprint:
             raise ValueError("SimpleFingerprint can only compare to SimpleFingerprint")
         
-        vec = (
-            self.cpu_events_per_second / ref_fingerprint.cpu_events_per_second,
-            self.cpu_latency_95 / ref_fingerprint.cpu_latency_95,
-            self.mem_latency_max / ref_fingerprint.mem_latency_max,
-            self.mem_exctime / ref_fingerprint.mem_exctime,
-            self.disk_iops / ref_fingerprint.disk_iops,
-            self.disk_latency_avg / ref_fingerprint.disk_latency_avg,
-            self.net_transfer_bitrate / ref_fingerprint.net_transfer_bitrate,
-            self.net_tcp_msg_rate / ref_fingerprint.net_tcp_msg_rate,
-            self.net_tcp_latency / ref_fingerprint.net_tcp_latency,
-            self.net_bw_cpu_usage / ref_fingerprint.net_bw_cpu_usage,
-            self.net_lat_cpu_usage / ref_fingerprint.net_lat_cpu_usage,
-        )
+        if for_resource is not None:
+            if for_resource == BenchmarkedResource.CPU:
+                vec = (
+                    self.cpu_events_per_second / ref_fingerprint.cpu_events_per_second,
+                    self.cpu_latency_95 / ref_fingerprint.cpu_latency_95
+                )
+            elif for_resource == BenchmarkedResource.DISK:
+                vec = (
+                    self.disk_iops / ref_fingerprint.disk_iops,
+                    self.disk_latency_avg / ref_fingerprint.disk_latency_avg
+                )
+            elif for_resource == BenchmarkedResource.MEMORY:
+                vec = (
+                    self.mem_latency_max / ref_fingerprint.mem_latency_max,
+                    self.mem_exctime / ref_fingerprint.mem_exctime,
+                )
+            elif for_resource == BenchmarkedResource.NETWORK:
+                vec = (
+                    self.net_transfer_bitrate / ref_fingerprint.net_transfer_bitrate,
+                    self.net_tcp_msg_rate / ref_fingerprint.net_tcp_msg_rate,
+                    self.net_tcp_latency / ref_fingerprint.net_tcp_latency,
+                    self.net_bw_cpu_usage / ref_fingerprint.net_bw_cpu_usage,
+                    self.net_lat_cpu_usage / ref_fingerprint.net_lat_cpu_usage,
+                )
+        else:
+            vec = (
+                self.cpu_events_per_second / ref_fingerprint.cpu_events_per_second,
+                self.cpu_latency_95 / ref_fingerprint.cpu_latency_95,
+                self.mem_latency_max / ref_fingerprint.mem_latency_max,
+                self.mem_exctime / ref_fingerprint.mem_exctime,
+                self.disk_iops / ref_fingerprint.disk_iops,
+                self.disk_latency_avg / ref_fingerprint.disk_latency_avg,
+                self.net_transfer_bitrate / ref_fingerprint.net_transfer_bitrate,
+                self.net_tcp_msg_rate / ref_fingerprint.net_tcp_msg_rate,
+                self.net_tcp_latency / ref_fingerprint.net_tcp_latency,
+                self.net_bw_cpu_usage / ref_fingerprint.net_bw_cpu_usage,
+                self.net_lat_cpu_usage / ref_fingerprint.net_lat_cpu_usage,
+            )
 
         return mean(vec)
 
@@ -100,12 +126,23 @@ class SimpleFingerprint(BaseFingerprint):
 
 
 class NodeScore(pydantic.BaseModel):
-    score: int
-    max_score: int = 10    
+    max_score: float = 10.0
+    min_score: float = 0.0
+    score: float
 
-@dataclass
+    @pydantic.validator("score")
+    def validate_score(cls, v, values):
+        return max(values["min_score"], min(values["max_score"], v))
+
+    # @property
+    # def score(self):
+    #     return max(self.min_score, min(self.max_score, self._score))
+
+#@dataclass
 class NodeScores(pydantic.BaseModel):
     node_name: str
+
+    total: NodeScore
 
     cpu: NodeScore
     memory: NodeScore
@@ -157,18 +194,38 @@ class SimpleFingerprintEngine(BaseFingerprintEngine):
             elif bms[bm.type].started < bm.started:
                 bms[bm.type] = bm
         
-        def get_metric_value(bm_type: BenchmarkedResourceKind, metric_name: str, default_value: Optional[float]=None) -> Optional[float]:
+        def get_metric_value(bm_type: BenchmarkedResourceKind, metric_name: str, default_value: Optional[float]=None, normalize: bool=True) -> Optional[float]:
             if bm_type.value in bms:
-                mt = next(filter(lambda m: m.name == metric_name, bms[bm_type.value].metrics), None)
+                bm_ts_start = bms[bm_type.value].started
+                bm_ts_end = bms[bm_type.value].started + datetime.timedelta(seconds=bms[bm_type.value].duration)
+                metrics_timeframe = datetime.timedelta(seconds=10)
+
+                node_metrics = self.benchmark_history_client.get_node_metrics(node_name, bm_ts_start - metrics_timeframe, bm_ts_end + metrics_timeframe)
+
+                def get_metric_avg(metric_name: str) -> float:
+                    values = [float(nm.value) for nm in node_metrics if nm.metric == metric_name]
+                    return mean(values)
+
+                cpu_busy_avg: float = get_metric_avg("cpu_busy") / 100.0
+                # memory_used_avg: float = get_metric_avg("memory_used") / 100.0 # useless
+                disk_io_util_avg: float = get_metric_avg("disk_io_util") / 100.0
+
+                mt = next(filter(lambda m: m.name == metric_name and m.value is not None, bms[bm_type.value].metrics), None)
                 if mt is not None and mt.value is not None:
                     rm = re.match(r"[\d\.]+", mt.value)
                     if rm is not None:
-                        print(mt.value, rm.group(0))
-                        return float(rm.group(0))
+                        value = float(rm.group(0))
+
+                        if normalize:
+                            if bm_type == BenchmarkedResourceKind.CPU_SYSBENCH and cpu_busy_avg > 0:
+                                value /= cpu_busy_avg
+                            elif bm_type in (BenchmarkedResourceKind.DISK_FIO, BenchmarkedResourceKind.DISK_IOPING) and disk_io_util_avg > 0:
+                                value /= disk_io_util_avg
+
+                        return value
             
             return default_value
 
-        # TODO correlate with node metrics from prometheus
         fp = SimpleFingerprint(
             node_name,
             datetime.datetime.utcnow(),
@@ -189,17 +246,33 @@ class SimpleFingerprintEngine(BaseFingerprintEngine):
 
 
     async def get_scores_for_node(self, node_name: str) -> NodeScores:
-        raise NotImplementedError
-        # recent_bms = self.benchmark_history_client.get_benchmarks_results(node_name)
+        fp = await self.get_fingerprint_for_node(node_name)
 
-        # interval = datetime.timedelta(seconds=60)
+        # TODO: global reference fingerprint
+        ref_fingerprint = SimpleFingerprint(
+            _node_name=node_name,
+            _utctimestamp=datetime.datetime(2022, 5, 25, 18, 47, 00),
+            cpu_events_per_second=73834.30137412282,
+            cpu_latency_95=0.7090241200365385,
+            mem_latency_max=52.53,
+            mem_exctime=8.4504,
+            disk_iops=869.149952244506,
+            disk_latency_avg=6.566380133715361,
+            net_transfer_bitrate=2.5,
+            net_tcp_msg_rate=63.6,
+            net_tcp_latency=15.7,
+            net_bw_cpu_usage=565.0,
+            net_lat_cpu_usage=264.0
+        )
 
-        # tf_end = datetime.datetime.now()
-        # tf_start = tf_end - interval
-
-        # node_stats = await self.prometheus_client.get_node_metrics(tf_start, tf_end, node_name=node_name)
-
-        # return NodeScores()
+        return NodeScores(
+            node_name=node_name,
+            total=NodeScore(score=fp.compare_to(ref_fingerprint) * 10),
+            cpu=NodeScore(score=fp.compare_to(ref_fingerprint, for_resource=BenchmarkedResource.CPU) * 10),
+            memory=NodeScore(score=fp.compare_to(ref_fingerprint, for_resource=BenchmarkedResource.MEMORY) * 10),
+            disk=NodeScore(score=fp.compare_to(ref_fingerprint, for_resource=BenchmarkedResource.DISK) * 10),
+            network=NodeScore(score=fp.compare_to(ref_fingerprint, for_resource=BenchmarkedResource.NETWORK) * 10)
+        )
 
 
 @lru_cache()
