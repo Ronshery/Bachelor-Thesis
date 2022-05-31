@@ -4,10 +4,13 @@ from typing import List, Dict, Type
 from fastapi import FastAPI, HTTPException, responses, Depends
 import common.benchmarks as benchmarks
 from fastapi.middleware.cors import CORSMiddleware
+from common.clients.benchmark_history import get_benchmark_history_client
+from common.clients.benchmark_history.client import BenchmarkHistoryClient
 
 from common.clients.k8s import get_k8s_client
 from common.clients.k8s.client import K8sClient
 from bm_api.models.node import NodeModel, NodeMetricsModel
+from bm_api.models.benchmark import BenchmarkResult
 from common.clients.prometheus.schemes import NodeMetricsModel as PrometheusNodeMetricsModel
 from bm_api.models.benchmark import BenchmarkResult
 
@@ -97,6 +100,25 @@ async def get_benchmark_results(bm_name: str):
         raise HTTPException(status_code=404, detail=f"Benchmark '{bm_name}' not found")
 
 
+@app.get("/benchmarks/node={node_name}/results", response_model=List[BenchmarkResult])
+async def get_benchmark_results_for_node(node_name: str, bm_history_client: BenchmarkHistoryClient = Depends(get_benchmark_history_client)):
+    try:
+        results = bm_history_client.get_benchmarks_results(node_name)
+        bm_list = [
+            BenchmarkResult(
+                type=r.type,
+                resource=r.type,
+                started=r.started,
+                metrics={ m.name: m.value for m in r.metrics }
+            ) for r in results
+        ]
+
+        return bm_list
+    except Exception as e:
+        logging.error(e)
+        raise HTTPException(status_code=404, detail=f"Benchmarks for node '{node_name}' not found")
+
+
 @app.post("/benchmark/{bm_type}/{node_id}")
 async def run_benchmark(bm_type: str, node_id: str, k8s_client: K8sClient = Depends(get_k8s_client)):
     bm_type = bm_type.lower()
@@ -168,6 +190,19 @@ async def get_node_metrics(node_name: str, time_delta: int,
         raise HTTPException(status_code=404, detail="Node metrics not found")
 
 
+@app.get("/metrics/{node_name}/{time_from}/{time_to}", response_model=NodeMetricsModel)
+async def get_node_metrics_from_to(node_name: str, time_from: datetime.datetime, time_to: datetime.datetime,
+                           prometheus_client: PrometheusClient = Depends(get_prometheus_client)):
+    try:
+        metrics: NodeMetricsModel = next((m for m in await get_all_nodes_metrics_from_to(time_from, time_to,
+                                                                                 prometheus_client)
+                                          if m.node_name == node_name), None)
+        return metrics
+    except Exception as e:
+        logging.error(e)
+        raise HTTPException(status_code=404, detail="Node metrics not found")
+
+
 @app.get("/metrics/{time_delta}", response_model=List[NodeMetricsModel])
 async def get_all_nodes_metrics(time_delta: int,
                                 prometheus_client: PrometheusClient = Depends(get_prometheus_client)):
@@ -177,6 +212,20 @@ async def get_all_nodes_metrics(time_delta: int,
         now_time: datetime.datetime = datetime.datetime.now()
         prometheus_models: List[PrometheusNodeMetricsModel] = await prometheus_client.get_node_metrics(
             now_time - datetime.timedelta(seconds=time_delta), now_time)
+        return [NodeMetricsModel(**prom_model.dict()) for prom_model in prometheus_models]
+
+    except Exception as e:
+        logging.error(e)
+        raise HTTPException(status_code=404, detail="No node metrics found")
+
+
+@app.get("/metrics/{time_from}/{time_to}", response_model=List[NodeMetricsModel])
+async def get_all_nodes_metrics_from_to(time_from: datetime.datetime,
+                                time_to: datetime.datetime,
+                                prometheus_client: PrometheusClient = Depends(get_prometheus_client)):
+    try:
+        prometheus_models: List[PrometheusNodeMetricsModel] = await prometheus_client.get_node_metrics(
+            time_from, time_to)
         return [NodeMetricsModel(**prom_model.dict()) for prom_model in prometheus_models]
 
     except Exception as e:

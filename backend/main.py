@@ -79,7 +79,7 @@ async def prometheus_thread(stop_me: threading.Event):
                 for node_metrics_obj in metrics:
                     node_name = node_metrics_obj.node_name
                     node_metric_groups = {
-                        "cpu_buys": node_metrics_obj.cpu_busy,
+                        "cpu_busy": node_metrics_obj.cpu_busy,
                         "memory_used": node_metrics_obj.memory_used,
                         "disk_io_util": node_metrics_obj.disk_io_util
                     }
