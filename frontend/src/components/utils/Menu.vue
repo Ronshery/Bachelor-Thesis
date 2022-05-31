@@ -60,6 +60,7 @@ const toggleDisplayCSS = () => {
   border-radius: 20px;
   padding: 0.75em 1em 1em 1em;
   opacity: 0;
+  visibility: hidden;
   transition: opacity 500ms;
 }
 

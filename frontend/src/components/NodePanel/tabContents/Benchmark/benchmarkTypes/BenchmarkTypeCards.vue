@@ -25,6 +25,7 @@
       <CpuSysbench
         v-if="bmType === 'cpu-sysbench'"
         :benchmarks="benchmarksByResourceType('cpu')"
+        :nodeID="nodeID"
         @changedRunning="updateRunningState"
       />
       <div v-if="bmType === 'memory-sysbench'">

@@ -4,25 +4,34 @@
   <TabContentCardsWrapper>
     <TabContentCard>
       <template v-slot:title> Latency </template>
-      <ApexBarChart />
+      <ApexBarChart :series="latencySeries" />
     </TabContentCard>
   </TabContentCardsWrapper>
 </template>
 
 <script setup lang="ts">
-import { defineProps, watch, computed, defineEmits } from "vue";
+import { defineProps, watch, computed, defineEmits, ref } from "vue";
 import ApexBarChart from "@/components/utils/ApexBarChart.vue";
 import TabContentCard from "@/components/NodePanel/tabContents/TabContentCard.vue";
 import TabContentCardsWrapper from "@/components/NodePanel/tabContents/TabContentCardsWrapper.vue";
 
+interface CPUSysbenchResult {
+  [key: string]: string;
+}
 // vue data
-const props = defineProps(["benchmarks"]);
+const props = defineProps(["benchmarks", "nodeID"]);
 const emit = defineEmits(["changedRunning"]);
 
 // data
+interface ApexBarDataPoint {
+  name: string;
+  data: string[];
+}
 
+const latencySeries = ref<ApexBarDataPoint[]>([]);
 // methods
 const getBenchmarks = computed(() => {
+  console.log("benchmarkslist changed: " + props.nodeID);
   if (props.benchmarks) {
     return props.benchmarks;
   } else {
@@ -41,9 +50,37 @@ const getRunningState = computed(() => {
 watch(getRunningState, () => {
   console.log("value changed");
   console.log(getRunningState.value);
+  if (!getRunningState.value) {
+    convertResultsToBar();
+  }
   const emitParam = { "cpu-sysbench": getRunningState.value };
   emit("changedRunning", emitParam);
 });
+
+const convertResultsToBar = () => {
+  const latestBenchmark = props.benchmarks[props.benchmarks.length - 1];
+  if (latestBenchmark.node == props.nodeID) {
+    const results: CPUSysbenchResult = latestBenchmark.results;
+    latencySeries.value = [
+      {
+        name: "min",
+        data: [results.latency_min],
+      },
+      {
+        name: "avg",
+        data: [results.latency_avg],
+      },
+      {
+        name: "max",
+        data: [results.latency_max],
+      },
+      {
+        name: "95p",
+        data: [results.latency_95p],
+      },
+    ];
+  }
+};
 </script>
 
 <style scoped></style>

@@ -27,9 +27,9 @@ interface ApexZoomConfig {
 const props = defineProps(["series", "errorMsg"]);
 
 // data
-let initmax = new Date().getTime(); // Current timestamp
-let initmin = new Date(initmax - 5 * 60000).getTime(); // timestamp 90 days before
-let initrange = initmax - initmin;
+let initMax = new Date().getTime(); // Current timestamp
+let initMin = new Date(initMax - 5 * 60000).getTime(); // timestamp 90 days before
+let initRange = initMax - initMin;
 
 const options = ref({
   chart: {
@@ -83,7 +83,7 @@ const options = ref({
     axisTicks: {
       show: true,
     },
-    range: initrange,
+    range: initRange,
   },
   yaxis: {
     labels: {
@@ -94,6 +94,7 @@ const options = ref({
   },
   noData: {
     text: "Loading...",
+    offsetY: -15,
     style: {
       color: "#FFFFFF",
     },
@@ -109,7 +110,7 @@ const beforeResetZoom = () => {
       axisTicks: {
         show: true,
       },
-      range: initrange,
+      range: initRange,
     },
   };
 };
