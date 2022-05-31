@@ -84,20 +84,23 @@ async def get_all_benchmarks_by_node(node_id: str, k8s_client: K8sClient = Depen
         raise HTTPException(status_code=404, detail=f"Benchmarks for node '{node_id}' not found")
 
 
-@app.get("/benchmarks/name={bm_name}/results", response_model=Dict[str, str])
-async def get_benchmark_results(bm_name: str):
+@app.get("/benchmarks/name={bm_name}/results", response_model=BenchmarkResult)
+async def get_benchmark_results(bm_name: str, bm_history_client: BenchmarkHistoryClient = Depends(get_benchmark_history_client)):
     try:
-        with Session(engine) as session:
-            metrics = session \
-                .query(BenchmarkMetric) \
-                .filter(BenchmarkMetric.benchmark_id == bm_name) \
-                .all()
-            return {
-                m.name: m.value for m in metrics
-            }
+        r = bm_history_client.get_benchmark_result(bm_name)
+        if r is not None:
+            return BenchmarkResult(
+                id=r.id,
+                type=r.type,
+                resource=r.type,
+                started=r.started,
+                metrics={ m.name: m.value for m in r.metrics }
+            )
+        else:
+            raise HTTPException(status_code=404, detail=f"Benchmark not found: '{bm_name}'")
     except Exception as e:
         logging.error(e)
-        raise HTTPException(status_code=404, detail=f"Benchmark '{bm_name}' not found")
+        raise HTTPException(status_code=404, detail=f"Benchmark '{bm_name}' not found: {str(e)}")
 
 
 @app.get("/benchmarks/node={node_name}/results", response_model=List[BenchmarkResult])
@@ -106,6 +109,7 @@ async def get_benchmark_results_for_node(node_name: str, bm_history_client: Benc
         results = bm_history_client.get_benchmarks_results(node_name)
         bm_list = [
             BenchmarkResult(
+                id=r.id,
                 type=r.type,
                 resource=r.type,
                 started=r.started,

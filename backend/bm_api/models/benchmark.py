@@ -3,6 +3,7 @@ from pydantic import BaseModel
 import datetime
 
 class BenchmarkResult(BaseModel):
+    id: str
     type: str
     resource: str
     started: datetime.datetime
