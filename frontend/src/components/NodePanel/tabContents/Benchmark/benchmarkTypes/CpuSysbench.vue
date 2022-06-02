@@ -1,86 +1,209 @@
 <template>
-  {{ getRunningState }}
-  {{ benchmarks[benchmarks.length - 1] }}
+  {{ benchmarks }}
   <TabContentCardsWrapper>
     <TabContentCard>
       <template v-slot:title> Latency </template>
-      <ApexBarChart :series="latencySeries" />
+      <ApexBarChart
+        :series="chartsData.latencySeries"
+        :options="chartsData.latencyOptions"
+      />
     </TabContentCard>
   </TabContentCardsWrapper>
 </template>
 
 <script setup lang="ts">
-import { defineProps, watch, computed, defineEmits, ref } from "vue";
+import { defineProps, computed } from "vue";
 import ApexBarChart from "@/components/utils/ApexBarChart.vue";
 import TabContentCard from "@/components/NodePanel/tabContents/TabContentCard.vue";
 import TabContentCardsWrapper from "@/components/NodePanel/tabContents/TabContentCardsWrapper.vue";
+import Benchmark from "@/models/Benchmark";
+import { IBenchmark } from "@/models/IBenchmark";
+import { Collection, Item } from "@vuex-orm/core";
 
-interface CPUSysbenchResult {
-  [key: string]: string;
-}
 // vue data
-const props = defineProps(["benchmarks", "nodeID"]);
-const emit = defineEmits(["changedRunning"]);
+const props = defineProps(["nodeID"]);
 
 // data
-interface ApexBarDataPoint {
-  name: string;
-  data: string[];
-}
 
-const latencySeries = ref<ApexBarDataPoint[]>([]);
+const benchmarks = computed(() => {
+  const query = Benchmark.query()
+    .where("node", props.nodeID)
+    .where((benchmark: IBenchmark) => {
+      return benchmark.id.includes("cpu-sysbench");
+    })
+    .orderBy("started");
+  const currentBms = query.get();
+  const runningBms = query.where("metrics", null).get();
+  console.log("bms: ");
+  console.log(currentBms);
+  console.log("current running BMs: ");
+  console.log(runningBms);
+
+  return currentBms;
+});
+
+const chartsData = computed(() => {
+  console.log("");
+  console.log("");
+  console.log("lets do series");
+  const query = Benchmark.query()
+    .where("node", props.nodeID)
+    .where((benchmark: IBenchmark) => {
+      return benchmark.id.includes("cpu-sysbench") && benchmark.metrics != null;
+    })
+    .orderBy("started");
+
+  const latestBm = query.last();
+  const currentBms = query.get();
+
+  const { latencyOptions, latencySeries } = latencyApexBarArguments(
+    currentBms,
+    latestBm
+  );
+
+  return {
+    latencySeries: latencySeries,
+    latencyOptions: latencyOptions,
+  };
+});
 // methods
-const getBenchmarks = computed(() => {
-  console.log("benchmarkslist changed: " + props.nodeID);
-  if (props.benchmarks) {
-    return props.benchmarks;
-  } else {
-    return [];
-  }
-});
-const getRunningState = computed(() => {
-  let returnValue = false;
-  if (getBenchmarks.value.length != 0) {
-    let latestBenchmark = props.benchmarks[props.benchmarks.length - 1];
-    returnValue = latestBenchmark.results == null;
-  }
-  return returnValue;
-});
 
-watch(getRunningState, () => {
-  console.log("value changed");
-  console.log(getRunningState.value);
-  if (!getRunningState.value) {
-    convertResultsToBar();
+const latencyApexBarArguments = (
+  currentBms: Collection<Benchmark>,
+  latestBm: Item<Benchmark>
+) => {
+  const latencySeries = [
+    {
+      name: "min",
+      data: [] as string[],
+    },
+    {
+      name: "avg",
+      data: [] as string[],
+    },
+    {
+      name: "max",
+      data: [] as string[],
+    },
+    {
+      name: "95p",
+      data: [] as string[],
+    },
+  ];
+  const categories: string[] = [];
+  for (let bm of currentBms) {
+    let tmp = bm.$getAttributes();
+    let metrics = tmp.metrics;
+    latencySeries[0].data.push(metrics.latency_min);
+    latencySeries[1].data.push(metrics.latency_avg);
+    latencySeries[2].data.push(metrics.latency_max);
+    latencySeries[3].data.push(metrics.latency_95p);
+    let date = new Date(tmp.started + "Z");
+    categories.push(`${date.getHours()}:${date.getMinutes()}`);
   }
-  const emitParam = { "cpu-sysbench": getRunningState.value };
-  emit("changedRunning", emitParam);
-});
 
-const convertResultsToBar = () => {
-  const latestBenchmark = props.benchmarks[props.benchmarks.length - 1];
-  if (latestBenchmark.node == props.nodeID) {
-    const results: CPUSysbenchResult = latestBenchmark.results;
-    latencySeries.value = [
-      {
-        name: "min",
-        data: [results.latency_min],
+  console.log("series: ");
+  console.log(latencySeries);
+  console.log("categories: ");
+  console.log(categories);
+
+  // on: panning and zoom enabled
+  const tickPlacement = currentBms.length <= 3 ? "between" : "on";
+
+  //  because of bug needs to be defined here
+  const latencyOptions = {
+    chart: {
+      id: "latency-" + latestBm?.$getAttributes().id,
+      type: "bar",
+      group: "cpu-sysbench",
+      width: 20,
+      stacked: false,
+    },
+    stroke: {
+      colors: ["transparent"],
+      width: 5,
+    },
+    plotOptions: {
+      bar: {
+        horizontal: false,
+        columnWidth: "50%",
+        borderRadius: 2,
+        dataLabels: {
+          position: "top",
+        },
       },
-      {
-        name: "avg",
-        data: [results.latency_avg],
+    },
+    dataLabels: {
+      offsetY: -20,
+      style: {
+        colors: ["#000000"],
       },
-      {
-        name: "max",
-        data: [results.latency_max],
+    },
+    legend: {
+      onItemClick: {
+        toggleDataSeries: true,
       },
-      {
-        name: "95p",
-        data: [results.latency_95p],
+    },
+    xaxis: {
+      type: "category",
+      min: currentBms.length - 3,
+      max: currentBms.length,
+      categories: categories,
+      tickPlacement: tickPlacement,
+      labels: {
+        formatter: function (value: string) {
+          console.log("test");
+          if (value == undefined || !value.toString().includes(":")) {
+            return "asd";
+          }
+          let list = value.split(":");
+          let scn = list[1];
+          if (parseInt(scn) < 10) {
+            return `${list[0]}:0${list[1]}`;
+          }
+          return value;
+        },
       },
-    ];
-  }
+    },
+    yaxis: {
+      max: 80,
+    },
+    noData: {
+      text: "run to see results",
+      offsetY: -15,
+      style: {
+        color: "#000000",
+      },
+    },
+  };
+  return { latencyOptions, latencySeries };
 };
+
+/* for multiple y axis combinations
+*     yaxis: [
+      {
+        seriesName: "95p",
+        title: {
+          text: "min, avg, 95p",
+        },
+      },
+      {
+        show: false,
+        seriesName: "95p",
+      },
+      {
+        opposite: true,
+        title: {
+          text: "max",
+        },
+        seriesName: "max",
+      },
+      {
+        show: false,
+        seriesName: "95p",
+      },
+    ],
+* */
 </script>
 
 <style scoped></style>

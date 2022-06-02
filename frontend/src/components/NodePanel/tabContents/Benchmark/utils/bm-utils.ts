@@ -1,13 +1,29 @@
+export const enum BmResource {
+  CPU = "cpu",
+  MEMORY = "memory",
+  DISK = "disk",
+  NETWORK = "network",
+}
+
+export const enum BmType {
+  CPU_SYSBENCH = "cpu-sysbench",
+  MEMORY_SYSBENCH = "memory-sysbench",
+  DISK_IOPING = "disk-ioping",
+  DISK_FIO = "disk-fio",
+  NETWORK_IPERF3 = "network-iperf3",
+  NETWORK_QPERF = "network-qperf",
+}
+
 export default {
-  benchmarkNameMapper(bmName: string): string {
+  benchmarkNameMapper(bmName: BmResource): string {
     switch (bmName) {
-      case "cpu":
+      case BmResource.CPU:
         return "CPU benchmarks";
-      case "memory":
+      case BmResource.MEMORY:
         return "Memory benchmarks";
-      case "disk":
+      case BmResource.DISK:
         return "Disk benchmarks";
-      case "network":
+      case BmResource.NETWORK:
         return "Network benchmarks";
     }
     return "";

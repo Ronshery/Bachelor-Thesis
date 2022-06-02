@@ -8,16 +8,16 @@
       :key="key"
       :benchmark="key"
     >
-      <div v-if="key === 'cpu'">
+      <div v-if="key === BmResource.CPU">
         <BenchmarkTypeCards :bmTypes="bm" :nodeID="props.node.name" :key="bm" />
       </div>
-      <div v-if="key === 'network'">
+      <div v-if="key === BmResource.NETWORK">
         <BenchmarkTypeCards :bmTypes="bm" :nodeID="props.node.name" :key="bm" />
       </div>
-      <div v-if="key === 'memory'">
+      <div v-if="key === BmResource.MEMORY">
         <BenchmarkTypeCards :bmTypes="bm" :nodeID="props.node.name" :key="bm" />
       </div>
-      <div v-if="key === 'disk'">
+      <div v-if="key === BmResource.DISK">
         <BenchmarkTypeCards :bmTypes="bm" :nodeID="props.node.name" :key="bm" />
       </div>
     </BenchmarkChapter>
@@ -30,7 +30,9 @@ import TabLayout from "@/components/NodePanel/tabContents/TabLayout.vue";
 import Menu from "@/components/utils/Menu.vue";
 import BenchmarkChapter from "@/components/NodePanel/tabContents/Benchmark/BenchmarkChapter.vue";
 import BenchmarkTypeCards from "@/components/NodePanel/tabContents/Benchmark/benchmarkTypes/BenchmarkTypeCards.vue";
-import bmScript from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
+import bmScript, {
+  BmResource,
+} from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
 
 // vue data
 const props = defineProps(["node", "nodePanelOpen", "availableBenchmarks"]);
@@ -40,12 +42,12 @@ const props = defineProps(["node", "nodePanelOpen", "availableBenchmarks"]);
 const menuItems = computed(() => {
   let list = Object.keys(props.availableBenchmarks);
   for (let i = 0; i < list.length; i++) {
-    list[i] = bmScript.benchmarkNameMapper(list[i]);
+    list[i] = bmScript.benchmarkNameMapper(list[i] as BmResource);
   }
   return list;
 });
 
-const itemClicked = (param: string) => {
+const itemClicked = (param: BmResource) => {
   let chapterID = param.toLowerCase().split(" ")[0] + "-chapter";
   const chapterElement = document.getElementById(chapterID);
   if (chapterElement) {

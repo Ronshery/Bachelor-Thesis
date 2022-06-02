@@ -1,6 +1,9 @@
 export interface IBenchmark {
   id: string;
   spec: object;
+  resource: string;
+  type: string;
   node: string;
-  results: object;
+  started: Date;
+  metrics: Record<string, string> | null;
 }

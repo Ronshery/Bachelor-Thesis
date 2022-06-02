@@ -91,6 +91,8 @@ const options = ref({
         colors: "#FFFFFF",
       },
     },
+    max: 100,
+    min: 0,
   },
   noData: {
     text: "Loading...",

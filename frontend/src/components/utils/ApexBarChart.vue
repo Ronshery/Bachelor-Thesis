@@ -1,21 +1,27 @@
 <template>
-  <div id="barchart" ref="barchart"></div>
-  <apexchart type="bar" :options="options" :series="props.series"></apexchart>
+  <apexchart
+    type="bar"
+    :options="options"
+    :series="series"
+    :key="options.chart.id"
+  ></apexchart>
 </template>
 
 <script setup lang="ts">
 import { defineProps } from "vue";
 
 // vue data
-const props = defineProps(["series"]);
-const options = {
+const props = defineProps(["series", "options"]);
+
+/*
+const options = ref({
   chart: {
     type: "bar",
+    stacked: false,
   },
   plotOptions: {
     bar: {
       horizontal: false,
-      columnWidth: "30%",
       borderRadius: 2,
       dataLabels: {
         position: "top",
@@ -34,7 +40,12 @@ const options = {
     },
   },
   xaxis: {
-    categories: [""],
+    type: "category",
+    categories: props.categories,
+    tickPlacement: "on",
+  },
+  yaxis: {
+    max: 50,
   },
   noData: {
     text: "run to see results",
@@ -43,22 +54,8 @@ const options = {
       color: "#000000",
     },
   },
-};
-
-const series = [
-  {
-    name: "min",
-    data: ["400", "200"],
-  },
-  {
-    name: "avg",
-    data: ["300", "250"],
-  },
-  {
-    name: "max",
-    data: ["500", "70"],
-  },
-];
+});
+*/
 </script>
 
 <style scoped></style>

@@ -3,6 +3,7 @@ import { ActionTree, MutationTree, GetterTree, Module } from "vuex";
 import { RootState } from "@/store";
 import benchmarkService from "@/services/benchmark-service";
 import bmUtils from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
+
 export default class Benchmark extends Model {
   static entity = "benchmarks";
 
@@ -11,9 +12,12 @@ export default class Benchmark extends Model {
   static fields() {
     return {
       id: this.attr(null),
+      type: this.attr(null),
+      resource: this.attr(null),
+      started: this.attr(null),
+      metrics: this.attr(null),
       spec: this.attr(null),
       node: this.attr(null),
-      results: this.attr(null),
     };
   }
 }
@@ -30,19 +34,35 @@ const state = () =>
 const getters: GetterTree<BenchmarkState, RootState> = {};
 
 const actions: ActionTree<BenchmarkState, RootState> = {
+  async fetchBenchmarksByNode({ commit }, { nodeID }) {
+    console.log(nodeID);
+    benchmarkService
+      .get(`/benchmarks/node=${nodeID}/results`)
+      .then((response) => {
+        console.log(response.data);
+        const benchmarks = response.data;
+        for (let i = 0; i < response.data.length; i++) {
+          benchmarks[i] = {
+            ...benchmarks[i],
+            node: nodeID,
+          };
+        }
+        commit("insertBenchmark", benchmarks);
+      });
+  },
   async runBenchmark({ commit }, { benchmarkType, nodeID }) {
     benchmarkService
-      .post(`/benchmark/${benchmarkType.split("_").join("-")}/${nodeID}`)
+      .post(`/benchmark/${benchmarkType}/${nodeID}`)
       .then((response) => {
         console.log(response);
         const bmDuration =
           parseInt(bmUtils.getBMDuration(response.data.spec.spec.options)) *
           1000;
-        const benchmark = {
+        let benchmark = {
           id: response.data.id,
-          spec: response.data.spec,
           node: nodeID,
-          results: null,
+          type: benchmarkType.split("-")[0],
+          resource: benchmarkType.split("-")[0],
         };
 
         let intervalID = 0;
@@ -52,12 +72,14 @@ const actions: ActionTree<BenchmarkState, RootState> = {
             .then((response) => {
               if (Object.keys(response.data).length > 0) {
                 clearInterval(intervalID);
-                benchmark.results = response.data;
+                benchmark = { ...benchmark, ...response.data };
                 commit("updateBenchmark", benchmark);
               }
             })
             .catch((error) => {
-              console.log(error);
+              if (error.response.status == 404) {
+                console.log("results not ready, try again...");
+              }
             });
         };
         // fetch results when benchmark ends
@@ -68,7 +90,6 @@ const actions: ActionTree<BenchmarkState, RootState> = {
           }, 1000);
         }, bmDuration);
         commit("insertBenchmark", benchmark);
-        console.log("test");
       });
   },
 };
