@@ -172,6 +172,33 @@ spec:
   selector:
     app: perona-operator
 ---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: perona-pv
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/var/perona-data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: perona-pv-claim
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -199,8 +226,9 @@ spec:
         - containerPort: 8000
           name: perona-api
         volumeMounts:
-        - mountPath: /tmp
-          name: sqlite-volume
+        - name: perona-pv-storage
+          mountPath: /tmp
       volumes:
-      - name: sqlite-volume
-        emptyDir: {}
+        - name: perona-pv-storage
+          persistentVolumeClaim:
+            claimName: perona-pv-claim
