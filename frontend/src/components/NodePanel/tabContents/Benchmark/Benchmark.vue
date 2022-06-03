@@ -60,5 +60,7 @@ const itemClicked = (param: BmResource) => {
 .menu-wrapper {
   position: absolute;
   right: 2em;
+  top: 3.25em;
+  z-index: 13;
 }
 </style>

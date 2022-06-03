@@ -4,7 +4,9 @@
       <div class="card-title">
         <slot name="title"></slot>
       </div>
-      <slot name="default" />
+      <div class="card-content-wrapper">
+        <slot name="default" />
+      </div>
     </div>
   </div>
 </template>

@@ -14,6 +14,63 @@ export const enum BmType {
   NETWORK_QPERF = "network-qperf",
 }
 
+export const mappings = {
+  num_threads: "Number of threads",
+  prime_numbers_limit: "Prime numbers limit",
+  total_time: "Total time",
+  [BmResource.CPU]: "CPU benchmarks",
+  [BmResource.MEMORY]: "Memory benchmarks",
+  [BmResource.DISK]: "Disk benchmarks",
+  [BmResource.NETWORK]: "Network benchmarks",
+};
+
+export const defaultBarOptions = {
+  chart: {
+    id: "",
+    type: "bar",
+    stacked: false,
+    group: undefined,
+  },
+  plotOptions: {
+    bar: {
+      horizontal: false,
+      borderRadius: 2,
+      dataLabels: {
+        position: "top",
+      },
+    },
+  },
+  tooltip: {
+    intersect: false,
+    shared: true,
+    fixed: {
+      enabled: true,
+      position: "topRight",
+      offsetY: -150,
+    },
+  },
+  dataLabels: {
+    offsetY: -20,
+    style: {
+      colors: ["#000000"],
+    },
+  },
+  xaxis: {
+    type: "category",
+    min: 1,
+    max: 4,
+    categories: [],
+    tickPlacement: "between",
+  },
+  noData: {
+    text: "run to see results",
+    offsetY: -15,
+    style: {
+      color: "#000000",
+    },
+  },
+};
+
 export default {
   benchmarkNameMapper(bmName: BmResource): string {
     switch (bmName) {

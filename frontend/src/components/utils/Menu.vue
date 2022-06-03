@@ -62,6 +62,7 @@ const toggleDisplayCSS = () => {
   opacity: 0;
   visibility: hidden;
   transition: opacity 500ms;
+  position: relative;
 }
 
 .menu-items-wrapper {

@@ -5,8 +5,8 @@
         @click="changeTab($event, index)"
         class="tab"
         :class="{
-          selected: index == 0,
-          'first-is-selected': index == 1,
+          selected: index === 0,
+          'first-is-selected': index === 1,
         }"
       >
         {{ tab.title }}
@@ -15,13 +15,28 @@
   </div>
   <div>
     <Tab ref="OverviewComponent" :nodePanelOpen="nodePanelOpen">
+      <div class="node-name-wrapper">
+        <span class="node-name">
+          {{ node.name }}
+        </span>
+      </div>
       <OverviewContainer :node="node" :nodePanelOpen="nodePanelOpen" />
     </Tab>
     <Tab ref="BenchmarkComponent" :nodePanelOpen="nodePanelOpen">
+      <div class="node-name-wrapper">
+        <span class="node-name">
+          {{ node.name }}
+        </span>
+      </div>
       <BenchmarkContainer :node="node" :nodePanelOpen="nodePanelOpen" />
     </Tab>
-    <Tab ref="SettingsComponent" :nodePanelOpen="nodePanelOpen"
-      >{{ node }} Settings Content</Tab
+    <Tab ref="SettingsComponent" :nodePanelOpen="nodePanelOpen">
+      <div class="node-name-wrapper">
+        <span class="node-name">
+          {{ node.name }}
+        </span>
+      </div>
+      Settings Content</Tab
     >
   </div>
 </template>
@@ -181,5 +196,30 @@ const resetTabClasses = (selectedElement: HTMLElement | null) => {
 
 .before-is-selected {
   border-bottom-left-radius: 20px;
+}
+
+.node-name-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 1em;
+}
+
+.node-name {
+  background-color: white;
+  border-radius: 8px;
+  padding: 5px;
+  font-weight: bold;
+}
+</style>
+
+<style>
+.blink_me {
+  animation: blinker 1s linear infinite;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
 }
 </style>

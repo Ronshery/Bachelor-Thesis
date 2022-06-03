@@ -65,6 +65,7 @@ const props = defineProps(["segments", "score"]);
   width: 190px;
   height: 190px;
   margin: 0 3em 0 2em;
+  font-size: 21px;
 }
 .segment-donut-chart {
   width: 85px;

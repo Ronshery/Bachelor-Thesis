@@ -1,6 +1,6 @@
 <template>
   <div :id="benchmark + '-chapter'" class="benchmark-chapter">
-    {{ bmScript.benchmarkNameMapper(benchmark) }}
+    {{ bmUtils.benchmarkNameMapper(benchmark) }}
   </div>
   <div class="horizontal-line" />
   <div class="benchmark-chapter-content">
@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { defineProps } from "vue";
-import bmScript from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
+import bmUtils from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
 
 // vue data
 const props = defineProps(["benchmark"]);
@@ -19,7 +19,7 @@ const props = defineProps(["benchmark"]);
 <style scoped>
 .benchmark-chapter {
   color: white;
-  font-size: 20px;
+  font-size: 22px;
   line-height: 28px;
   border-bottom: 1px solid white;
 }

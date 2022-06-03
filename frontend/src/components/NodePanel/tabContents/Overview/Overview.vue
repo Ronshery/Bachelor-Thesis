@@ -6,20 +6,10 @@
         <TabContentCard>
           <template v-slot:title> Node info </template>
           <template v-slot:default>
-            <div class="wrapper">
-              <div
-                class="row"
-                v-for="(value, index) in nodeInfoComp[0]"
-                :key="value"
-              >
-                <div class="row-element">
-                  {{ nodeInfoComp[0][index] }}
-                </div>
-                <div class="row-element row-element-right">
-                  {{ nodeInfoComp[1][index] }}
-                </div>
-              </div>
-            </div>
+            <InnerTableCard
+              :list-as-object="nodeInfoComp"
+              :mappings="mappings"
+            />
           </template>
         </TabContentCard>
         <TabContentCard
@@ -49,6 +39,7 @@ import ApexLineChart from "@/components/utils/ApexLineChart.vue";
 import TabLayout from "@/components/NodePanel/tabContents/TabLayout.vue";
 import TabContentCard from "@/components/NodePanel/tabContents/TabContentCard.vue";
 import TabContentCardsWrapper from "@/components/NodePanel/tabContents/TabContentCardsWrapper.vue";
+import InnerTableCard from "@/components/NodePanel/tabContents/InnerTableCard.vue";
 
 interface Segment {
   benchmark: string;
@@ -82,6 +73,17 @@ interface GraphList {
 const props = defineProps(["node", "nodePanelOpen"]);
 
 // data
+const mappings = {
+  architecture: "architecture",
+  operatingSystem: "operating system",
+  osImage: "OS image",
+  kernelVersion: "kernel version",
+  cpu: "cpu cores",
+  memory: "memory",
+  ephemeralStorage: "ephemeral storage",
+  pods: "max pods",
+};
+
 const nodeComp = computed(() => {
   if (props.node == null) {
     return {
@@ -142,9 +144,9 @@ const segments: Array<Segment> = [
 // methods
 const nodeInfoComp = computed(() => {
   let kubeNodeInfo = nodeComp.value.status;
-  let list: [string[], string[]] = [[], []];
+  let info: Record<string, string> = {};
   if (kubeNodeInfo) {
-    let info = {
+    info = {
       architecture: kubeNodeInfo.nodeInfo.architecture,
       operatingSystem: kubeNodeInfo.nodeInfo.operatingSystem,
       osImage: kubeNodeInfo.nodeInfo.osImage,
@@ -154,38 +156,8 @@ const nodeInfoComp = computed(() => {
       ephemeralStorage: kubeNodeInfo.allocatable["ephemeral-storage"],
       pods: kubeNodeInfo.allocatable.pods,
     };
-
-    let i = 0;
-    for (const [key, value] of Object.entries(info)) {
-      let keyString = key;
-      let valueString = value;
-      switch (keyString) {
-        case "cpu":
-          keyString = "cpu cores";
-          break;
-        case "operatingSystem":
-          keyString = "operating system";
-          break;
-        case "osImage":
-          keyString = "OS image";
-          break;
-        case "kernelVersion":
-          keyString = "kernel version";
-          break;
-        case "ephemeralStorage":
-          keyString = "ephemeral storage";
-          break;
-        case "pods":
-          keyString = "max pods";
-          break;
-      }
-
-      list[0][i] = keyString;
-      list[1][i] = valueString;
-      i++;
-    }
   }
-  return list;
+  return info;
 });
 
 watch(props, () => {
@@ -286,25 +258,5 @@ const convertMinutes = (minutes: number) => {
   margin-top: 1em;
   color: white;
   font-weight: bold;
-}
-
-.row {
-  display: flex;
-  padding: 0.25vw;
-}
-
-.row-element {
-  width: 50%;
-}
-
-.row-element-right {
-  color: #006fff;
-}
-
-.wrapper {
-  background-color: #efefef;
-  border-radius: 7px;
-  box-shadow: 0 2px 2px 2px rgba(0, 0, 0, 0.29);
-  padding: 0.25vw 0 0.25vw 0.5vw;
 }
 </style>

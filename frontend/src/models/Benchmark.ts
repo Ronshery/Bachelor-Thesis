@@ -39,6 +39,7 @@ const actions: ActionTree<BenchmarkState, RootState> = {
     benchmarkService
       .get(`/benchmarks/node=${nodeID}/results`)
       .then((response) => {
+        console.log(`******* benchmarks ${nodeID} **********`);
         console.log(response.data);
         const benchmarks = response.data;
         for (let i = 0; i < response.data.length; i++) {
@@ -70,7 +71,10 @@ const actions: ActionTree<BenchmarkState, RootState> = {
           benchmarkService
             .get(`/benchmarks/name=${benchmark.id}/results`)
             .then((response) => {
-              if (Object.keys(response.data).length > 0) {
+              if (
+                Object.keys(response.data).length > 0 &&
+                Object.values(response.data.metrics)[0] != null
+              ) {
                 clearInterval(intervalID);
                 benchmark = { ...benchmark, ...response.data };
                 commit("updateBenchmark", benchmark);
@@ -97,7 +101,6 @@ const actions: ActionTree<BenchmarkState, RootState> = {
 const mutations: MutationTree<BenchmarkState> = {
   insertBenchmark(state, payload) {
     console.log("mutation start - insertBenchmark");
-    console.log(state);
     Benchmark.insert({
       data: payload,
     }).then(() => {

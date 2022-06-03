@@ -3,8 +3,9 @@
     type="bar"
     :options="options"
     :series="series"
-    :key="options.chart.id"
+    :key="Math.random()"
   ></apexchart>
+  <!-- key: trigger render again for sync charts -->
 </template>
 
 <script setup lang="ts">

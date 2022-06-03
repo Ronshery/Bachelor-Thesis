@@ -1,5 +1,4 @@
 <template>
-  {{ node.name }}
   <BenchmarkComponent :node="node" :availableBenchmarks="availableBenchmarks" />
 </template>
 

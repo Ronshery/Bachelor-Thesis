@@ -9,14 +9,25 @@
     >
       <template v-slot:title>
         <span style="color: white">
-          {{ bmType }}
-          <span
-            style="color: green; font-weight: bold; cursor: pointer"
-            @click="runBenchmark(bmType)"
-          >
-            run
+          <span class="benchmark-type-title">{{ bmType }}</span>
+          <span class="run-wrapper" :class="{ running: runningState[bmType] }">
+            <span style="cursor: pointer" v-if="!runningState[bmType]">
+              <img
+                class="run-icon"
+                alt="run"
+                @click="runBenchmark(bmType)"
+                :src="require('@/assets/benchmark/benchmark-run-icon.svg')"
+              />
+              <span class="run-text" @click="runBenchmark(bmType)"> run </span>
+            </span>
+            <span v-else>
+              <img
+                class="running-icon"
+                alt="running"
+                :src="require('@/assets/benchmark/benchmark-running-icon.svg')"
+              /><span>running ...</span>
+            </span>
           </span>
-          <span v-if="runningState[bmType]"> running... </span>
         </span>
       </template>
       <CpuSysbench v-if="bmType === BmType.CPU_SYSBENCH" :nodeID="nodeID" />
@@ -84,4 +95,49 @@ const runningState = computed(() => {
 });
 </script>
 
-<style scoped></style>
+<style scoped>
+.benchmark-type-title {
+  font-size: 19px;
+}
+
+.run-wrapper {
+  font-weight: bold;
+  background-color: #00000080;
+  margin-left: 1em;
+  border-radius: 20px;
+  padding: 8px 16px 8px 16px;
+}
+
+.run-icon {
+  width: 16px;
+  position: relative;
+  top: 3px;
+  margin-right: 5px;
+  cursor: pointer;
+}
+
+.run-text:hover {
+  color: lightgray;
+}
+
+.running-icon {
+  width: 24px;
+  position: relative;
+  top: 6px;
+  margin-right: 5px;
+  animation: spin 2s linear infinite;
+}
+
+.running {
+  background-color: #00000050;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+</style>
