@@ -1,0 +1,201 @@
+<template>
+  <div v-if="!chartsData.globalOptions" class="no-data">run to see results</div>
+  <TabContentCardsWrapper v-else>
+    <TabContentCard>
+      <template v-slot:title> Score </template>
+      <div class="donut-score-chart-wrapper">
+        <div>
+          <DonutChart
+            class="donut-score-chart"
+            style="font-size: 21px"
+            :radius="80"
+            :x="95"
+            :y="95"
+            :strokeWidth="30"
+            :maxValue="10"
+            :loadedView="true"
+            :score="5"
+            :strokeColor="'#7D72FF'"
+            :isSegmented="false"
+          />
+        </div>
+        <div
+          style="
+            padding: 10px;
+            border-radius: 20px;
+            box-shadow: 0 4px 4px 4px rgba(0, 0, 0, 0.25);
+            margin-left: 2em;
+          "
+        >
+          A tool to monitor I/O latency in real time. It shows disk latency in
+          the same way as ping shows network latency. With ioping benchmark you
+          can measure the latency of the storage I/O subsystem in your
+          Kubernetes cluster.
+        </div>
+      </div>
+    </TabContentCard>
+    <TabContentCard>
+      <template v-slot:title> Fixed values </template>
+      <InnerTableCard
+        :listAsObject="chartsData.globalOptions"
+        :mappings="mappings"
+      />
+    </TabContentCard>
+    <TabContentCard :cssStyle="{ minHeight: '400px' }">
+      <template v-slot:title> Latency </template>
+      <apexchart
+        :series="chartsData.latencySeries"
+        :options="chartsData.latencyOptions"
+        :key="Math.random()"
+      />
+    </TabContentCard>
+    <TabContentCard>
+      <template v-slot:title> I/O operations per second </template>
+      <apexchart
+        :series="chartsData.iopsSeries"
+        :options="chartsData.iopsOptions"
+        :key="Math.random()"
+      />
+    </TabContentCard>
+  </TabContentCardsWrapper>
+</template>
+
+<script setup lang="ts">
+import { computed, defineProps } from "vue";
+import Benchmark from "@/models/Benchmark";
+import { IBenchmark } from "@/models/IBenchmark";
+import bmUtils, {
+  BmType,
+  mappings,
+  defaultBarOptions,
+} from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
+import InnerTableCard from "@/components/NodePanel/tabContents/InnerTableCard.vue";
+import DonutChart from "@/components/utils/DonutChart.vue";
+import TabContentCardsWrapper from "@/components/NodePanel/tabContents/TabContentCardsWrapper.vue";
+import TabContentCard from "@/components/NodePanel/tabContents/TabContentCard.vue";
+import { Collection, Item } from "@vuex-orm/core";
+
+// vue data
+const props = defineProps(["nodeID"]);
+
+// data
+const chartsData = computed(() => {
+  const query = Benchmark.query()
+    .where("node", props.nodeID)
+    .where((benchmark: IBenchmark) => {
+      return (
+        benchmark.id.includes(BmType.DISK_IOPING) && benchmark.metrics != null
+      );
+    })
+    .orderBy("started");
+
+  const latestBm = query.last();
+  const currentBms = query.get();
+
+  const { latencyOptions, latencySeries } = bmUtils.latencyApexArguments(
+    currentBms,
+    latestBm,
+    BmType.DISK_IOPING
+  );
+
+  const { iopsOptions, iopsSeries } = iopsApexArguments(currentBms, latestBm);
+
+  const metrics = latestBm?.$getAttributes().metrics;
+
+  let globalOptions = undefined;
+  if (metrics) {
+    globalOptions = {
+      number_of_requests: metrics.number_of_requests,
+    };
+  }
+
+  return {
+    latencySeries,
+    latencyOptions,
+    iopsOptions,
+    iopsSeries,
+    globalOptions,
+  };
+});
+
+// methods
+const iopsApexArguments = (
+  currentBms: Collection<Benchmark>,
+  latestBm: Item<Benchmark>
+) => {
+  const iopsSeries = [
+    {
+      name: "iops",
+      data: [] as string[],
+    },
+    {
+      name: "transfer bitrate (KiB/s)",
+      data: [] as string[],
+    },
+    {
+      name: "total duration (ms)",
+      data: [] as string[],
+    },
+  ];
+
+  const categories: string[] = [];
+
+  for (const bm of currentBms) {
+    const tmp = bm.$getAttributes();
+    const metrics = tmp.metrics;
+    iopsSeries[0].data.push(metrics.iops);
+    iopsSeries[1].data.push(metrics.transfer_bitrate);
+    iopsSeries[2].data.push(metrics.total_duration);
+    const date = new Date(tmp.started + "Z");
+    const minutes =
+      date.getMinutes() < 10 ? `0${date.getMinutes()}` : date.getMinutes();
+    categories.push(`${date.getHours()}:${minutes}`);
+  }
+
+  // on: panning and zoom enabled
+  const tickPlacement = currentBms.length <= 3 ? "between" : "on";
+
+  let iopsOptions = JSON.parse(JSON.stringify(defaultBarOptions));
+
+  iopsOptions = {
+    ...iopsOptions,
+    chart: {
+      ...iopsOptions.chart,
+      id: "iops-" + latestBm?.$getAttributes().id,
+      group: BmType.DISK_IOPING,
+    },
+    xaxis: {
+      ...iopsOptions.xaxis,
+      min: currentBms.length - 3,
+      max: currentBms.length,
+      categories: categories,
+      tickPlacement: tickPlacement,
+    },
+    tooltip: {
+      ...iopsOptions.tooltip,
+      fixed: {
+        ...iopsOptions.tooltip.fixed,
+        offsetY: -120,
+      },
+    },
+  };
+
+  return { iopsOptions, iopsSeries };
+};
+</script>
+
+<style scoped>
+.no-data {
+  color: white;
+  font-weight: bold;
+}
+
+.donut-score-chart {
+  width: 191px;
+  height: 191px;
+}
+
+.donut-score-chart-wrapper {
+  display: flex;
+}
+</style>

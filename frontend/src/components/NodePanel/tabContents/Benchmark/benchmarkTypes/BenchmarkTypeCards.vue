@@ -1,5 +1,4 @@
 <template>
-  {{ runningState }}
   <div v-for="bmType in bmTypes" :key="bmType">
     <TabContentCard
       :cssStyle="{
@@ -31,11 +30,12 @@
         </span>
       </template>
       <CpuSysbench v-if="bmType === BmType.CPU_SYSBENCH" :nodeID="nodeID" />
-      <div v-if="bmType === BmType.MEMORY_SYSBENCH">
-        memory-sysbench results
-      </div>
-      <div v-if="bmType === BmType.DISK_IOPING">disk-ioping results</div>
-      <div v-if="bmType === BmType.DISK_FIO">disk-fio results</div>
+      <MemorySysbench
+        v-if="bmType === BmType.MEMORY_SYSBENCH"
+        :nodeID="nodeID"
+      />
+      <DiskIoping v-if="bmType === BmType.DISK_IOPING" :nodeID="nodeID" />
+      <DiskFio v-if="bmType === BmType.DISK_FIO" :nodeID="nodeID" />
       <div v-if="bmType === BmType.NETWORK_IPERF3">network-iperf3 results</div>
       <div v-if="bmType === BmType.NETWORK_QPERF">network-qperf results</div>
     </TabContentCard>
@@ -49,6 +49,9 @@ import CpuSysbench from "@/components/NodePanel/tabContents/Benchmark/benchmarkT
 import { IBenchmark } from "@/models/IBenchmark";
 import Benchmark from "@/models/Benchmark";
 import { BmType } from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
+import MemorySysbench from "@/components/NodePanel/tabContents/Benchmark/benchmarkTypes/MemorySysbench.vue";
+import DiskIoping from "@/components/NodePanel/tabContents/Benchmark/benchmarkTypes/DiskIoping.vue";
+import DiskFio from "@/components/NodePanel/tabContents/Benchmark/benchmarkTypes/DiskFio.vue";
 
 // vue data
 const props = defineProps(["bmTypes", "nodeID"]);
@@ -72,7 +75,7 @@ const runningState = computed(() => {
     BmType.NETWORK_IPERF3,
     BmType.NETWORK_QPERF,
   ];
-  const query = Benchmark.query().where("node", props.nodeID);
+
   const runningStateNew = {
     [BmType.CPU_SYSBENCH]: false,
     [BmType.MEMORY_SYSBENCH]: false,
@@ -82,6 +85,7 @@ const runningState = computed(() => {
     [BmType.NETWORK_QPERF]: false,
   };
   for (let bmType of bmTypes) {
+    const query = Benchmark.query().where("node", props.nodeID);
     const runningBmsByType = query
       .where((benchmark: IBenchmark) => {
         return benchmark.id.includes(bmType);

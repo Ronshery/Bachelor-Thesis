@@ -15,7 +15,7 @@
             :maxValue="10"
             :loadedView="true"
             :score="5"
-            :strokeColor="'#CECAFF'"
+            :strokeColor="'#AEA7FF'"
             :isSegmented="false"
           />
         </div>
@@ -61,17 +61,17 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, computed } from "vue";
-import TabContentCard from "@/components/NodePanel/tabContents/TabContentCard.vue";
-import TabContentCardsWrapper from "@/components/NodePanel/tabContents/TabContentCardsWrapper.vue";
+import { computed, defineProps } from "vue";
 import Benchmark from "@/models/Benchmark";
 import { IBenchmark } from "@/models/IBenchmark";
 import bmUtils, {
-  mappings,
   BmType,
+  mappings,
 } from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
 import InnerTableCard from "@/components/NodePanel/tabContents/InnerTableCard.vue";
 import DonutChart from "@/components/utils/DonutChart.vue";
+import TabContentCardsWrapper from "@/components/NodePanel/tabContents/TabContentCardsWrapper.vue";
+import TabContentCard from "@/components/NodePanel/tabContents/TabContentCard.vue";
 
 // vue data
 const props = defineProps(["nodeID"]);
@@ -82,7 +82,8 @@ const chartsData = computed(() => {
     .where("node", props.nodeID)
     .where((benchmark: IBenchmark) => {
       return (
-        benchmark.id.includes(BmType.CPU_SYSBENCH) && benchmark.metrics != null
+        benchmark.id.includes(BmType.MEMORY_SYSBENCH) &&
+        benchmark.metrics != null
       );
     })
     .orderBy("started");
@@ -90,24 +91,26 @@ const chartsData = computed(() => {
   const latestBm = query.last();
   const currentBms = query.get();
 
-  let { latencyOptions, latencySeries } = bmUtils.latencyApexArguments(
+  const { latencyOptions, latencySeries } = bmUtils.latencyApexArguments(
     currentBms,
     latestBm,
-    BmType.CPU_SYSBENCH
+    BmType.MEMORY_SYSBENCH
   );
 
   const { eventsOptions, eventsSeries } = bmUtils.eventsApexArguments(
     currentBms,
     latestBm,
-    BmType.CPU_SYSBENCH
+    BmType.MEMORY_SYSBENCH
   );
 
   const metrics = latestBm?.$getAttributes().metrics;
   let globalOptions = undefined;
   if (metrics) {
     globalOptions = {
-      num_threads: metrics.num_threads,
-      prime_numbers_limit: metrics.prime_numbers_limit,
+      num_threads: metrics.number_of_threads,
+      block_size: metrics.block_size,
+      total_size: metrics.total_size,
+      operation: metrics.operation,
       total_time: bmUtils.convertTotalTime(metrics.total_time),
     };
   }
@@ -120,34 +123,6 @@ const chartsData = computed(() => {
     globalOptions,
   };
 });
-
-// methods
-
-/* for multiple y axis combinations
-*     yaxis: [
-      {
-        seriesName: "95p",
-        title: {
-          text: "min, avg, 95p",
-        },
-      },
-      {
-        show: false,
-        seriesName: "95p",
-      },
-      {
-        opposite: true,
-        title: {
-          text: "max",
-        },
-        seriesName: "max",
-      },
-      {
-        show: false,
-        seriesName: "95p",
-      },
-    ],
-* */
 </script>
 
 <style scoped>

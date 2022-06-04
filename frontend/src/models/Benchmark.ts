@@ -56,9 +56,12 @@ const actions: ActionTree<BenchmarkState, RootState> = {
       .post(`/benchmark/${benchmarkType}/${nodeID}`)
       .then((response) => {
         console.log(response);
-        const bmDuration =
+        let bmDuration =
           parseInt(bmUtils.getBMDuration(response.data.spec.spec.options)) *
           1000;
+        if (bmDuration == 0) {
+          bmDuration = 15000;
+        }
         let benchmark = {
           id: response.data.id,
           node: nodeID,

@@ -23,6 +23,7 @@ import HamburgerIcon from "@/components/utils/HamburgerIcon.vue";
 // vue data
 const props = defineProps(["items"]);
 const emit = defineEmits(["itemClicked"]);
+
 // data
 const menuOpen = ref(false);
 
@@ -33,6 +34,7 @@ const toggleIcon = () => {
 };
 
 const itemClicked = (item: string) => {
+  toggleIcon();
   emit("itemClicked", item);
 };
 
