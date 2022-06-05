@@ -2,7 +2,9 @@ import { Model } from "@vuex-orm/core";
 import { ActionTree, MutationTree, GetterTree, Module } from "vuex";
 import { RootState } from "@/store";
 import benchmarkService from "@/services/benchmark-service";
-import bmUtils from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
+import bmUtils, {
+  BmType,
+} from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
 
 export default class Benchmark extends Model {
   static entity = "benchmarks";
@@ -62,9 +64,14 @@ const actions: ActionTree<BenchmarkState, RootState> = {
         if (bmDuration == 0) {
           bmDuration = 15000;
         }
+
+        const isNetworkBm =
+          benchmarkType == BmType.NETWORK_IPERF3 ||
+          benchmarkType == BmType.NETWORK_QPERF;
+
         let benchmark = {
-          id: response.data.id,
-          node: nodeID,
+          id: isNetworkBm ? response.data.id + "-client" : response.data.id,
+          node: isNetworkBm ? nodeID.split("@@@")[0] : nodeID,
           type: benchmarkType.split("-")[0],
           resource: benchmarkType.split("-")[0],
         };

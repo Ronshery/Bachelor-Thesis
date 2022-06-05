@@ -9,15 +9,33 @@
       <template v-slot:title>
         <span style="color: white">
           <span class="benchmark-type-title">{{ bmType }}</span>
-          <span class="run-wrapper" :class="{ running: runningState[bmType] }">
-            <span style="cursor: pointer" v-if="!runningState[bmType]">
+          <DropDown
+            v-if="isNetworkBenchmark(bmType)"
+            :bmType="bmType"
+            :nodeID="nodeID"
+            @networkSelected="updateSelectValue"
+            :key="bmType"
+          />
+          <span
+            class="run-wrapper"
+            :class="{
+              'run-disabled':
+                selections[bmType] === '0' || runningState[bmType],
+            }"
+          >
+            <span
+              :class="{ 'cursor-pointer': selections[bmType] !== '0' }"
+              v-if="!runningState[bmType]"
+              @click="runBenchmark(bmType)"
+            >
               <img
                 class="run-icon"
                 alt="run"
-                @click="runBenchmark(bmType)"
                 :src="require('@/assets/benchmark/benchmark-run-icon.svg')"
               />
-              <span class="run-text" @click="runBenchmark(bmType)"> run </span>
+              <span :class="{ 'run-text': selections[bmType] !== '0' }">
+                run
+              </span>
             </span>
             <span v-else>
               <img
@@ -36,14 +54,14 @@
       />
       <DiskIoping v-if="bmType === BmType.DISK_IOPING" :nodeID="nodeID" />
       <DiskFio v-if="bmType === BmType.DISK_FIO" :nodeID="nodeID" />
-      <div v-if="bmType === BmType.NETWORK_IPERF3">network-iperf3 results</div>
+      <NetworkIperf3 v-if="bmType === BmType.NETWORK_IPERF3" :nodeID="nodeID" />
       <div v-if="bmType === BmType.NETWORK_QPERF">network-qperf results</div>
     </TabContentCard>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, defineProps } from "vue";
+import { computed, defineProps, ref, Ref } from "vue";
 import TabContentCard from "@/components/NodePanel/tabContents/TabContentCard.vue";
 import CpuSysbench from "@/components/NodePanel/tabContents/Benchmark/benchmarkTypes/CpuSysbench.vue";
 import { IBenchmark } from "@/models/IBenchmark";
@@ -52,20 +70,49 @@ import { BmType } from "@/components/NodePanel/tabContents/Benchmark/utils/bm-ut
 import MemorySysbench from "@/components/NodePanel/tabContents/Benchmark/benchmarkTypes/MemorySysbench.vue";
 import DiskIoping from "@/components/NodePanel/tabContents/Benchmark/benchmarkTypes/DiskIoping.vue";
 import DiskFio from "@/components/NodePanel/tabContents/Benchmark/benchmarkTypes/DiskFio.vue";
+import NetworkIperf3 from "@/components/NodePanel/tabContents/Benchmark/benchmarkTypes/NetworkIperf3.vue";
+import DropDown from "@/components/NodePanel/tabContents/Benchmark/utils/DropDown.vue";
 
 // vue data
 const props = defineProps(["bmTypes", "nodeID"]);
 
 // data
+let iPerf3SelectValue = ref("0");
+let qperfSelectValue = ref("0");
+const selections = ref<{ [key: string]: Ref<string> }>({
+  [BmType.NETWORK_IPERF3]: iPerf3SelectValue,
+  [BmType.NETWORK_QPERF]: qperfSelectValue,
+});
 
 // methods
 const runBenchmark = (benchmarkType: BmType) => {
+  let nodeParam = props.nodeID;
+  if (selections.value[benchmarkType] == "0") {
+    return;
+  }
+  if (isNetworkBenchmark(benchmarkType)) {
+    nodeParam = props.nodeID + "@@@" + selections.value[benchmarkType];
+  }
   Benchmark.dispatch("runBenchmark", {
     benchmarkType: benchmarkType,
-    nodeID: props.nodeID,
+    nodeID: nodeParam,
   });
 };
 
+const updateSelectValue = (param: { bmType: BmType; value: string }) => {
+  if (param.bmType == BmType.NETWORK_IPERF3) {
+    iPerf3SelectValue.value = param.value;
+  } else {
+    qperfSelectValue.value = param.value;
+  }
+};
+
+const isNetworkBenchmark = (benchmarkType: BmType) => {
+  return (
+    benchmarkType == BmType.NETWORK_IPERF3 ||
+    benchmarkType == BmType.NETWORK_QPERF
+  );
+};
 const runningState = computed(() => {
   const bmTypes = [
     BmType.CPU_SYSBENCH,
@@ -84,6 +131,7 @@ const runningState = computed(() => {
     [BmType.NETWORK_IPERF3]: false,
     [BmType.NETWORK_QPERF]: false,
   };
+  console.log(Benchmark.query().where("node", props.nodeID).get());
   for (let bmType of bmTypes) {
     const query = Benchmark.query().where("node", props.nodeID);
     const runningBmsByType = query
@@ -92,7 +140,6 @@ const runningState = computed(() => {
       })
       .where("metrics", null)
       .get();
-
     runningStateNew[bmType] = runningBmsByType.length > 0;
   }
   return runningStateNew;
@@ -117,11 +164,22 @@ const runningState = computed(() => {
   position: relative;
   top: 3px;
   margin-right: 5px;
+}
+
+.run-icon:hover + .run-text {
+  color: #bdbdbd;
+}
+
+.cursor-pointer {
   cursor: pointer;
 }
 
+.run-disabled {
+  opacity: 30%;
+}
+
 .run-text:hover {
-  color: lightgray;
+  color: #bdbdbd;
 }
 
 .running-icon {
@@ -130,10 +188,6 @@ const runningState = computed(() => {
   top: 6px;
   margin-right: 5px;
   animation: spin 2s linear infinite;
-}
-
-.running {
-  background-color: #00000050;
 }
 
 @keyframes spin {

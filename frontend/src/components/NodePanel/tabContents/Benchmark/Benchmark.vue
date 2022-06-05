@@ -9,16 +9,32 @@
       :benchmark="key"
     >
       <div v-if="key === BmResource.CPU">
-        <BenchmarkTypeCards :bmTypes="bm" :nodeID="props.node.name" :key="bm" />
+        <BenchmarkTypeCards
+          :bmTypes="bm"
+          :nodeID="props.node.name"
+          :key="key"
+        />
       </div>
       <div v-if="key === BmResource.NETWORK">
-        <BenchmarkTypeCards :bmTypes="bm" :nodeID="props.node.name" :key="bm" />
+        <BenchmarkTypeCards
+          :bmTypes="bm"
+          :nodeID="props.node.name"
+          :key="key"
+        />
       </div>
       <div v-if="key === BmResource.MEMORY">
-        <BenchmarkTypeCards :bmTypes="bm" :nodeID="props.node.name" :key="bm" />
+        <BenchmarkTypeCards
+          :bmTypes="bm"
+          :nodeID="props.node.name"
+          :key="key"
+        />
       </div>
       <div v-if="key === BmResource.DISK">
-        <BenchmarkTypeCards :bmTypes="bm" :nodeID="props.node.name" :key="bm" />
+        <BenchmarkTypeCards
+          :bmTypes="bm"
+          :nodeID="props.node.name"
+          :key="key"
+        />
       </div>
     </BenchmarkChapter>
   </TabLayout>
