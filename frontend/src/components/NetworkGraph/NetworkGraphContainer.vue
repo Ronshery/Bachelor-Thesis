@@ -20,11 +20,12 @@ import NetworkGraph from "@/components/NetworkGraph/NetworkGraph.vue";
 import * as vNG from "v-network-graph"; // @ is an alias to /src
 import { useStore } from "vuex";
 import NodePanel from "@/components/NodePanel/NodePanel.vue";
+import { INode } from "@/models/INode";
 
 // vue data
 const store = useStore();
 // data
-const selectedNode = ref<string | null>(null);
+const selectedNode = ref<INode | null>(null);
 const NodeModel = computed(() => store.$db().model("nodes"));
 const nodes = computed(() => {
   let nodesList = NodeModel.value.query().all();
@@ -35,6 +36,7 @@ const nodes = computed(() => {
     convertedNodesList[node.name] = node;
   });
   console.log(convertedNodesList);
+
   return convertedNodesList;
 });
 let lastSelectedNode = ref();
@@ -62,6 +64,7 @@ const nodeClicked = (params: any) => {
     }
     lastSelectedNode.value.show = false;
     lastSelectedNode.value.color = "white";
+    // trigger events again with copy of object
     selectedNode.value = JSON.parse(JSON.stringify(lastSelectedNode.value));
   }
 };
@@ -116,8 +119,7 @@ const configs: vNG.UserConfigs = reactive(
     node: {
       selectable: 2,
       label: {
-        color: "white",
-        fontSize: 20,
+        visible: false,
       },
       normal: {
         type: "rect",
@@ -130,7 +132,7 @@ const configs: vNG.UserConfigs = reactive(
         color: (node) => node.color,
       },
       focusring: {
-        color: "black",
+        color: "#393b54",
       },
     },
   })

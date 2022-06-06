@@ -31,5 +31,6 @@ defineExpose({ isActive });
 .tab-content-container {
   overflow: auto;
   height: 100vh;
+  overflow-x: hidden;
 }
 </style>

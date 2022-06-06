@@ -112,13 +112,10 @@ const layoutsBackup = ref<vNG.Layouts>();
 let layoutsBackupSet = false;
 let data = ref([1, 9, 5, 6]);
 const layoutsComputed = computed(() => {
-  console.log("computed");
   const keys = Object.keys(layouts.value.nodes);
-  console.log(keys);
   Object.entries(layouts.value.nodes).forEach((node, index) => {
-    layouts.value.nodes[keys[index]].bmScore = data.value[index];
+    layouts.value.nodes[keys[index]].bmScore = props.nodes[node[0]].bmScore;
   });
-  console.log(layouts.value);
   return layouts.value;
 });
 const loadedView = ref(false);
@@ -136,6 +133,7 @@ let setTabContentHeight = () => {
     }
   }
 };
+
 onMounted(() => {
   console.log("NetworkGraph mounted");
   store.dispatch("initializeGraph", graph);
@@ -146,7 +144,7 @@ onMounted(() => {
     graphCenterAndFit();
     setTabContentHeight();
     console.log(window.innerWidth);
-    if (window.innerWidth < 800) {
+    if (window.innerWidth < 1230) {
       emit("closePanel", true);
     } else {
       emit("closePanel", false);
@@ -240,7 +238,7 @@ const convertedScore = (score: number) => (score * circumference) / maxValue;
 </script>
 <style scoped>
 .v-network-graph-container {
-  background-color: #27293d;
+  background-color: #191824;
   height: 100vh;
   flex-grow: 1;
 }

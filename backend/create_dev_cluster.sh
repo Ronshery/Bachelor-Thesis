@@ -63,6 +63,23 @@ helm install \
 # customize monitoring settings
 kubectl apply -f ci_dev/monitoring-settings.yml &>/dev/null
 
+printf "\n##### Deploy Chaos Mesh...\n"
+helm repo add chaos-mesh https://charts.chaos-mesh.org &>/dev/null
+helm repo update &>/dev/null
+kubectl create ns chaos-testing
+helm install \
+    --version 2.2.0 \
+    --namespace chaos-testing \
+    --set chaosDaemon.runtime=containerd \
+    --set chaosDaemon.socketPath=/run/containerd/containerd.sock \
+    --set dashboard.create=true \
+    --set dashboard.securityMode=false \
+    chaos-mesh chaos-mesh/chaos-mesh
+# check chaos installation
+kubectl get po -n chaos-testing
+# create chaos schedules
+kubectl apply -f ci_dev/chaos-stress-cpu.yml
+
 printf "\n##### Deploy Kubernetes Dashboard...\n"
 helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/ &>/dev/null
 helm repo update &>/dev/null

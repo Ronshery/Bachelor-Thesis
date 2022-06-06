@@ -1,0 +1,10 @@
+[Unit]
+Description=Run perona benchmark
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c '(echo $(date); /usr/bin/curl -s -X POST http://localhost:8000/benchmark/cpu-sysbench/benchmark-operator-worker; echo -e) | tee -a /perona-data/log.txt'
+StandardOutput=journal
+
+[Install]
+WantedBy=multi-user.target
