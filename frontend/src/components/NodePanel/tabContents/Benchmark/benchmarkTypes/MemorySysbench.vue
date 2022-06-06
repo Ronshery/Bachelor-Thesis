@@ -1,47 +1,20 @@
 <template>
-  <div v-if="!chartsData.globalOptions" class="no-data">run to see results</div>
-  <TabContentCardsWrapper v-else>
-    <TabContentCard>
-      <template v-slot:title> Score </template>
-      <div class="donut-score-chart-wrapper">
-        <div>
-          <DonutChart
-            class="donut-score-chart"
-            style="font-size: 21px"
-            :radius="80"
-            :x="95"
-            :y="95"
-            :strokeWidth="30"
-            :maxValue="10"
-            :loadedView="true"
-            :score="5"
-            :strokeColor="'#AEA7FF'"
-            :isSegmented="false"
-          />
-        </div>
-        <div
-          style="
-            padding: 10px;
-            border-radius: 20px;
-            box-shadow: 0 4px 4px 4px rgba(0, 0, 0, 0.25);
-            margin-left: 2em;
-          "
-        >
-          sysbench is a scriptable multi-threaded benchmark tool based on
-          LuaJIT. It is most frequently used for database benchmarks, but can
-          also be used to create arbitrarily complex workloads that do not
-          involve a database server.
-        </div>
-      </div>
-    </TabContentCard>
-    <TabContentCard>
+  <TabContentCardsWrapper>
+    <ScoreCard :score="5" strokeColor="#AEA7FF" :description="description" />
+    <div v-if="!chartsData.globalOptions" class="no-data">
+      run to see results
+    </div>
+    <TabContentCard v-if="chartsData.globalOptions">
       <template v-slot:title> Fixed values </template>
       <InnerTableCard
         :listAsObject="chartsData.globalOptions"
         :mappings="mappings"
       />
     </TabContentCard>
-    <TabContentCard :cssStyle="{ minHeight: '400px' }">
+    <TabContentCard
+      v-if="chartsData.globalOptions"
+      :cssStyle="{ minHeight: '400px' }"
+    >
       <template v-slot:title> Latency </template>
       <apexchart
         :series="chartsData.latencySeries"
@@ -49,7 +22,7 @@
         :key="Math.random()"
       />
     </TabContentCard>
-    <TabContentCard>
+    <TabContentCard v-if="chartsData.globalOptions">
       <template v-slot:title> Events </template>
       <apexchart
         :series="chartsData.eventsSeries"
@@ -69,14 +42,16 @@ import bmUtils, {
   mappings,
 } from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
 import InnerTableCard from "@/components/NodePanel/tabContents/InnerTableCard.vue";
-import DonutChart from "@/components/utils/DonutChart.vue";
 import TabContentCardsWrapper from "@/components/NodePanel/tabContents/TabContentCardsWrapper.vue";
 import TabContentCard from "@/components/NodePanel/tabContents/TabContentCard.vue";
+import ScoreCard from "@/components/NodePanel/tabContents/Benchmark/utils/ScoreCard.vue";
 
 // vue data
 const props = defineProps(["nodeID"]);
 
 // data
+const description =
+  "sysbench is a scriptable multi-threaded benchmark tool based on LuaJIT. It is most frequently used for database benchmarks, but can also be used to create arbitrarily complex workloads that do not involve a database server.";
 const chartsData = computed(() => {
   const query = Benchmark.query()
     .where("node", props.nodeID)
@@ -124,19 +99,3 @@ const chartsData = computed(() => {
   };
 });
 </script>
-
-<style scoped>
-.no-data {
-  color: white;
-  font-weight: bold;
-}
-
-.donut-score-chart {
-  width: 191px;
-  height: 191px;
-}
-
-.donut-score-chart-wrapper {
-  display: flex;
-}
-</style>

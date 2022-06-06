@@ -1,47 +1,20 @@
 <template>
-  <div v-if="!chartsData.globalOptions" class="no-data">run to see results</div>
-  <TabContentCardsWrapper v-else>
-    <TabContentCard>
-      <template v-slot:title> Score </template>
-      <div class="donut-score-chart-wrapper">
-        <div>
-          <DonutChart
-            class="donut-score-chart"
-            style="font-size: 21px"
-            :radius="80"
-            :x="95"
-            :y="95"
-            :strokeWidth="30"
-            :maxValue="10"
-            :loadedView="true"
-            :score="5"
-            :strokeColor="'#7D72FF'"
-            :isSegmented="false"
-          />
-        </div>
-        <div
-          style="
-            padding: 10px;
-            border-radius: 20px;
-            box-shadow: 0 4px 4px 4px rgba(0, 0, 0, 0.25);
-            margin-left: 2em;
-          "
-        >
-          A tool to monitor I/O latency in real time. It shows disk latency in
-          the same way as ping shows network latency. With ioping benchmark you
-          can measure the latency of the storage I/O subsystem in your
-          Kubernetes cluster.
-        </div>
-      </div>
-    </TabContentCard>
-    <TabContentCard>
+  <TabContentCardsWrapper>
+    <ScoreCard :score="5" strokeColor="#7D72FF" :description="description" />
+    <div v-if="!chartsData.globalOptions" class="no-data">
+      run to see results
+    </div>
+    <TabContentCard v-if="chartsData.globalOptions">
       <template v-slot:title> Fixed values </template>
       <InnerTableCard
         :listAsObject="chartsData.globalOptions"
         :mappings="mappings"
       />
     </TabContentCard>
-    <TabContentCard :cssStyle="{ minHeight: '400px' }">
+    <TabContentCard
+      v-if="chartsData.globalOptions"
+      :cssStyle="{ minHeight: '400px' }"
+    >
       <template v-slot:title> Latency </template>
       <apexchart
         :series="chartsData.latencySeries"
@@ -49,7 +22,7 @@
         :key="Math.random()"
       />
     </TabContentCard>
-    <TabContentCard>
+    <TabContentCard v-if="chartsData.globalOptions">
       <template v-slot:title> I/O operations per second </template>
       <apexchart
         :series="chartsData.iopsSeries"
@@ -70,15 +43,17 @@ import bmUtils, {
   defaultBarOptions,
 } from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
 import InnerTableCard from "@/components/NodePanel/tabContents/InnerTableCard.vue";
-import DonutChart from "@/components/utils/DonutChart.vue";
 import TabContentCardsWrapper from "@/components/NodePanel/tabContents/TabContentCardsWrapper.vue";
 import TabContentCard from "@/components/NodePanel/tabContents/TabContentCard.vue";
 import { Collection, Item } from "@vuex-orm/core";
+import ScoreCard from "@/components/NodePanel/tabContents/Benchmark/utils/ScoreCard.vue";
 
 // vue data
 const props = defineProps(["nodeID"]);
 
 // data
+const description =
+  "A tool to monitor I/O latency in real time. It shows disk latency in the same way as ping shows network latency. With ioping benchmark you can measure the latency of the storage I/O subsystem in your Kubernetes cluster.";
 const chartsData = computed(() => {
   const query = Benchmark.query()
     .where("node", props.nodeID)
@@ -183,19 +158,3 @@ const iopsApexArguments = (
   return { iopsOptions, iopsSeries };
 };
 </script>
-
-<style scoped>
-.no-data {
-  color: white;
-  font-weight: bold;
-}
-
-.donut-score-chart {
-  width: 191px;
-  height: 191px;
-}
-
-.donut-score-chart-wrapper {
-  display: flex;
-}
-</style>

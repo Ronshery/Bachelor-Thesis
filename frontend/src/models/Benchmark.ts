@@ -61,8 +61,8 @@ const actions: ActionTree<BenchmarkState, RootState> = {
         let bmDuration =
           parseInt(bmUtils.getBMDuration(response.data.spec.spec.options)) *
           1000;
-        if (bmDuration == 0) {
-          bmDuration = 15000;
+        if (bmDuration == 1000) {
+          bmDuration = 30000;
         }
 
         const isNetworkBm =

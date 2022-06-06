@@ -1,40 +1,10 @@
 <template>
   <TabContentCardsWrapper>
-    <TabContentCard>
-      <template v-slot:title> Score</template>
-      <div class="donut-score-chart-wrapper">
-        <div>
-          <DonutChart
-            class="donut-score-chart"
-            style="font-size: 21px"
-            :radius="80"
-            :x="95"
-            :y="95"
-            :strokeWidth="30"
-            :maxValue="10"
-            :loadedView="true"
-            :score="5"
-            :strokeColor="'#5245EA'"
-            :isSegmented="false"
-          />
-        </div>
-        <div
-          style="
-            padding: 10px;
-            border-radius: 20px;
-            box-shadow: 0 4px 4px 4px rgba(0, 0, 0, 0.25);
-            margin-left: 2em;
-          "
-        >
-          iPerf3 is a tool for active measurements of the maximum achievable
-          bandwidth on IP networks. It supports tuning of various parameters
-          related to timing, buffers and protocols (TCP, UDP, SCTP with IPv4 and
-          IPv6). With the iPerf3 benchmark, you can measure the I/O performance
-          of the network hardware and stack used in your Kubernetes cluster.
-        </div>
-      </div>
-    </TabContentCard>
-    <TabContentCard>
+    <ScoreCard :description="description" :score="5" strokeColor="#5245EA" />
+    <div v-if="chartsData.iPerf3Series[0].data.length === 0" class="no-data">
+      run to see results
+    </div>
+    <TabContentCard v-if="chartsData.iPerf3Series[0].data.length > 0">
       <template v-slot:title> iPerf3</template>
       <apexchart
         :series="chartsData.iPerf3Series"
@@ -53,15 +23,17 @@ import {
   BmType,
   defaultBarOptions,
 } from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
-import DonutChart from "@/components/utils/DonutChart.vue";
 import TabContentCardsWrapper from "@/components/NodePanel/tabContents/TabContentCardsWrapper.vue";
 import TabContentCard from "@/components/NodePanel/tabContents/TabContentCard.vue";
 import { Collection, Item } from "@vuex-orm/core";
+import ScoreCard from "@/components/NodePanel/tabContents/Benchmark/utils/ScoreCard.vue";
 
 // vue data
 const props = defineProps(["nodeID"]);
 
 // data
+const description =
+  "iPerf3 is a tool for active measurements of the maximum achievable bandwidth on IP networks. It supports tuning of various parameters related to timing, buffers and protocols (TCP, UDP, SCTP with IPv4 and IPv6). With the iPerf3 benchmark, you can measure the I/O performance of the network hardware and stack used in your Kubernetes cluster.";
 const chartsData = computed(() => {
   const query = Benchmark.query()
     .where("node", props.nodeID)
@@ -80,6 +52,8 @@ const chartsData = computed(() => {
     currentBms,
     latestBm
   );
+
+  console.log(iPerf3Series);
 
   return {
     iPerf3Options,
@@ -147,14 +121,5 @@ const iPerf3ApexArguments = (
 .no-data {
   color: white;
   font-weight: bold;
-}
-
-.donut-score-chart {
-  width: 191px;
-  height: 191px;
-}
-
-.donut-score-chart-wrapper {
-  display: flex;
 }
 </style>

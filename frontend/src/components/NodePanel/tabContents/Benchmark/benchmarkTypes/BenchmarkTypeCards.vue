@@ -55,7 +55,7 @@
       <DiskIoping v-if="bmType === BmType.DISK_IOPING" :nodeID="nodeID" />
       <DiskFio v-if="bmType === BmType.DISK_FIO" :nodeID="nodeID" />
       <NetworkIperf3 v-if="bmType === BmType.NETWORK_IPERF3" :nodeID="nodeID" />
-      <div v-if="bmType === BmType.NETWORK_QPERF">network-qperf results</div>
+      <NetworkQperf v-if="bmType === BmType.NETWORK_QPERF" :nodeID="nodeID" />
     </TabContentCard>
   </div>
 </template>
@@ -72,6 +72,7 @@ import DiskIoping from "@/components/NodePanel/tabContents/Benchmark/benchmarkTy
 import DiskFio from "@/components/NodePanel/tabContents/Benchmark/benchmarkTypes/DiskFio.vue";
 import NetworkIperf3 from "@/components/NodePanel/tabContents/Benchmark/benchmarkTypes/NetworkIperf3.vue";
 import DropDown from "@/components/NodePanel/tabContents/Benchmark/utils/DropDown.vue";
+import NetworkQperf from "@/components/NodePanel/tabContents/Benchmark/benchmarkTypes/NetworkQperf.vue";
 
 // vue data
 const props = defineProps(["bmTypes", "nodeID"]);
@@ -131,7 +132,6 @@ const runningState = computed(() => {
     [BmType.NETWORK_IPERF3]: false,
     [BmType.NETWORK_QPERF]: false,
   };
-  console.log(Benchmark.query().where("node", props.nodeID).get());
   for (let bmType of bmTypes) {
     const query = Benchmark.query().where("node", props.nodeID);
     const runningBmsByType = query
@@ -197,5 +197,13 @@ const runningState = computed(() => {
   100% {
     transform: rotate(360deg);
   }
+}
+</style>
+
+<style>
+.no-data {
+  color: white;
+  font-weight: bold;
+  width: 100%;
 }
 </style>
