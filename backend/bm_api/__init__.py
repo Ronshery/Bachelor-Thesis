@@ -1,5 +1,5 @@
 import datetime
-from typing import List, Dict, Type
+from typing import List, Dict, Optional, Tuple, Type
 
 from fastapi import FastAPI, HTTPException, responses, Depends
 import common.benchmarks as benchmarks
@@ -10,7 +10,7 @@ from common.clients.benchmark_history.client import BenchmarkHistoryClient
 from common.clients.k8s import get_k8s_client
 from common.clients.k8s.client import K8sClient
 from bm_api.models.node import NodeModel, NodeMetricsModel
-from bm_api.models.benchmark import BenchmarkResult
+from bm_api.models.benchmark import BenchmarkResult, BenchmarkResultMetric
 from common.clients.prometheus.schemes import NodeMetricsModel as PrometheusNodeMetricsModel
 from bm_api.models.benchmark import BenchmarkResult
 
@@ -113,7 +113,7 @@ async def get_benchmark_results_for_node(node_name: str, bm_history_client: Benc
                 type=r.type,
                 resource=r.type,
                 started=r.started,
-                metrics={ m.name: m.value for m in r.metrics }
+                metrics=[BenchmarkResultMetric(name=m.name, value=m.value, unit=m.unit) for m in r.metrics]
             ) for r in results
         ]
 

@@ -1,4 +1,4 @@
-from sqlalchemy import MetaData, ForeignKey
+from sqlalchemy import Float, MetaData, ForeignKey
 from sqlalchemy import Table, Column, Integer, String, TIMESTAMP
 from sqlalchemy.orm import relationship, declarative_base, registry
 
@@ -27,11 +27,13 @@ class Benchmark(Base):
 
 
 class BenchmarkMetric(Base):
-    __tablename__ = "benchmark_metrics"
+    __tablename__ = "benchmark_metrics_2"
 
     benchmark_id = Column(ForeignKey("benchmarks.id"), primary_key=True, nullable=False)
     name = Column(String(30), primary_key=True, nullable=False)
-    value = Column(String)
+    text_value = Column(String, nullable=False)
+    value = Column(Float, nullable=True)
+    unit = Column(String, nullable=True)
 
     benchmark = relationship("Benchmark", back_populates="metrics")
 
