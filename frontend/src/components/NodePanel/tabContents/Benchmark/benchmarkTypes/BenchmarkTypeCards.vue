@@ -61,10 +61,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineProps, ref, Ref } from "vue";
+import { defineProps, ref, Ref } from "vue";
 import TabContentCard from "@/components/NodePanel/tabContents/TabContentCard.vue";
 import CpuSysbench from "@/components/NodePanel/tabContents/Benchmark/benchmarkTypes/CpuSysbench.vue";
-import { IBenchmark } from "@/models/IBenchmark";
 import Benchmark from "@/models/Benchmark";
 import { BmType } from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
 import MemorySysbench from "@/components/NodePanel/tabContents/Benchmark/benchmarkTypes/MemorySysbench.vue";
@@ -75,7 +74,7 @@ import DropDown from "@/components/NodePanel/tabContents/Benchmark/utils/DropDow
 import NetworkQperf from "@/components/NodePanel/tabContents/Benchmark/benchmarkTypes/NetworkQperf.vue";
 
 // vue data
-const props = defineProps(["bmTypes", "nodeID"]);
+const props = defineProps(["bmTypes", "nodeID", "runningState"]);
 
 // data
 let iPerf3SelectValue = ref("0");
@@ -114,36 +113,6 @@ const isNetworkBenchmark = (benchmarkType: BmType) => {
     benchmarkType == BmType.NETWORK_QPERF
   );
 };
-const runningState = computed(() => {
-  const bmTypes = [
-    BmType.CPU_SYSBENCH,
-    BmType.MEMORY_SYSBENCH,
-    BmType.DISK_IOPING,
-    BmType.DISK_FIO,
-    BmType.NETWORK_IPERF3,
-    BmType.NETWORK_QPERF,
-  ];
-
-  const runningStateNew = {
-    [BmType.CPU_SYSBENCH]: false,
-    [BmType.MEMORY_SYSBENCH]: false,
-    [BmType.DISK_IOPING]: false,
-    [BmType.DISK_FIO]: false,
-    [BmType.NETWORK_IPERF3]: false,
-    [BmType.NETWORK_QPERF]: false,
-  };
-  for (let bmType of bmTypes) {
-    const query = Benchmark.query().where("node", props.nodeID);
-    const runningBmsByType = query
-      .where((benchmark: IBenchmark) => {
-        return benchmark.id.includes(bmType);
-      })
-      .where("metrics", null)
-      .get();
-    runningStateNew[bmType] = runningBmsByType.length > 0;
-  }
-  return runningStateNew;
-});
 </script>
 
 <style scoped>

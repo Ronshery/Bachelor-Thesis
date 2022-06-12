@@ -273,6 +273,9 @@ export default {
     return { eventsOptions, eventsSeries };
   },
   convertTotalTime(time: string) {
+    if (time == null) {
+      return time;
+    }
     const substr = time.toString().substring(0, time.length - 1);
     let convertedTime = Number(substr).toFixed(0);
     convertedTime = convertedTime + time[time.length - 1];

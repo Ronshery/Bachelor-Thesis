@@ -12,28 +12,28 @@
         <BenchmarkTypeCards
           :bmTypes="bm"
           :nodeID="props.node.name"
-          :key="key"
+          :runningState="runningState"
         />
       </div>
       <div v-if="key === BmResource.NETWORK">
         <BenchmarkTypeCards
           :bmTypes="bm"
           :nodeID="props.node.name"
-          :key="key"
+          :runningState="runningState"
         />
       </div>
       <div v-if="key === BmResource.MEMORY">
         <BenchmarkTypeCards
           :bmTypes="bm"
           :nodeID="props.node.name"
-          :key="key"
+          :runningState="runningState"
         />
       </div>
       <div v-if="key === BmResource.DISK">
         <BenchmarkTypeCards
           :bmTypes="bm"
           :nodeID="props.node.name"
-          :key="key"
+          :runningState="runningState"
         />
       </div>
     </BenchmarkChapter>
@@ -51,7 +51,12 @@ import bmScript, {
 } from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
 
 // vue data
-const props = defineProps(["node", "nodePanelOpen", "availableBenchmarks"]);
+const props = defineProps([
+  "node",
+  "nodePanelOpen",
+  "availableBenchmarks",
+  "runningState",
+]);
 
 // data
 // methods
