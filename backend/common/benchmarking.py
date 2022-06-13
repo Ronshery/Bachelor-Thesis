@@ -46,7 +46,7 @@ def to_metrics_list(benchmark_id: str, o: any) -> List[BenchmarkMetric]:
         result.append(BenchmarkMetric(
             benchmark_id=benchmark_id,
             name=k,
-            full_value=v.value,
+            text_value=v.value,
             value=p_value,
             unit=p_unit
         ))

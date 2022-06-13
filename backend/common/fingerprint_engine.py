@@ -250,18 +250,15 @@ class SimpleFingerprintEngine(BaseFingerprintEngine):
                 mt = next(filter(lambda m: m.name == metric_name and m.value is not None, bms[bm_type.value].metrics),
                           None)
                 if mt is not None and mt.value is not None:
-                    rm = re.match(r"[\d\.]+", mt.value)
-                    if rm is not None:
-                        value = float(rm.group(0))
-
-                        if normalize:
-                            if bm_type == BenchmarkedResourceKind.CPU_SYSBENCH and cpu_busy_avg > 0:
-                                value /= cpu_busy_avg
+                    value = mt.value
+                    if normalize:
+                        if bm_type == BenchmarkedResourceKind.CPU_SYSBENCH and cpu_busy_avg > 0:
+                            value /= cpu_busy_avg
                             elif bm_type in (BenchmarkedResourceKind.DISK_FIO,
                                              BenchmarkedResourceKind.DISK_IOPING) and disk_io_util_avg > 0:
-                                value /= disk_io_util_avg
+                            value /= disk_io_util_avg
 
-                        return value
+                    return value
 
             return default_value
 

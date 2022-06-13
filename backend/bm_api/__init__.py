@@ -94,7 +94,7 @@ async def get_benchmark_results(bm_name: str, bm_history_client: BenchmarkHistor
                 type=r.type,
                 resource=r.type,
                 started=r.started,
-                metrics={ m.name: m.value for m in r.metrics }
+                metrics=[BenchmarkResultMetric(name=m.name, value=m.value, unit=m.unit) for m in r.metrics]
             )
         else:
             raise HTTPException(status_code=404, detail=f"Benchmark not found: '{bm_name}'")
