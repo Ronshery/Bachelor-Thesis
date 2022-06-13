@@ -74,6 +74,8 @@ helm install \
     --set chaosDaemon.socketPath=/run/containerd/containerd.sock \
     --set dashboard.create=true \
     --set dashboard.securityMode=false \
+    --set dashboard.service.type=NodePort \
+    --set dashboard.service.nodePort=31333 \
     chaos-mesh chaos-mesh/chaos-mesh
 # check chaos installation
 kubectl get po -n chaos-testing

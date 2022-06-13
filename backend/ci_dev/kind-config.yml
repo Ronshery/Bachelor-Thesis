@@ -22,7 +22,7 @@ nodes:
     listenAddress: "127.0.0.1"
     protocol: TCP
   # chaos dashboard
-  - containerPort: 2333
+  - containerPort: 31333
     hostPort: 8333
     listenAddress: "127.0.0.1"
     protocol: TCP
