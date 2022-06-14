@@ -27,7 +27,8 @@ class BaseFingerprint(ABC):
     def timestamp(self) -> datetime.datetime:
         raise NotImplementedError
 
-    def compare_to(self, ref_fingerprint: BaseFingerprint, for_resource: Optional[BenchmarkedResource]) -> float:
+    def compare_to(self, ref_fingerprint: BaseFingerprint, for_resource: Optional[BenchmarkedResource] = None,
+                   for_kind: Optional[BenchmarkedResourceKind] = None) -> float:
         raise NotImplementedError
 
     def serialize(self) -> str:
@@ -72,10 +73,12 @@ class SimpleFingerprint(BaseFingerprint):
     def timestamp(self) -> datetime.datetime:
         return self._utctimestamp
 
-    def compare_to(self, ref_fingerprint: SimpleFingerprint, for_resource: Optional[BenchmarkedResource]=None) -> float:
+    def compare_to(self, ref_fingerprint: SimpleFingerprint,
+                   for_resource: Optional[BenchmarkedResource] = None,
+                   for_kind: Optional[BenchmarkedResourceKind] = None) -> float:
         if type(ref_fingerprint) != SimpleFingerprint:
             raise ValueError("SimpleFingerprint can only compare to SimpleFingerprint")
-        
+
         if for_resource is not None:
             if for_resource == BenchmarkedResource.CPU:
                 vec = (
@@ -100,6 +103,34 @@ class SimpleFingerprint(BaseFingerprint):
                     self.net_bw_cpu_usage / ref_fingerprint.net_bw_cpu_usage,
                     self.net_lat_cpu_usage / ref_fingerprint.net_lat_cpu_usage,
                 )
+        elif for_kind is not None:
+            if for_kind == BenchmarkedResourceKind.CPU_SYSBENCH:
+                vec = (
+                    self.cpu_events_per_second / ref_fingerprint.cpu_events_per_second,
+                    self.cpu_latency_95 / ref_fingerprint.cpu_latency_95
+                )
+            elif for_kind == BenchmarkedResourceKind.DISK_IOPING:
+                vec = (
+                    self.disk_iops / ref_fingerprint.disk_iops,
+                    self.disk_latency_avg / ref_fingerprint.disk_latency_avg
+                )
+            elif for_kind == BenchmarkedResourceKind.MEMORY_SYSBENCH:
+                vec = (
+                    self.mem_latency_max / ref_fingerprint.mem_latency_max,
+                    self.mem_exctime / ref_fingerprint.mem_exctime,
+                )
+            elif for_kind == BenchmarkedResourceKind.NETWORK_IPERF3:
+                vec = (
+                    self.net_transfer_bitrate / ref_fingerprint.net_transfer_bitrate
+                )
+            elif for_kind == BenchmarkedResourceKind.NETWORK_QPERF:
+                vec = (
+                    self.net_tcp_msg_rate / ref_fingerprint.net_tcp_msg_rate,
+                    self.net_tcp_latency / ref_fingerprint.net_tcp_latency,
+                    self.net_bw_cpu_usage / ref_fingerprint.net_bw_cpu_usage,
+                    self.net_lat_cpu_usage / ref_fingerprint.net_lat_cpu_usage,
+                )
+            # TODO: DISK_FIO
         else:
             vec = (
                 self.cpu_events_per_second / ref_fingerprint.cpu_events_per_second,
@@ -138,7 +169,8 @@ class NodeScore(pydantic.BaseModel):
     # def score(self):
     #     return max(self.min_score, min(self.max_score, self._score))
 
-#@dataclass
+
+# @dataclass
 class NodeScores(pydantic.BaseModel):
     node_name: str
 
@@ -148,7 +180,9 @@ class NodeScores(pydantic.BaseModel):
     memory: NodeScore
     disk: NodeScore
     network: NodeScore
-    
+
+    details: Optional[Dict[str, NodeScore]] = {}
+
 
 class BaseFingerprintEngine(ABC):
     @property
@@ -161,12 +195,12 @@ class BaseFingerprintEngine(ABC):
     async def get_scores_for_node(self, node_name: str) -> NodeScores:
         raise NotImplementedError
 
-    async def get_scores(self, *node_names : str) -> Dict[str, NodeScores]:
+    async def get_scores(self, *node_names: str) -> Dict[str, NodeScores]:
         return {
             n: await self.get_scores_for_node(n) for n in node_names
         }
 
-    async def get_fingerprints(self, *node_names : str) -> Dict[str, BaseFingerprint]:
+    async def get_fingerprints(self, *node_names: str) -> Dict[str, BaseFingerprint]:
         return {
             n: await self.get_fingerprint_for_node(n) for n in node_names
         }
@@ -187,20 +221,23 @@ class SimpleFingerprintEngine(BaseFingerprintEngine):
         recent_bms = self.benchmark_history_client.get_benchmarks_results(node_name)
 
         bms: Dict[str, Benchmark] = {}
-        
+
         for bm in recent_bms:
             if bm.type not in bms:
                 bms[bm.type] = bm
             elif bms[bm.type].started < bm.started:
                 bms[bm.type] = bm
-        
-        def get_metric_value(bm_type: BenchmarkedResourceKind, metric_name: str, default_value: Optional[float]=None, normalize: bool=True) -> Optional[float]:
+
+        def get_metric_value(bm_type: BenchmarkedResourceKind, metric_name: str, default_value: Optional[float] = None,
+                             normalize: bool = True) -> Optional[float]:
             if bm_type.value in bms:
                 bm_ts_start = bms[bm_type.value].started
                 bm_ts_end = bms[bm_type.value].started + datetime.timedelta(seconds=bms[bm_type.value].duration)
                 metrics_timeframe = datetime.timedelta(seconds=10)
 
-                node_metrics = self.benchmark_history_client.get_node_metrics(node_name, bm_ts_start - metrics_timeframe, bm_ts_end + metrics_timeframe)
+                node_metrics = self.benchmark_history_client.get_node_metrics(node_name,
+                                                                              bm_ts_start - metrics_timeframe,
+                                                                              bm_ts_end + metrics_timeframe)
 
                 def get_metric_avg(metric_name: str) -> float:
                     values = [float(nm.value) for nm in node_metrics if nm.metric == metric_name]
@@ -210,7 +247,8 @@ class SimpleFingerprintEngine(BaseFingerprintEngine):
                 # memory_used_avg: float = get_metric_avg("memory_used") / 100.0 # useless
                 disk_io_util_avg: float = get_metric_avg("disk_io_util") / 100.0
 
-                mt = next(filter(lambda m: m.name == metric_name and m.value is not None, bms[bm_type.value].metrics), None)
+                mt = next(filter(lambda m: m.name == metric_name and m.value is not None, bms[bm_type.value].metrics),
+                          None)
                 if mt is not None and mt.value is not None:
                     rm = re.match(r"[\d\.]+", mt.value)
                     if rm is not None:
@@ -219,11 +257,12 @@ class SimpleFingerprintEngine(BaseFingerprintEngine):
                         if normalize:
                             if bm_type == BenchmarkedResourceKind.CPU_SYSBENCH and cpu_busy_avg > 0:
                                 value /= cpu_busy_avg
-                            elif bm_type in (BenchmarkedResourceKind.DISK_FIO, BenchmarkedResourceKind.DISK_IOPING) and disk_io_util_avg > 0:
+                            elif bm_type in (BenchmarkedResourceKind.DISK_FIO,
+                                             BenchmarkedResourceKind.DISK_IOPING) and disk_io_util_avg > 0:
                                 value /= disk_io_util_avg
 
                         return value
-            
+
             return default_value
 
         fp = SimpleFingerprint(
@@ -243,7 +282,6 @@ class SimpleFingerprintEngine(BaseFingerprintEngine):
         )
 
         return fp
-
 
     async def get_scores_for_node(self, node_name: str) -> NodeScores:
         fp = await self.get_fingerprint_for_node(node_name)
@@ -271,7 +309,9 @@ class SimpleFingerprintEngine(BaseFingerprintEngine):
             cpu=NodeScore(score=fp.compare_to(ref_fingerprint, for_resource=BenchmarkedResource.CPU) * 10),
             memory=NodeScore(score=fp.compare_to(ref_fingerprint, for_resource=BenchmarkedResource.MEMORY) * 10),
             disk=NodeScore(score=fp.compare_to(ref_fingerprint, for_resource=BenchmarkedResource.DISK) * 10),
-            network=NodeScore(score=fp.compare_to(ref_fingerprint, for_resource=BenchmarkedResource.NETWORK) * 10)
+            network=NodeScore(score=fp.compare_to(ref_fingerprint, for_resource=BenchmarkedResource.NETWORK) * 10),
+            details={data.name: NodeScore(score=fp.compare_to(ref_fingerprint, for_kind=data.value) * 10)
+                     for data in BenchmarkedResourceKind}
         )
 
 
