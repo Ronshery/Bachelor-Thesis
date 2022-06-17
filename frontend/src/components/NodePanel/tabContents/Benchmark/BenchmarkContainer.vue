@@ -6,10 +6,6 @@
   <div style="color: white">
     {{ runningStateList }}
   </div>
-  <br />
-  <div style="color: white">
-    {{ copy }}
-  </div>
   <BenchmarkComponent
     :node="node"
     :availableBenchmarks="availableBenchmarks"
@@ -79,7 +75,6 @@ interface RunningState {
 }
 
 let runningStateList = ref<RunningState>({});
-let copy = ref(runningStateList);
 let fetchingActiveList = ref<NodeFetchingState>({});
 const runningState = computed(() => {
   if (props.node.name == undefined) {
@@ -123,7 +118,7 @@ const runningState = computed(() => {
     //updateRunningState(bmType as BmType, runningBmsByType.length > 0);
   }*/
 
-  for (const node in copy.value) {
+  for (const node in runningStateList.value) {
     for (let bmType of bmTypes) {
       const query = Benchmark.query().where("node", node);
       const runningBmsByType = query
@@ -139,27 +134,7 @@ const runningState = computed(() => {
       );
     }
   }
-  initFetchingActiveList();
-  for (const [node, nodeRunningState] of Object.entries(copy.value)) {
-    for (const [bmType, isRunning] of Object.entries(nodeRunningState)) {
-      if (isRunning) {
-        console.log(`fetch results of: ${bmType} in node: ${node}`);
-        const query = Benchmark.query().where("node", node);
-        const runningBm = query
-          .where((benchmark: IBenchmark) => {
-            return benchmark.id.includes(bmType);
-          })
-          .where("metrics", null)
-          .get();
-        console.log("the runningBm: ");
-        console.log(runningBm[0].$getAttributes());
-        fetchResultsByNode(runningBm[0], bmType as BmType, node);
-        //resetFetchingActiveListByNode(bmType as BmType, node);
-      } else {
-        resetFetchingActiveListByNode(bmType as BmType, node);
-      }
-    }
-  }
+
   /*  initFetchingActiveList();
   for (const [bmType, isRunning] of Object.entries(runningStateNew)) {
     if (isRunning) {
@@ -180,7 +155,32 @@ const runningState = computed(() => {
   return runningStateList.value[props.node.name];
 });
 
-const fetchResults = (benchmark: Benchmark, bmType: BmType) => {
+watch(runningStateList.value, () => {
+  console.log("watch watch");
+  initFetchingActiveList();
+  for (const [node, nodeRunningState] of Object.entries(
+    runningStateList.value
+  )) {
+    for (const [bmType, isRunning] of Object.entries(nodeRunningState)) {
+      if (isRunning) {
+        console.log(`fetch results of: ${bmType} in node: ${node}`);
+        const query = Benchmark.query().where("node", node);
+        const runningBm = query
+          .where((benchmark: IBenchmark) => {
+            return benchmark.id.includes(bmType);
+          })
+          .where("metrics", null)
+          .get();
+        console.log("the runningBm: ");
+        console.log(runningBm[0].$getAttributes());
+        fetchResultsByNode(runningBm[0], bmType as BmType, node);
+      } else {
+        resetIsFetchingByNode(bmType as BmType, node);
+      }
+    }
+  }
+});
+/*const fetchResults = (benchmark: Benchmark, bmType: BmType) => {
   const spec = benchmark.$getAttributes().spec;
   if (
     !fetchingActiveList.value[props.node.name][bmType].isFetching &&
@@ -192,6 +192,7 @@ const fetchResults = (benchmark: Benchmark, bmType: BmType) => {
     if (bmDuration == 1000) {
       bmDuration = 30000;
     }
+    bmDuration = 5000;
     setTimeout(() => {
       fetchingActiveList.value[props.node.name][bmType].intervalID =
         setInterval(() => {
@@ -204,7 +205,7 @@ const fetchResults = (benchmark: Benchmark, bmType: BmType) => {
         fetchingActiveList.value[props.node.name][bmType].intervalID
     );
   }
-};
+};*/
 
 const fetchResultsByNode = (
   benchmark: Benchmark,
@@ -226,8 +227,14 @@ const fetchResultsByNode = (
     setTimeout(() => {
       fetchingActiveList.value[nodeName][bmType].intervalID = setInterval(
         () => {
-          console.log(nodeName + "   ****   " + props.node.name);
-          Benchmark.dispatch("fetchBenchmarkById", benchmark);
+          // needs .toString() to avoid call by reference
+          const tmp =
+            fetchingActiveList.value[nodeName][bmType].intervalID?.toString();
+          if (!fetchingActiveList.value[nodeName][bmType].isFetching) {
+            resetIntervalIDByNode(bmType, nodeName, parseInt(tmp ? tmp : ""));
+          } else {
+            Benchmark.dispatch("fetchBenchmarkById", benchmark);
+          }
         },
         1000
       );
@@ -296,15 +303,25 @@ const initFetchingActiveList = () => {
     };
   }
 };
-const resetFetchingActiveListByNode = (bmType: BmType, nodeName: string) => {
+const resetIntervalIDByNode = (
+  bmType: BmType,
+  nodeName: string,
+  intervalID: number
+) => {
   if (props.node.name != undefined) {
     fetchingActiveList.value[nodeName][bmType].isFetching = false;
-    clearInterval(fetchingActiveList.value[props.node.name][bmType].intervalID);
+    clearInterval(intervalID);
     fetchingActiveList.value[nodeName][bmType].intervalID = undefined;
   }
 };
 
-const resetFetchingActiveList = (bmType: BmType) => {
+const resetIsFetchingByNode = (bmType: BmType, nodeName: string) => {
+  if (props.node.name != undefined) {
+    fetchingActiveList.value[nodeName][bmType].isFetching = false;
+  }
+};
+
+/*const resetFetchingActiveList = (bmType: BmType) => {
   if (props.node.name != undefined) {
     fetchingActiveList.value[props.node.name][bmType].isFetching = false;
     clearInterval(fetchingActiveList.value[props.node.name][bmType].intervalID);
@@ -323,7 +340,7 @@ const resetRunningStateListByNode = (nodeName: string) => {
       [BmType.NETWORK_QPERF]: false,
     };
   }
-};
+};*/
 </script>
 
 <style scoped></style>
