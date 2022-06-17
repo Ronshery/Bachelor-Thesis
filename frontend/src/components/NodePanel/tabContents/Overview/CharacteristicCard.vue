@@ -41,6 +41,11 @@ const options = {
   },
   yaxis: {
     show: true,
+    labels: {
+      style: {
+        offsetY: 5,
+      },
+    },
     max: 10,
     min: 0,
   },

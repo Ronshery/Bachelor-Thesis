@@ -1,6 +1,6 @@
 <template>
   <TabContentCardsWrapper>
-    <ScoreCard :description="description" :score="8" strokeColor="#CECAFF" />
+    <ScoreCard :description="description" :score="8" strokeColor="#E3E0FF" />
     <div v-if="!chartsData.globalOptions" class="no-data">
       run to see results
     </div>

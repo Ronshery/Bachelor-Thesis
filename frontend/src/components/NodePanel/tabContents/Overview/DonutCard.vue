@@ -19,7 +19,7 @@
         <div
           class="segment-donut-content-wrapper"
           v-for="segment in segments"
-          :key="segment.score"
+          :key="segment.benchmark"
         >
           <div class="benchmark-name">{{ segment.benchmark }}</div>
           <div class="segment-donut-chart-wrapper">

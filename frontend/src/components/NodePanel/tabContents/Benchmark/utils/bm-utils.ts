@@ -150,9 +150,14 @@ export default {
         latencySeries[3].data.push(metrics.latency_95p);
       }
       const date = new Date(tmp.started + "Z");
-      const minutes =
-        date.getMinutes() < 10 ? `0${date.getMinutes()}` : date.getMinutes();
-      categories.push(`${date.getHours()}:${minutes}`);
+      const clock = date.toLocaleString("en-US", {
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      });
+      const month =
+        date.getMonth() < 10 ? `0${date.getMonth()}` : date.getMonth();
+      categories.push(`${month}/${date.getDate()} ${clock}`);
     }
 
     // on: panning and zoom enabled
@@ -248,9 +253,14 @@ export default {
       }
 
       const date = new Date(tmp.started + "Z");
-      const minutes =
-        date.getMinutes() < 10 ? `0${date.getMinutes()}` : date.getMinutes();
-      categories.push(`${date.getHours()}:${minutes}`);
+      const clock = date.toLocaleString("en-US", {
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      });
+      const month =
+        date.getMonth() < 10 ? `0${date.getMonth()}` : date.getMonth();
+      categories.push(`${month}/${date.getDate()} ${clock}`);
     }
     const tickPlacement = currentBms.length <= 3 ? "between" : "on";
 

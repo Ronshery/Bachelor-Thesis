@@ -56,7 +56,13 @@ const nodeClicked = (params: any) => {
     }
     params.show = true;
     lastSelectedNode.value.color = "white";
+    NodeModel.value.update({
+      ...lastSelectedNode.value,
+      color: "white",
+    });
     params.color = "#6753e1";
+    NodeModel.value.update({ ...params, show: true, color: "#6753e1" });
+
     selectedNode.value = params;
     lastSelectedNode.value = params;
   } else {
@@ -65,6 +71,11 @@ const nodeClicked = (params: any) => {
     }
     lastSelectedNode.value.show = false;
     lastSelectedNode.value.color = "white";
+    NodeModel.value.update({
+      ...lastSelectedNode.value,
+      show: false,
+      color: "white",
+    });
     // trigger events again with copy of object
     selectedNode.value = JSON.parse(JSON.stringify(lastSelectedNode.value));
   }
@@ -118,7 +129,7 @@ const configs: vNG.UserConfigs = reactive(
       maxZoomLevel: 16,
     },
     node: {
-      selectable: 2,
+      selectable: 1,
       label: {
         visible: false,
       },

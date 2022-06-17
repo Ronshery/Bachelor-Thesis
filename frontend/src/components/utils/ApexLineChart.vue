@@ -52,7 +52,13 @@ const options = ref({
     x: {
       formatter: (x: number) => {
         let date = new Date(x);
-        return `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+        const clock = date.toLocaleString("en-US", {
+          hour: "numeric",
+          minute: "numeric",
+          second: "numeric",
+          hour12: true,
+        });
+        return `${clock}`;
       },
     },
   },
@@ -79,6 +85,7 @@ const options = ref({
       style: {
         colors: "#FFFFFF",
       },
+      format: "hh:mm:ss",
     },
     axisTicks: {
       show: true,
