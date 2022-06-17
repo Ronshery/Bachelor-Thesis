@@ -2,6 +2,11 @@ import { createStore } from "vuex";
 import { ActionTree, MutationTree, GetterTree } from "vuex";
 import VuexORM from "@vuex-orm/core";
 import database from "@/database";
+import VuexPersistence from "vuex-persist";
+
+const vuexLocal = new VuexPersistence<RootState>({
+  storage: window.sessionStorage,
+});
 
 export interface RootState {
   graph: any;
@@ -31,7 +36,7 @@ const mutations: MutationTree<RootState> = {
 };
 
 const store = createStore({
-  plugins: [VuexORM.install(database)],
+  plugins: [VuexORM.install(database), vuexLocal.plugin],
   state,
   getters,
   actions,

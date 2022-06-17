@@ -24,6 +24,7 @@ import { INode } from "@/models/INode";
 
 // vue data
 const store = useStore();
+
 // data
 const selectedNode = ref<INode | null>(null);
 const NodeModel = computed(() => store.$db().model("nodes"));

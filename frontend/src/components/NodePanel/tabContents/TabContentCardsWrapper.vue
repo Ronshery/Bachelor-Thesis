@@ -1,13 +1,13 @@
 <template>
-  <div class="overview-layout-container">
+  <div class="cards-wrapper">
     <slot />
   </div>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts" />
 
 <style scoped>
-.overview-layout-container {
+.cards-wrapper {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;

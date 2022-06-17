@@ -1,29 +1,45 @@
 <template>
-  <div v-if="errorMsg != ''" class="error">
+  <div v-if="errorMsg !== ''" class="error">
     {{ errorMsg }}
-    <div class="lds-ring">
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-    </div>
   </div>
   <apexchart
-    width="100%"
-    height="auto"
     :options="options"
     :series="series"
+    @beforeZoom="beforeZoom"
+    @beforeResetZoom="beforeResetZoom"
   ></apexchart>
 </template>
 
 <script setup lang="ts">
-import { defineProps } from "vue";
+import { defineProps, ref } from "vue";
+
+interface AxisMinMax {
+  min: Date;
+  max: Date;
+}
+
+interface ApexZoomConfig {
+  xaxis: AxisMinMax;
+  yaxis: AxisMinMax;
+}
 
 // vue data
-const props = defineProps(["options", "series", "errorMsg"]);
+const props = defineProps(["series", "errorMsg"]);
 
 // data
-const options = {
+let initMax = new Date().getTime(); // Current timestamp
+let initMin = new Date(initMax - 5 * 60000).getTime(); // timestamp 90 days before
+let initRange = initMax - initMin;
+
+const options = ref({
+  chart: {
+    id: "linechart",
+    toolbar: {
+      tools: {
+        download: false,
+      },
+    },
+  },
   animations: {
     enabled: true,
     speed: 4000,
@@ -56,9 +72,6 @@ const options = {
       colors: ["#F44336", "#E91E63", "#9C27B0"],
     },
   },
-  chart: {
-    id: "vuechart-example",
-  },
   xaxis: {
     type: "datetime",
     labels: {
@@ -67,6 +80,10 @@ const options = {
         colors: "#FFFFFF",
       },
     },
+    axisTicks: {
+      show: true,
+    },
+    range: initRange,
   },
   yaxis: {
     labels: {
@@ -74,13 +91,55 @@ const options = {
         colors: "#FFFFFF",
       },
     },
+    max: 100,
+    min: 0,
   },
   noData: {
     text: "Loading...",
+    offsetY: -15,
     style: {
       color: "#FFFFFF",
     },
   },
+});
+
+// methods
+const beforeResetZoom = () => {
+  options.value = {
+    ...options.value,
+    xaxis: {
+      ...options.value.xaxis,
+      axisTicks: {
+        show: true,
+      },
+      range: initRange,
+    },
+  };
+};
+
+const beforeZoom = (chartContext: never, config: ApexZoomConfig) => {
+  let max, min;
+  let now = new Date();
+  let showAxisTicks = true;
+  max = new Date(config.xaxis.max).getTime();
+  min = new Date(config.xaxis.min).getTime();
+
+  // if max is in future zoom fully out
+  if (max > now.getTime()) {
+    max = props.series[0].data[props.series[0].data.length - 1].x.getTime();
+    min = props.series[0].data[0].x.getTime();
+    showAxisTicks = false;
+  }
+  options.value = {
+    ...options.value,
+    xaxis: {
+      ...options.value.xaxis,
+      axisTicks: {
+        show: showAxisTicks,
+      },
+      range: max - min,
+    },
+  };
 };
 </script>
 

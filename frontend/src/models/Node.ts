@@ -65,7 +65,7 @@ const actions: ActionTree<NodeState, RootState> = {
     await benchmarkService.get("nodes", { params });
     commit("setLoading", true);
     const nodesResponse = await benchmarkService.get("/nodes");
-    console.log("******* data **********");
+    console.log("******* nodes **********");
     console.log(nodesResponse.data);
     const nodes = nodesResponse.data;
     for (const node of nodes) {
@@ -105,7 +105,6 @@ const mutations: MutationTree<NodeState> = {
   },
   insertNodes(state, payload) {
     console.log("mutation start - insertNodes");
-    console.log(payload);
     Node.insert({
       data: payload,
     }).then(() => {

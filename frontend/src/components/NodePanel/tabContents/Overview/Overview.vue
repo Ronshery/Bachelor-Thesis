@@ -1,54 +1,58 @@
 <template>
-  <OverviewLayout>
-    <DonutCard :segments="segments" :score="nodeComp.bmScore" />
-    <OverviewCard>
-      <template v-slot:title> Node info </template>
-      <template v-slot:default>
-        <div class="wrapper">
-          <div
-            class="row"
-            v-for="(value, index) in nodeInfoComp[0]"
-            :key="value"
-          >
-            <div class="row-element">
-              {{ nodeInfoComp[0][index] }}
-            </div>
-            <div class="row-element row-element-right">
-              {{ nodeInfoComp[1][index] }}
-            </div>
-          </div>
-        </div>
-      </template>
-    </OverviewCard>
-    <OverviewCard
-      v-for="graph in graphListApex"
-      :key="graph.title"
-      :cssStyle="{ backgroundColor: '#4c4f69' }"
-      :isSVG="true"
-    >
-      <template v-slot:title>
-        <div class="graph-card-title">{{ graph.title }}</div>
-      </template>
-      <template v-slot:default>
-        <ApexLineChart :series="graph.data" :errorMsg="metricsError" />
-      </template>
-    </OverviewCard>
-  </OverviewLayout>
+  <TabLayout>
+    <OverviewLayout>
+      <TabContentCard>
+        <template v-slot:title>Score</template>
+        <DonutCard :segments="segments" :score="nodeComp.bmScore" />
+      </TabContentCard>
+      <TabContentCard>
+        <template v-slot:title> Characteristic </template>
+        <CharacteristicCard />
+      </TabContentCard>
+      <TabContentCardsWrapper>
+        <TabContentCard>
+          <template v-slot:title> Node info </template>
+          <template v-slot:default>
+            <InnerTableCard
+              :list-as-object="nodeInfoComp"
+              :mappings="mappings"
+            />
+          </template>
+        </TabContentCard>
+        <TabContentCard
+          v-for="graph in graphListApex"
+          :key="graph.title"
+          :cssStyle="{ backgroundColor: '#4c4f69', minHeight: '400px' }"
+          :isSVG="true"
+        >
+          <template v-slot:title>
+            <div class="graph-card-title">{{ graph.title }}</div>
+          </template>
+          <template v-slot:default>
+            <ApexLineChart :series="graph.data" :errorMsg="metricsError" />
+          </template>
+        </TabContentCard>
+      </TabContentCardsWrapper>
+    </OverviewLayout>
+  </TabLayout>
 </template>
 
 <script setup lang="ts">
 import { computed, defineProps, ref, watch } from "vue";
 import benchmarkService from "@/services/benchmark-service";
 import DonutCard from "@/components/NodePanel/tabContents/Overview/DonutCard.vue";
-import OverviewCard from "@/components/NodePanel/tabContents/Overview/OverviewCard.vue";
 import OverviewLayout from "@/components/NodePanel/tabContents/Overview/OverviewLayout.vue";
 import ApexLineChart from "@/components/utils/ApexLineChart.vue";
+import TabLayout from "@/components/NodePanel/tabContents/TabLayout.vue";
+import TabContentCard from "@/components/NodePanel/tabContents/TabContentCard.vue";
+import TabContentCardsWrapper from "@/components/NodePanel/tabContents/TabContentCardsWrapper.vue";
+import InnerTableCard from "@/components/NodePanel/tabContents/InnerTableCard.vue";
+import CharacteristicCard from "@/components/NodePanel/tabContents/Overview/CharacteristicCard.vue";
 
 interface Segment {
   benchmark: string;
   score: number;
   color: string;
-  text: string;
 }
 
 interface ChartData {
@@ -76,6 +80,17 @@ interface GraphList {
 const props = defineProps(["node", "nodePanelOpen"]);
 
 // data
+const mappings = {
+  architecture: "architecture",
+  operatingSystem: "operating system",
+  osImage: "OS image",
+  kernelVersion: "kernel version",
+  cpu: "cpu cores",
+  memory: "memory",
+  ephemeralStorage: "ephemeral storage",
+  pods: "max pods",
+};
+
 const nodeComp = computed(() => {
   if (props.node == null) {
     return {
@@ -96,49 +111,44 @@ let graphListApex = ref<GraphList[]>([
   { id: "disk_io_util", title: "Disk IO util", data: [] },
 ]);
 
-const segments: Array<Segment> = [
+const segments = ref<Segment[]>([
   {
     benchmark: "cpu-sysbench",
-    score: 2,
+    score: 3,
     color: "#CECAFF",
-    text: "sysbench is a scriptable multi-threaded benchmark tool based on LuaJIT. It is most frequently used for database benchmarks, but can also be used to create arbitrarily complex workloads that do not involve a database server.",
   },
   {
     benchmark: "memory-sysbench",
     score: 5,
     color: "#AEA7FF",
-    text: "sysbench is a scriptable multi-threaded benchmark tool based on LuaJIT. It is most frequently used for database benchmarks, but can also be used to create arbitrarily complex workloads that do not involve a database server.",
   },
-  /*  {
+  {
     benchmark: "network-iperf3",
     score: 5,
-    color: "#AEA7FF",
+    color: "green",
   },
   {
     benchmark: "network-qperf",
     score: 5,
     color: "#AEA7FF",
-  },*/
+  },
   {
     benchmark: "disk-ioping",
     score: 1,
     color: "#7D72FF",
-    text: "A tool to monitor I/O latency in real time. It shows disk latency in the same way as ping shows network latency.",
   },
   {
     benchmark: "disk-fio",
     score: 3,
     color: "#5245EA",
-    text: "fio is a tool that will spawn a number of threads or processes doing a particular type of I/O action as specified by the user. The typical use of fio is to write a job file matching the I/O load one wants to simulate.",
   },
-];
-
+]);
 // methods
 const nodeInfoComp = computed(() => {
   let kubeNodeInfo = nodeComp.value.status;
-  let list: [string[], string[]] = [[], []];
+  let info: Record<string, string> = {};
   if (kubeNodeInfo) {
-    let info = {
+    info = {
       architecture: kubeNodeInfo.nodeInfo.architecture,
       operatingSystem: kubeNodeInfo.nodeInfo.operatingSystem,
       osImage: kubeNodeInfo.nodeInfo.osImage,
@@ -148,38 +158,8 @@ const nodeInfoComp = computed(() => {
       ephemeralStorage: kubeNodeInfo.allocatable["ephemeral-storage"],
       pods: kubeNodeInfo.allocatable.pods,
     };
-
-    let i = 0;
-    for (const [key, value] of Object.entries(info)) {
-      let keyString = key;
-      let valueString = value;
-      switch (keyString) {
-        case "cpu":
-          keyString = "cpu cores";
-          break;
-        case "operatingSystem":
-          keyString = "operating system";
-          break;
-        case "osImage":
-          keyString = "OS image";
-          break;
-        case "kernelVersion":
-          keyString = "kernel version";
-          break;
-        case "ephemeralStorage":
-          keyString = "ephemeral storage";
-          break;
-        case "pods":
-          keyString = "max pods";
-          break;
-      }
-
-      list[0][i] = keyString;
-      list[1][i] = valueString;
-      i++;
-    }
   }
-  return list;
+  return info;
 });
 
 watch(props, () => {
@@ -207,7 +187,7 @@ const dataNameMapper = (dataName: string): string => {
 
 let firstCall = true;
 const fetchData = async (nodeID: string) => {
-  let timeDelta = 420;
+  let timeDelta = -1;
   if (nodeID) {
     benchmarkService
       .get(`/metrics/${nodeID}/${timeDelta}`)
@@ -217,7 +197,6 @@ const fetchData = async (nodeID: string) => {
         } = response.data;
         let dataNames = Object.keys(responseData);
         dataNames = dataNames.filter((key) => key != "node_name");
-        console.log(dataNames);
 
         //initialize graphList
         /*        if (firstCall) {
@@ -241,7 +220,6 @@ const fetchData = async (nodeID: string) => {
             }
           }
         });
-        console.log(graphListApex);
       })
       .catch((error) => {
         console.log(error);
@@ -282,25 +260,5 @@ const convertMinutes = (minutes: number) => {
   margin-top: 1em;
   color: white;
   font-weight: bold;
-}
-
-.row {
-  display: flex;
-  padding: 0.25vw;
-}
-
-.row-element {
-  width: 50%;
-}
-
-.row-element-right {
-  color: #006fff;
-}
-
-.wrapper {
-  background-color: #efefef;
-  border-radius: 7px;
-  box-shadow: 0 2px 2px 2px rgba(0, 0, 0, 0.29);
-  padding: 0.25vw 0 0.25vw 0.5vw;
 }
 </style>
