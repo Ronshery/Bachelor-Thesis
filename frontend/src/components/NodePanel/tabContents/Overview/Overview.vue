@@ -1,7 +1,14 @@
 <template>
   <TabLayout>
     <OverviewLayout>
-      <DonutCard :segments="segments" :score="nodeComp.bmScore" />
+      <TabContentCard>
+        <template v-slot:title>Score</template>
+        <DonutCard :segments="segments" :score="nodeComp.bmScore" />
+      </TabContentCard>
+      <TabContentCard>
+        <template v-slot:title> Characteristic </template>
+        <CharacteristicCard />
+      </TabContentCard>
       <TabContentCardsWrapper>
         <TabContentCard>
           <template v-slot:title> Node info </template>
@@ -40,12 +47,12 @@ import TabLayout from "@/components/NodePanel/tabContents/TabLayout.vue";
 import TabContentCard from "@/components/NodePanel/tabContents/TabContentCard.vue";
 import TabContentCardsWrapper from "@/components/NodePanel/tabContents/TabContentCardsWrapper.vue";
 import InnerTableCard from "@/components/NodePanel/tabContents/InnerTableCard.vue";
+import CharacteristicCard from "@/components/NodePanel/tabContents/Overview/CharacteristicCard.vue";
 
 interface Segment {
   benchmark: string;
   score: number;
   color: string;
-  text: string;
 }
 
 interface ChartData {
@@ -104,43 +111,38 @@ let graphListApex = ref<GraphList[]>([
   { id: "disk_io_util", title: "Disk IO util", data: [] },
 ]);
 
-const segments: Array<Segment> = [
+const segments = ref<Segment[]>([
   {
     benchmark: "cpu-sysbench",
-    score: 2,
+    score: 3,
     color: "#CECAFF",
-    text: "sysbench is a scriptable multi-threaded benchmark tool based on LuaJIT. It is most frequently used for database benchmarks, but can also be used to create arbitrarily complex workloads that do not involve a database server.",
   },
   {
     benchmark: "memory-sysbench",
     score: 5,
     color: "#AEA7FF",
-    text: "sysbench is a scriptable multi-threaded benchmark tool based on LuaJIT. It is most frequently used for database benchmarks, but can also be used to create arbitrarily complex workloads that do not involve a database server.",
   },
-  /*  {
+  {
     benchmark: "network-iperf3",
     score: 5,
-    color: "#AEA7FF",
+    color: "green",
   },
   {
     benchmark: "network-qperf",
     score: 5,
     color: "#AEA7FF",
-  },*/
+  },
   {
     benchmark: "disk-ioping",
     score: 1,
     color: "#7D72FF",
-    text: "A tool to monitor I/O latency in real time. It shows disk latency in the same way as ping shows network latency.",
   },
   {
     benchmark: "disk-fio",
     score: 3,
     color: "#5245EA",
-    text: "fio is a tool that will spawn a number of threads or processes doing a particular type of I/O action as specified by the user. The typical use of fio is to write a job file matching the I/O load one wants to simulate.",
   },
-];
-
+]);
 // methods
 const nodeInfoComp = computed(() => {
   let kubeNodeInfo = nodeComp.value.status;

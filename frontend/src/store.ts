@@ -5,7 +5,7 @@ import database from "@/database";
 import VuexPersistence from "vuex-persist";
 
 const vuexLocal = new VuexPersistence<RootState>({
-  storage: window.localStorage,
+  storage: window.sessionStorage,
 });
 
 export interface RootState {

@@ -1,5 +1,5 @@
 <template>
-  <div class="donut-chart-container">
+  <div class="donut-card-container">
     <div class="donut-chart-wrapper">
       <DonutChart
         class="segmented-donut"
@@ -14,30 +14,26 @@
         :segments="segments"
       />
     </div>
-
-    <div class="segments-donut-chart">
-      <div class="row" v-for="segment in segments" :key="segment.score">
-        <div>
-          <DonutChart
-            class="segment-donut-chart"
-            :radius="35"
-            :x="42"
-            :y="42"
-            :strokeWidth="13"
-            :maxValue="10"
-            :loadedView="true"
-            :score="segment.score"
-            :strokeColor="segment.color"
-          />
-        </div>
-
-        <div class="benchmark-description">
-          <div class="benchmark-description-inner">
-            <span class="benchmark-name"> {{ segment.benchmark }}</span>
-
-            <div>
-              {{ segment.text }}
-            </div>
+    <div class="segments-donut-container">
+      <div>
+        <div
+          class="segment-donut-content-wrapper"
+          v-for="segment in segments"
+          :key="segment.score"
+        >
+          <div class="benchmark-name">{{ segment.benchmark }}</div>
+          <div class="segment-donut-chart-wrapper">
+            <DonutChart
+              class="segment-donut-chart"
+              :radius="35"
+              :x="42"
+              :y="42"
+              :strokeWidth="13"
+              :maxValue="10"
+              :loadedView="true"
+              :score="segment.score"
+              :strokeColor="segment.color"
+            />
           </div>
         </div>
       </div>
@@ -54,65 +50,44 @@ const props = defineProps(["segments", "score"]);
 </script>
 
 <style scoped>
-.donut-chart-container {
+.donut-card-container {
   display: flex;
-  background-color: white;
-  border-radius: 20px;
-  padding: 2em;
-  margin-bottom: 1.5em;
 }
+
+.donut-chart-wrapper {
+  width: 50%;
+  align-self: center;
+}
+
 .segmented-donut {
   width: 190px;
   height: 190px;
-  margin: 0 3em 0 2em;
+  padding: 0 0 0 1.5em;
   font-size: 21px;
 }
+
+.segments-donut-container {
+  display: inline-block;
+  width: 50%;
+  margin: 0 1em 0 0;
+}
+
+.segment-donut-chart-wrapper {
+  margin-left: 15%;
+}
+
+.segment-donut-content-wrapper {
+  display: inline-block;
+  width: 50%;
+}
+
 .segment-donut-chart {
   width: 85px;
   height: 85px;
 }
 
-.segments-donut-chart {
-  display: flex;
-  flex-direction: column;
-}
-
-.row {
-  display: flex;
-  margin-bottom: 1em;
-}
-
-.row:last-child {
-  margin-bottom: unset;
-}
-
 .benchmark-name {
-  font-weight: bold;
-}
-
-.benchmark-description {
-  border-radius: 11px;
-  box-shadow: 0 4px 4px 4px rgba(0, 0, 0, 0.25);
-  height: 61px;
-  margin-left: 1em;
-  padding: 10px 10px 2px 10px;
-}
-
-.benchmark-description-inner {
-  overflow: auto;
-  height: 56px;
-}
-
-.donut-chart-wrapper {
-  align-self: center;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #cecaff;
-  border-radius: 50px !important;
-}
-
-::-webkit-scrollbar {
-  width: 6px;
+  text-align: center;
+  vertical-align: middle;
 }
 </style>
