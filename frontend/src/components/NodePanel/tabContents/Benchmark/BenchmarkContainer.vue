@@ -1,4 +1,15 @@
 <template>
+  <div style="color: white">
+    {{ fetchingActiveList }}
+  </div>
+  <br />
+  <div style="color: white">
+    {{ runningStateList }}
+  </div>
+  <br />
+  <div style="color: white">
+    {{ copy }}
+  </div>
   <BenchmarkComponent
     :node="node"
     :availableBenchmarks="availableBenchmarks"
@@ -56,8 +67,32 @@ interface NodeFetchingState {
   [key: string]: FetchingState;
 }
 
+interface RunningState {
+  [key: string]: {
+    [BmType.CPU_SYSBENCH]: boolean;
+    [BmType.MEMORY_SYSBENCH]: boolean;
+    [BmType.DISK_IOPING]: boolean;
+    [BmType.DISK_FIO]: boolean;
+    [BmType.NETWORK_IPERF3]: boolean;
+    [BmType.NETWORK_QPERF]: boolean;
+  };
+}
+
+let runningStateList = ref<RunningState>({});
+let copy = ref(runningStateList);
 let fetchingActiveList = ref<NodeFetchingState>({});
 const runningState = computed(() => {
+  if (props.node.name == undefined) {
+    return {
+      [BmType.CPU_SYSBENCH]: false,
+      [BmType.MEMORY_SYSBENCH]: false,
+      [BmType.DISK_IOPING]: false,
+      [BmType.DISK_FIO]: false,
+      [BmType.NETWORK_IPERF3]: false,
+      [BmType.NETWORK_QPERF]: false,
+    };
+  }
+  console.log("runningstate of: " + props.node.name);
   const bmTypes = [
     BmType.CPU_SYSBENCH,
     BmType.MEMORY_SYSBENCH,
@@ -75,7 +110,8 @@ const runningState = computed(() => {
     [BmType.NETWORK_IPERF3]: false,
     [BmType.NETWORK_QPERF]: false,
   };
-  for (let bmType of bmTypes) {
+  initRunningState();
+  /*  for (let bmType of bmTypes) {
     const query = Benchmark.query().where("node", props.node.id);
     const runningBmsByType = query
       .where((benchmark: IBenchmark) => {
@@ -84,9 +120,47 @@ const runningState = computed(() => {
       .where("metrics", null)
       .get();
     runningStateNew[bmType] = runningBmsByType.length > 0;
-  }
+    //updateRunningState(bmType as BmType, runningBmsByType.length > 0);
+  }*/
 
+  for (const node in copy.value) {
+    for (let bmType of bmTypes) {
+      const query = Benchmark.query().where("node", node);
+      const runningBmsByType = query
+        .where((benchmark: IBenchmark) => {
+          return benchmark.id.includes(bmType);
+        })
+        .where("metrics", null)
+        .get();
+      updateRunningStateByNode(
+        bmType as BmType,
+        runningBmsByType.length > 0,
+        node
+      );
+    }
+  }
   initFetchingActiveList();
+  for (const [node, nodeRunningState] of Object.entries(copy.value)) {
+    for (const [bmType, isRunning] of Object.entries(nodeRunningState)) {
+      if (isRunning) {
+        console.log(`fetch results of: ${bmType} in node: ${node}`);
+        const query = Benchmark.query().where("node", node);
+        const runningBm = query
+          .where((benchmark: IBenchmark) => {
+            return benchmark.id.includes(bmType);
+          })
+          .where("metrics", null)
+          .get();
+        console.log("the runningBm: ");
+        console.log(runningBm[0].$getAttributes());
+        fetchResultsByNode(runningBm[0], bmType as BmType, node);
+        //resetFetchingActiveListByNode(bmType as BmType, node);
+      } else {
+        resetFetchingActiveListByNode(bmType as BmType, node);
+      }
+    }
+  }
+  /*  initFetchingActiveList();
   for (const [bmType, isRunning] of Object.entries(runningStateNew)) {
     if (isRunning) {
       console.log(`fetch results of: ${bmType} in node: ${props.node.id}`);
@@ -101,9 +175,9 @@ const runningState = computed(() => {
     } else {
       resetFetchingActiveList(bmType as BmType);
     }
-  }
+  }*/
 
-  return runningStateNew;
+  return runningStateList.value[props.node.name];
 });
 
 const fetchResults = (benchmark: Benchmark, bmType: BmType) => {
@@ -129,6 +203,63 @@ const fetchResults = (benchmark: Benchmark, bmType: BmType) => {
       "old fetch - intervalID: " +
         fetchingActiveList.value[props.node.name][bmType].intervalID
     );
+  }
+};
+
+const fetchResultsByNode = (
+  benchmark: Benchmark,
+  bmType: BmType,
+  nodeName: string
+) => {
+  const spec = benchmark.$getAttributes().spec;
+  if (
+    !fetchingActiveList.value[nodeName][bmType].isFetching &&
+    fetchingActiveList.value[nodeName][bmType].intervalID == undefined
+  ) {
+    // there is no fetching active do it now
+    fetchingActiveList.value[nodeName][bmType].isFetching = true;
+    let bmDuration = parseInt(bmUtils.getBMDuration(spec.spec.options)) * 1000;
+    if (bmDuration == 1000) {
+      bmDuration = 30000;
+    }
+    bmDuration = 5000;
+    setTimeout(() => {
+      fetchingActiveList.value[nodeName][bmType].intervalID = setInterval(
+        () => {
+          console.log(nodeName + "   ****   " + props.node.name);
+          Benchmark.dispatch("fetchBenchmarkById", benchmark);
+        },
+        1000
+      );
+    }, bmDuration);
+  } else {
+    console.log(
+      "old fetch - intervalID: " +
+        fetchingActiveList.value[nodeName][bmType].intervalID
+    );
+  }
+};
+const updateRunningStateByNode = (
+  bmType: BmType,
+  isRunning: boolean,
+  nodeName: string
+) => {
+  runningStateList.value[nodeName][bmType] = isRunning;
+};
+
+const initRunningState = () => {
+  if (
+    props.node.name != undefined &&
+    runningStateList.value[props.node.name] == undefined
+  ) {
+    runningStateList.value[props.node.name] = {
+      [BmType.CPU_SYSBENCH]: false,
+      [BmType.MEMORY_SYSBENCH]: false,
+      [BmType.DISK_IOPING]: false,
+      [BmType.DISK_FIO]: false,
+      [BmType.NETWORK_IPERF3]: false,
+      [BmType.NETWORK_QPERF]: false,
+    };
   }
 };
 
@@ -165,11 +296,32 @@ const initFetchingActiveList = () => {
     };
   }
 };
+const resetFetchingActiveListByNode = (bmType: BmType, nodeName: string) => {
+  if (props.node.name != undefined) {
+    fetchingActiveList.value[nodeName][bmType].isFetching = false;
+    clearInterval(fetchingActiveList.value[props.node.name][bmType].intervalID);
+    fetchingActiveList.value[nodeName][bmType].intervalID = undefined;
+  }
+};
+
 const resetFetchingActiveList = (bmType: BmType) => {
   if (props.node.name != undefined) {
     fetchingActiveList.value[props.node.name][bmType].isFetching = false;
     clearInterval(fetchingActiveList.value[props.node.name][bmType].intervalID);
     fetchingActiveList.value[props.node.name][bmType].intervalID = undefined;
+  }
+};
+
+const resetRunningStateListByNode = (nodeName: string) => {
+  if (props.node.name != undefined) {
+    runningStateList.value[nodeName] = {
+      [BmType.CPU_SYSBENCH]: false,
+      [BmType.MEMORY_SYSBENCH]: false,
+      [BmType.DISK_IOPING]: false,
+      [BmType.DISK_FIO]: false,
+      [BmType.NETWORK_IPERF3]: false,
+      [BmType.NETWORK_QPERF]: false,
+    };
   }
 };
 </script>

@@ -53,8 +53,6 @@ const chartsData = computed(() => {
     latestBm
   );
 
-  console.log(iPerf3Series);
-
   return {
     iPerf3Options,
     iPerf3Series,

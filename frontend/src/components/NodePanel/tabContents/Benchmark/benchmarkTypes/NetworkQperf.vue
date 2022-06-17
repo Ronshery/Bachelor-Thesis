@@ -65,7 +65,6 @@ const chartsData = computed(() => {
     currentBms,
     latestBm
   );
-  console.log(qperfBandWidthSeries);
 
   return {
     qperfBandWidthOptions,
