@@ -1,11 +1,4 @@
 <template>
-  <div style="color: white">
-    {{ fetchingActiveList }}
-  </div>
-  <br />
-  <div style="color: white">
-    {{ runningStateList }}
-  </div>
   <BenchmarkComponent
     :node="node"
     :availableBenchmarks="availableBenchmarks"
@@ -17,7 +10,7 @@
 import { computed, defineProps, ref, watch } from "vue";
 import BenchmarkComponent from "@/components/NodePanel/tabContents/Benchmark/Benchmark.vue";
 import Benchmark from "@/models/Benchmark";
-import bmUtils, {
+import {
   BmResource,
   BmType,
 } from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
@@ -87,7 +80,7 @@ const runningState = computed(() => {
       [BmType.NETWORK_QPERF]: false,
     };
   }
-  console.log("runningstate of: " + props.node.name);
+
   const bmTypes = [
     BmType.CPU_SYSBENCH,
     BmType.MEMORY_SYSBENCH,
@@ -97,27 +90,7 @@ const runningState = computed(() => {
     BmType.NETWORK_QPERF,
   ];
 
-  const runningStateNew = {
-    [BmType.CPU_SYSBENCH]: false,
-    [BmType.MEMORY_SYSBENCH]: false,
-    [BmType.DISK_IOPING]: false,
-    [BmType.DISK_FIO]: false,
-    [BmType.NETWORK_IPERF3]: false,
-    [BmType.NETWORK_QPERF]: false,
-  };
   initRunningState();
-  /*  for (let bmType of bmTypes) {
-    const query = Benchmark.query().where("node", props.node.id);
-    const runningBmsByType = query
-      .where((benchmark: IBenchmark) => {
-        return benchmark.id.includes(bmType);
-      })
-      .where("metrics", null)
-      .get();
-    runningStateNew[bmType] = runningBmsByType.length > 0;
-    //updateRunningState(bmType as BmType, runningBmsByType.length > 0);
-  }*/
-
   for (const node in runningStateList.value) {
     for (let bmType of bmTypes) {
       const query = Benchmark.query().where("node", node);
@@ -135,28 +108,10 @@ const runningState = computed(() => {
     }
   }
 
-  /*  initFetchingActiveList();
-  for (const [bmType, isRunning] of Object.entries(runningStateNew)) {
-    if (isRunning) {
-      console.log(`fetch results of: ${bmType} in node: ${props.node.id}`);
-      const query = Benchmark.query().where("node", props.node.id);
-      const runningBm = query
-        .where((benchmark: IBenchmark) => {
-          return benchmark.id.includes(bmType);
-        })
-        .where("metrics", null)
-        .get();
-      fetchResults(runningBm[0], bmType as BmType);
-    } else {
-      resetFetchingActiveList(bmType as BmType);
-    }
-  }*/
-
   return runningStateList.value[props.node.name];
 });
 
 watch(runningStateList.value, () => {
-  console.log("watch watch");
   initFetchingActiveList();
   for (const [node, nodeRunningState] of Object.entries(
     runningStateList.value
@@ -171,59 +126,34 @@ watch(runningStateList.value, () => {
           })
           .where("metrics", null)
           .get();
-        console.log("the runningBm: ");
-        console.log(runningBm[0].$getAttributes());
         fetchResultsByNode(runningBm[0], bmType as BmType, node);
       } else {
+        // helps to clear interval in fetchResultsByNode()
         resetIsFetchingByNode(bmType as BmType, node);
       }
     }
   }
 });
-/*const fetchResults = (benchmark: Benchmark, bmType: BmType) => {
-  const spec = benchmark.$getAttributes().spec;
-  if (
-    !fetchingActiveList.value[props.node.name][bmType].isFetching &&
-    fetchingActiveList.value[props.node.name][bmType].intervalID == undefined
-  ) {
-    // there is no fetching active do it now
-    fetchingActiveList.value[props.node.name][bmType].isFetching = true;
-    let bmDuration = parseInt(bmUtils.getBMDuration(spec.spec.options)) * 1000;
-    if (bmDuration == 1000) {
-      bmDuration = 30000;
-    }
-    bmDuration = 5000;
-    setTimeout(() => {
-      fetchingActiveList.value[props.node.name][bmType].intervalID =
-        setInterval(() => {
-          Benchmark.dispatch("fetchBenchmarkById", benchmark);
-        }, 1000);
-    }, bmDuration);
-  } else {
-    console.log(
-      "old fetch - intervalID: " +
-        fetchingActiveList.value[props.node.name][bmType].intervalID
-    );
-  }
-};*/
 
 const fetchResultsByNode = (
   benchmark: Benchmark,
   bmType: BmType,
   nodeName: string
 ) => {
-  const spec = benchmark.$getAttributes().spec;
   if (
     !fetchingActiveList.value[nodeName][bmType].isFetching &&
     fetchingActiveList.value[nodeName][bmType].intervalID == undefined
   ) {
     // there is no fetching active do it now
     fetchingActiveList.value[nodeName][bmType].isFetching = true;
+    /*
+    // not usable yet, because after page reload it is counted from the beginning
+    const spec = benchmark.$getAttributes().spec;
     let bmDuration = parseInt(bmUtils.getBMDuration(spec.spec.options)) * 1000;
     if (bmDuration == 1000) {
       bmDuration = 30000;
-    }
-    bmDuration = 5000;
+    }*/
+    const bmDuration = 5000;
     setTimeout(() => {
       fetchingActiveList.value[nodeName][bmType].intervalID = setInterval(
         () => {
@@ -320,27 +250,6 @@ const resetIsFetchingByNode = (bmType: BmType, nodeName: string) => {
     fetchingActiveList.value[nodeName][bmType].isFetching = false;
   }
 };
-
-/*const resetFetchingActiveList = (bmType: BmType) => {
-  if (props.node.name != undefined) {
-    fetchingActiveList.value[props.node.name][bmType].isFetching = false;
-    clearInterval(fetchingActiveList.value[props.node.name][bmType].intervalID);
-    fetchingActiveList.value[props.node.name][bmType].intervalID = undefined;
-  }
-};
-
-const resetRunningStateListByNode = (nodeName: string) => {
-  if (props.node.name != undefined) {
-    runningStateList.value[nodeName] = {
-      [BmType.CPU_SYSBENCH]: false,
-      [BmType.MEMORY_SYSBENCH]: false,
-      [BmType.DISK_IOPING]: false,
-      [BmType.DISK_FIO]: false,
-      [BmType.NETWORK_IPERF3]: false,
-      [BmType.NETWORK_QPERF]: false,
-    };
-  }
-};*/
 </script>
 
 <style scoped></style>
