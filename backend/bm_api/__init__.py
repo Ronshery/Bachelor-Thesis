@@ -3,6 +3,7 @@ from typing import List, Dict, Optional, Tuple, Type
 
 from fastapi import FastAPI, HTTPException, responses, Depends
 import common.benchmarks as benchmarks
+from common.benchmarks import BaseBenchmark
 from fastapi.middleware.cors import CORSMiddleware
 from common.clients.benchmark_history import get_benchmark_history_client
 from common.clients.benchmark_history.client import BenchmarkHistoryClient
@@ -34,7 +35,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-benchmark_mappings: Dict[str, Type[benchmarks.BaseBenchmark]] = {
+benchmark_mappings: Dict[str, Type[BaseBenchmark]] = {
     "cpu-sysbench": benchmarks.CpuSysbenchBenchmark,
     "memory-sysbench": benchmarks.MemorySysbenchBenchmark,
     "network-iperf3": benchmarks.NetworkIperf3Benchmark,
@@ -147,6 +148,15 @@ async def run_benchmark(bm_type: str, node_id: str, k8s_client: K8sClient = Depe
 async def get_node_fingerprint(node_name: str, fingerprint_engine: BaseFingerprintEngine = Depends(get_fingerprint_engine)):
     try:
         fp = await fingerprint_engine.get_fingerprint_for_node(node_name)
+        return fp.serialize()
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=str(ex))
+
+
+@app.get("/cluster-fingerprint")
+async def get_node_fingerprint(fingerprint_engine: BaseFingerprintEngine = Depends(get_fingerprint_engine)):
+    try:
+        fp = await fingerprint_engine.get_fingerprint_for_cluster()
         return fp.serialize()
     except Exception as ex:
         raise HTTPException(status_code=500, detail=str(ex))

@@ -38,6 +38,10 @@ class BaseFingerprint(ABC):
     def parse(source: str) -> BaseFingerprint:
         raise NotImplementedError
 
+    @staticmethod
+    def mean(fingerprints: List[BaseFingerprint]) -> BaseFingerprint:
+        raise NotImplementedError
+
 
 @dataclass
 class SimpleFingerprint(BaseFingerprint):
@@ -55,6 +59,10 @@ class SimpleFingerprint(BaseFingerprint):
     # disk-ioping
     disk_iops: float
     disk_latency_avg: float
+
+    # disk-fio
+    disk_write_iops: float
+    disk_write_mibps: float
 
     # network-iperf3
     net_transfer_bitrate: float
@@ -88,7 +96,9 @@ class SimpleFingerprint(BaseFingerprint):
             elif for_resource == BenchmarkedResource.DISK:
                 vec = (
                     self.disk_iops / ref_fingerprint.disk_iops,
-                    self.disk_latency_avg / ref_fingerprint.disk_latency_avg
+                    self.disk_latency_avg / ref_fingerprint.disk_latency_avg,
+                    self.disk_write_iops / ref_fingerprint.disk_write_iops,
+                    self.disk_write_mibps / ref_fingerprint.disk_write_mibps
                 )
             elif for_resource == BenchmarkedResource.MEMORY:
                 vec = (
@@ -114,6 +124,11 @@ class SimpleFingerprint(BaseFingerprint):
                     self.disk_iops / ref_fingerprint.disk_iops,
                     self.disk_latency_avg / ref_fingerprint.disk_latency_avg
                 )
+            elif for_kind == BenchmarkedResourceKind.DISK_FIO:
+                vec = (
+                    self.disk_write_iops / ref_fingerprint.disk_write_iops,
+                    self.disk_write_mibps / ref_fingerprint.disk_write_mibps
+                )
             elif for_kind == BenchmarkedResourceKind.MEMORY_SYSBENCH:
                 vec = (
                     self.mem_latency_max / ref_fingerprint.mem_latency_max,
@@ -121,7 +136,7 @@ class SimpleFingerprint(BaseFingerprint):
                 )
             elif for_kind == BenchmarkedResourceKind.NETWORK_IPERF3:
                 vec = (
-                    self.net_transfer_bitrate / ref_fingerprint.net_transfer_bitrate
+                    self.net_transfer_bitrate / ref_fingerprint.net_transfer_bitrate,
                 )
             elif for_kind == BenchmarkedResourceKind.NETWORK_QPERF:
                 vec = (
@@ -130,7 +145,6 @@ class SimpleFingerprint(BaseFingerprint):
                     self.net_bw_cpu_usage / ref_fingerprint.net_bw_cpu_usage,
                     self.net_lat_cpu_usage / ref_fingerprint.net_lat_cpu_usage,
                 )
-            # TODO: DISK_FIO
         else:
             vec = (
                 self.cpu_events_per_second / ref_fingerprint.cpu_events_per_second,
@@ -139,6 +153,8 @@ class SimpleFingerprint(BaseFingerprint):
                 self.mem_exctime / ref_fingerprint.mem_exctime,
                 self.disk_iops / ref_fingerprint.disk_iops,
                 self.disk_latency_avg / ref_fingerprint.disk_latency_avg,
+                self.disk_write_iops / ref_fingerprint.disk_write_iops,
+                self.disk_write_mibps / ref_fingerprint.disk_write_mibps,
                 self.net_transfer_bitrate / ref_fingerprint.net_transfer_bitrate,
                 self.net_tcp_msg_rate / ref_fingerprint.net_tcp_msg_rate,
                 self.net_tcp_latency / ref_fingerprint.net_tcp_latency,
@@ -155,6 +171,24 @@ class SimpleFingerprint(BaseFingerprint):
     def parse(source: str) -> SimpleFingerprint:
         return SimpleFingerprint(**json.loads(source))
 
+    @staticmethod
+    def mean(fingerprints: List[SimpleFingerprint]) -> SimpleFingerprint:
+        return SimpleFingerprint(
+            _node_name='+'.join([fp._node_name for fp in fingerprints]),
+            _utctimestamp=max([fp._utctimestamp for fp in fingerprints]),
+            cpu_events_per_second=mean([fp.cpu_events_per_second for fp in fingerprints]),
+            cpu_latency_95=mean([fp.cpu_latency_95 for fp in fingerprints]),
+            mem_latency_max=mean([fp.mem_latency_max for fp in fingerprints]),
+            mem_exctime=mean([fp.mem_exctime for fp in fingerprints]),
+            disk_iops=mean([fp.disk_iops for fp in fingerprints]),
+            disk_latency_avg=mean([fp.disk_latency_avg for fp in fingerprints]),
+            disk_write_iops=mean([fp.disk_write_iops for fp in fingerprints]),
+            disk_write_mibps=mean([fp.disk_write_mibps for fp in fingerprints]),
+            net_transfer_bitrate=mean([fp.net_transfer_bitrate for fp in fingerprints]),
+            net_tcp_msg_rate=mean([fp.net_tcp_msg_rate for fp in fingerprints]),
+            net_bw_cpu_usage=mean([fp.net_bw_cpu_usage for fp in fingerprints]),
+            net_lat_cpu_usage=mean([fp.net_lat_cpu_usage for fp in fingerprints])
+        )
 
 class NodeScore(pydantic.BaseModel):
     max_score: float = 10.0
@@ -192,6 +226,9 @@ class BaseFingerprintEngine(ABC):
     async def get_fingerprint_for_node(self, node_name: str) -> BaseFingerprint:
         raise NotImplementedError
 
+    async def get_fingerprint_for_cluster(self) -> BaseFingerprint:
+        raise NotImplementedError
+
     async def get_scores_for_node(self, node_name: str) -> NodeScores:
         raise NotImplementedError
 
@@ -213,9 +250,11 @@ class SimpleFingerprintEngine(BaseFingerprintEngine):
 
     def __init__(self,
                  prometheus_client: PrometheusClient,
-                 benchmark_history_client: BenchmarkHistoryClient):
+                 benchmark_history_client: BenchmarkHistoryClient,
+                 k8s_client: K8sClient):
         self.prometheus_client = prometheus_client
         self.benchmark_history_client = benchmark_history_client
+        self.k8s_client = k8s_client
 
     async def get_fingerprint_for_node(self, node_name: str) -> BaseFingerprint:
         recent_bms = self.benchmark_history_client.get_benchmarks_results(node_name)
@@ -254,8 +293,8 @@ class SimpleFingerprintEngine(BaseFingerprintEngine):
                     if normalize:
                         if bm_type == BenchmarkedResourceKind.CPU_SYSBENCH and cpu_busy_avg > 0:
                             value /= cpu_busy_avg
-                            elif bm_type in (BenchmarkedResourceKind.DISK_FIO,
-                                             BenchmarkedResourceKind.DISK_IOPING) and disk_io_util_avg > 0:
+                        elif bm_type in (BenchmarkedResourceKind.DISK_FIO,
+                                         BenchmarkedResourceKind.DISK_IOPING) and disk_io_util_avg > 0:
                             value /= disk_io_util_avg
 
                     return value
@@ -269,6 +308,8 @@ class SimpleFingerprintEngine(BaseFingerprintEngine):
             cpu_latency_95=get_metric_value(BenchmarkedResourceKind.CPU_SYSBENCH, "latency_95p", 0.0),
             disk_iops=get_metric_value(BenchmarkedResourceKind.DISK_IOPING, "iops", 0.0),
             disk_latency_avg=get_metric_value(BenchmarkedResourceKind.DISK_IOPING, "latency_avg", 0.0),
+            disk_write_iops=get_metric_value(BenchmarkedResourceKind.DISK_FIO, "write_iops", 0.0),
+            disk_write_mibps=get_metric_value(BenchmarkedResourceKind.DISK_FIO, "write_mibps", 0.0),
             mem_exctime=get_metric_value(BenchmarkedResourceKind.MEMORY_SYSBENCH, "fairness_exctime", 0.0),
             mem_latency_max=get_metric_value(BenchmarkedResourceKind.MEMORY_SYSBENCH, "latency_max", 0.0),
             net_bw_cpu_usage=get_metric_value(BenchmarkedResourceKind.NETWORK_QPERF, "tcp_bw_send_cpus_used", 0.0),
@@ -279,6 +320,17 @@ class SimpleFingerprintEngine(BaseFingerprintEngine):
         )
 
         return fp
+
+    async def get_fingerprint_for_cluster(self) -> SimpleFingerprint:
+        nodes = self.k8s_client.get_nodes()
+        if nodes is not None:
+            fps: List[SimpleFingerprint] = []
+            for n in nodes:
+                n_fp = self.get_fingerprint_for_node(n.metadata["name"])
+                fps.append(n_fp)
+
+            return SimpleFingerprint.mean(fps)
+            
 
     async def get_scores_for_node(self, node_name: str) -> NodeScores:
         fp = await self.get_fingerprint_for_node(node_name)
@@ -293,6 +345,8 @@ class SimpleFingerprintEngine(BaseFingerprintEngine):
             mem_exctime=8.4504,
             disk_iops=869.149952244506,
             disk_latency_avg=6.566380133715361,
+            disk_write_iops=5000,
+            disk_write_mibps=18000,
             net_transfer_bitrate=2.5,
             net_tcp_msg_rate=63.6,
             net_tcp_latency=15.7,
@@ -307,11 +361,11 @@ class SimpleFingerprintEngine(BaseFingerprintEngine):
             memory=NodeScore(score=fp.compare_to(ref_fingerprint, for_resource=BenchmarkedResource.MEMORY) * 10),
             disk=NodeScore(score=fp.compare_to(ref_fingerprint, for_resource=BenchmarkedResource.DISK) * 10),
             network=NodeScore(score=fp.compare_to(ref_fingerprint, for_resource=BenchmarkedResource.NETWORK) * 10),
-            details={data.name: NodeScore(score=fp.compare_to(ref_fingerprint, for_kind=data.value) * 10)
-                     for data in BenchmarkedResourceKind}
+            details={brk.name: NodeScore(score=fp.compare_to(ref_fingerprint, for_kind=brk) * 10)
+                     for brk in BenchmarkedResourceKind}
         )
 
 
 @lru_cache()
 def get_fingerprint_engine() -> BaseFingerprintEngine:
-    return SimpleFingerprintEngine(get_prometheus_client(), BenchmarkHistoryClient())
+    return SimpleFingerprintEngine(get_prometheus_client(), BenchmarkHistoryClient(), get_k8s_client())

@@ -5,7 +5,7 @@ import pykube
 import logging
 from bm_api.models.node import NodeModel
 
-from common.benchmarks import BaseBenchmark
+from common.benchmarks.base import BaseBenchmark
 
 
 class K8sClient:
