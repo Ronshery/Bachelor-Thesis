@@ -15,6 +15,8 @@ from common.benchmarks.base import BenchmarkedResource, BenchmarkedResourceKind
 
 from common.clients.benchmark_history.client import BenchmarkHistoryClient
 from common.clients.prometheus import PrometheusClient, get_prometheus_client
+from common.clients.k8s import get_k8s_client
+from common.clients.k8s.client import K8sClient
 from orm.models import Benchmark
 
 
@@ -187,7 +189,8 @@ class SimpleFingerprint(BaseFingerprint):
             net_transfer_bitrate=mean([fp.net_transfer_bitrate for fp in fingerprints]),
             net_tcp_msg_rate=mean([fp.net_tcp_msg_rate for fp in fingerprints]),
             net_bw_cpu_usage=mean([fp.net_bw_cpu_usage for fp in fingerprints]),
-            net_lat_cpu_usage=mean([fp.net_lat_cpu_usage for fp in fingerprints])
+            net_lat_cpu_usage=mean([fp.net_lat_cpu_usage for fp in fingerprints]),
+            net_tcp_latency=mean([fp.net_tcp_latency for fp in fingerprints]),
         )
 
 class NodeScore(pydantic.BaseModel):
@@ -326,7 +329,7 @@ class SimpleFingerprintEngine(BaseFingerprintEngine):
         if nodes is not None:
             fps: List[SimpleFingerprint] = []
             for n in nodes:
-                n_fp = self.get_fingerprint_for_node(n.metadata["name"])
+                n_fp = await self.get_fingerprint_for_node(n.metadata.name)
                 fps.append(n_fp)
 
             return SimpleFingerprint.mean(fps)

@@ -7,7 +7,6 @@ from pydantic import BaseModel
 from bm_api.models.k8s.io.k8s.api.core.v1 import Node
 from bm_api.models.k8s.io.k8s.apimachinery.pkg.apis.meta.v1 import ObjectMeta
 from common.clients.prometheus.schemes import NodeMetricsModel as PrometheusNodeMetricsModel
-from common.fingerprint_engine import NodeScores
 
 
 class NodeLimitations(BaseModel):

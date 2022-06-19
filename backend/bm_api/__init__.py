@@ -21,7 +21,7 @@ from common.clients.prometheus import PrometheusClient, get_prometheus_client
 
 from sqlalchemy.orm import Session
 
-from common.fingerprint_engine import BaseFingerprintEngine, NodeScores, NodeScore, get_fingerprint_engine
+from common.fingerprint.fingerprint_engine import BaseFingerprintEngine, NodeScores, NodeScore, get_fingerprint_engine
 from orm import engine
 from orm.models import BenchmarkMetric
 
