@@ -1,0 +1,9 @@
+[Unit]
+Description=Run perona operators on schedule
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=60sec
+
+[Install]
+WantedBy=timers.target

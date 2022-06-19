@@ -1,8 +1,9 @@
 import datetime
-from typing import List, Dict, Type
+from typing import List, Dict, Optional, Tuple, Type
 
 from fastapi import FastAPI, HTTPException, responses, Depends
 import common.benchmarks as benchmarks
+from common.benchmarks import BaseBenchmark
 from fastapi.middleware.cors import CORSMiddleware
 from common.clients.benchmark_history import get_benchmark_history_client
 from common.clients.benchmark_history.client import BenchmarkHistoryClient
@@ -10,7 +11,7 @@ from common.clients.benchmark_history.client import BenchmarkHistoryClient
 from common.clients.k8s import get_k8s_client
 from common.clients.k8s.client import K8sClient
 from bm_api.models.node import NodeModel, NodeMetricsModel
-from bm_api.models.benchmark import BenchmarkResult
+from bm_api.models.benchmark import BenchmarkResult, BenchmarkResultMetric
 from common.clients.prometheus.schemes import NodeMetricsModel as PrometheusNodeMetricsModel
 from bm_api.models.benchmark import BenchmarkResult
 
@@ -20,7 +21,7 @@ from common.clients.prometheus import PrometheusClient, get_prometheus_client
 
 from sqlalchemy.orm import Session
 
-from common.fingerprint_engine import BaseFingerprintEngine, NodeScores, NodeScore, get_fingerprint_engine
+from common.fingerprint.fingerprint_engine import BaseFingerprintEngine, NodeScores, NodeScore, get_fingerprint_engine
 from orm import engine
 from orm.models import BenchmarkMetric
 
@@ -34,7 +35,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-benchmark_mappings: Dict[str, Type[benchmarks.BaseBenchmark]] = {
+benchmark_mappings: Dict[str, Type[BaseBenchmark]] = {
     "cpu-sysbench": benchmarks.CpuSysbenchBenchmark,
     "memory-sysbench": benchmarks.MemorySysbenchBenchmark,
     "network-iperf3": benchmarks.NetworkIperf3Benchmark,
@@ -94,7 +95,7 @@ async def get_benchmark_results(bm_name: str, bm_history_client: BenchmarkHistor
                 type=r.type,
                 resource=r.type,
                 started=r.started,
-                metrics={ m.name: m.value for m in r.metrics }
+                metrics=[BenchmarkResultMetric(name=m.name, value=m.value, unit=m.unit) for m in r.metrics]
             )
         else:
             raise HTTPException(status_code=404, detail=f"Benchmark not found: '{bm_name}'")
@@ -113,7 +114,7 @@ async def get_benchmark_results_for_node(node_name: str, bm_history_client: Benc
                 type=r.type,
                 resource=r.type,
                 started=r.started,
-                metrics={ m.name: m.value for m in r.metrics }
+                metrics=[BenchmarkResultMetric(name=m.name, value=m.value, unit=m.unit) for m in r.metrics]
             ) for r in results
         ]
 
@@ -152,10 +153,28 @@ async def get_node_fingerprint(node_name: str, fingerprint_engine: BaseFingerpri
         raise HTTPException(status_code=500, detail=str(ex))
 
 
+@app.get("/cluster-fingerprint")
+async def get_node_fingerprint(fingerprint_engine: BaseFingerprintEngine = Depends(get_fingerprint_engine)):
+    try:
+        fp = await fingerprint_engine.get_fingerprint_for_cluster()
+        return fp.serialize()
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=str(ex))
+
+
 @app.get("/scores/{node_name}", response_model=NodeScores)
 async def get_node_scores(node_name: str, fingerprint_engine: BaseFingerprintEngine = Depends(get_fingerprint_engine)):
     try:
-        scores = await fingerprint_engine.get_scores_for_node(node_name)
+        scores = await fingerprint_engine.get_scores_for_node(node_name, relative_to_cluster=False)
+        return scores
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=str(ex))
+
+
+@app.get("/scores/{node_name}/cluster", response_model=NodeScores)
+async def get_node_scores(node_name: str, fingerprint_engine: BaseFingerprintEngine = Depends(get_fingerprint_engine)):
+    try:
+        scores = await fingerprint_engine.get_scores_for_node(node_name, relative_to_cluster=True)
         return scores
     except Exception as ex:
         raise HTTPException(status_code=500, detail=str(ex))

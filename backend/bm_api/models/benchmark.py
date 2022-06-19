@@ -1,6 +1,12 @@
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 from pydantic import BaseModel
 import datetime
+
+class BenchmarkResultMetric(BaseModel):
+    name: str
+    value: Optional[float]
+    unit: str
+
 
 class BenchmarkResult(BaseModel):
     id: str
@@ -8,4 +14,4 @@ class BenchmarkResult(BaseModel):
     resource: str
     started: datetime.datetime
 
-    metrics: Dict[str, Optional[str]]
+    metrics: List[BenchmarkResultMetric] # Dict[str, Optional[str]]

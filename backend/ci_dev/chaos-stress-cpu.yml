@@ -1,0 +1,24 @@
+kind: Schedule
+apiVersion: chaos-mesh.org/v1alpha1
+metadata:
+  namespace: kubestone
+  name: chaos-sched-cpu-stress
+spec:
+  schedule: '*/1 * * * *'
+  startingDeadlineSeconds: null
+  concurrencyPolicy: Forbid
+  historyLimit: 100
+  type: StressChaos
+  stressChaos:
+    selector:
+      namespaces:
+        - kubestone
+      podPhaseSelectors:
+        - Running
+    mode: all
+    stressors:
+      cpu:
+        workers: 2
+        load: 4
+    duration: 40s
+

@@ -21,8 +21,17 @@ nodes:
     hostPort: 8001
     listenAddress: "127.0.0.1"
     protocol: TCP
+  # chaos dashboard
+  - containerPort: 31333
+    hostPort: 8333
+    listenAddress: "127.0.0.1"
+    protocol: TCP
 # the three workers
 - role: worker
   image: kindest/node:v1.21.10@sha256:84709f09756ba4f863769bdcabe5edafc2ada72d3c8c44d6515fc581b66b029c
+  extraMounts:
+  - hostPath: /perona-data/
+    containerPath: /var/perona-data
+    readOnly: false
 - role: worker
   image: kindest/node:v1.21.10@sha256:84709f09756ba4f863769bdcabe5edafc2ada72d3c8c44d6515fc581b66b029c
