@@ -69,7 +69,9 @@ watch(props, () => {
     ];
     for (let i = 0; i < bmResources.length; i++) {
       let resource = bmResources[i];
-      series.value[0].data[i] = props.nodeScore[resource].score;
+      series.value[0].data[i] = parseFloat(
+        Number(props.nodeScore[resource].score).toFixed(2)
+      );
     }
   }
 });
