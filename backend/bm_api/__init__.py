@@ -165,7 +165,16 @@ async def get_node_fingerprint(fingerprint_engine: BaseFingerprintEngine = Depen
 @app.get("/scores/{node_name}", response_model=NodeScores)
 async def get_node_scores(node_name: str, fingerprint_engine: BaseFingerprintEngine = Depends(get_fingerprint_engine)):
     try:
-        scores = await fingerprint_engine.get_scores_for_node(node_name)
+        scores = await fingerprint_engine.get_scores_for_node(node_name, relative_to_cluster=False)
+        return scores
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=str(ex))
+
+
+@app.get("/scores/{node_name}/cluster", response_model=NodeScores)
+async def get_node_scores(node_name: str, fingerprint_engine: BaseFingerprintEngine = Depends(get_fingerprint_engine)):
+    try:
+        scores = await fingerprint_engine.get_scores_for_node(node_name, relative_to_cluster=True)
         return scores
     except Exception as ex:
         raise HTTPException(status_code=500, detail=str(ex))

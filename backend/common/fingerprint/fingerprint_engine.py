@@ -89,79 +89,85 @@ class SimpleFingerprint(BaseFingerprint):
         if type(ref_fingerprint) != SimpleFingerprint:
             raise ValueError("SimpleFingerprint can only compare to SimpleFingerprint")
 
+        def safe_div(self_measure: float, ref_measure: float):
+            if ref_measure == 0.0:
+                ref_measure = 1.0
+            
+            return self_measure / ref_measure
+
         if for_resource is not None:
             if for_resource == BenchmarkedResource.CPU:
                 vec = (
-                    self.cpu_events_per_second / ref_fingerprint.cpu_events_per_second,
-                    self.cpu_latency_95 / ref_fingerprint.cpu_latency_95
+                    safe_div(self.cpu_events_per_second, ref_fingerprint.cpu_events_per_second),
+                    safe_div(self.cpu_latency_95, ref_fingerprint.cpu_latency_95),
                 )
             elif for_resource == BenchmarkedResource.DISK:
                 vec = (
-                    self.disk_iops / ref_fingerprint.disk_iops,
-                    self.disk_latency_avg / ref_fingerprint.disk_latency_avg,
-                    self.disk_write_iops / ref_fingerprint.disk_write_iops,
-                    self.disk_write_mibps / ref_fingerprint.disk_write_mibps
+                    safe_div(self.disk_iops, ref_fingerprint.disk_iops),
+                    safe_div(self.disk_latency_avg, ref_fingerprint.disk_latency_avg),
+                    safe_div(self.disk_write_iops, ref_fingerprint.disk_write_iops),
+                    safe_div(self.disk_write_mibps, ref_fingerprint.disk_write_mibps),
                 )
             elif for_resource == BenchmarkedResource.MEMORY:
                 vec = (
-                    self.mem_latency_max / ref_fingerprint.mem_latency_max,
-                    self.mem_exctime / ref_fingerprint.mem_exctime,
+                    safe_div(self.mem_latency_max, ref_fingerprint.mem_latency_max),
+                    safe_div(self.mem_exctime, ref_fingerprint.mem_exctime),
                 )
             elif for_resource == BenchmarkedResource.NETWORK:
                 vec = (
-                    self.net_transfer_bitrate / ref_fingerprint.net_transfer_bitrate,
-                    self.net_tcp_msg_rate / ref_fingerprint.net_tcp_msg_rate,
-                    self.net_tcp_latency / ref_fingerprint.net_tcp_latency,
-                    self.net_bw_cpu_usage / ref_fingerprint.net_bw_cpu_usage,
-                    self.net_lat_cpu_usage / ref_fingerprint.net_lat_cpu_usage,
+                    safe_div(self.net_transfer_bitrate, ref_fingerprint.net_transfer_bitrate),
+                    safe_div(self.net_tcp_msg_rate, ref_fingerprint.net_tcp_msg_rate),
+                    safe_div(self.net_tcp_latency, ref_fingerprint.net_tcp_latency),
+                    safe_div(self.net_bw_cpu_usage, ref_fingerprint.net_bw_cpu_usage),
+                    safe_div(self.net_lat_cpu_usage, ref_fingerprint.net_lat_cpu_usage),
                 )
         elif for_kind is not None:
             if for_kind == BenchmarkedResourceKind.CPU_SYSBENCH:
                 vec = (
-                    self.cpu_events_per_second / ref_fingerprint.cpu_events_per_second,
-                    self.cpu_latency_95 / ref_fingerprint.cpu_latency_95
+                    safe_div(self.cpu_events_per_second, ref_fingerprint.cpu_events_per_second),
+                    safe_div(self.cpu_latency_95, ref_fingerprint.cpu_latency_95),
                 )
             elif for_kind == BenchmarkedResourceKind.DISK_IOPING:
                 vec = (
-                    self.disk_iops / ref_fingerprint.disk_iops,
-                    self.disk_latency_avg / ref_fingerprint.disk_latency_avg
+                    safe_div(self.disk_iops, ref_fingerprint.disk_iops),
+                    safe_div(self.disk_latency_avg, ref_fingerprint.disk_latency_avg),
                 )
             elif for_kind == BenchmarkedResourceKind.DISK_FIO:
                 vec = (
-                    self.disk_write_iops / ref_fingerprint.disk_write_iops,
-                    self.disk_write_mibps / ref_fingerprint.disk_write_mibps
+                    safe_div(self.disk_write_iops, ref_fingerprint.disk_write_iops),
+                    safe_div(self.disk_write_mibps, ref_fingerprint.disk_write_mibps),
                 )
             elif for_kind == BenchmarkedResourceKind.MEMORY_SYSBENCH:
                 vec = (
-                    self.mem_latency_max / ref_fingerprint.mem_latency_max,
-                    self.mem_exctime / ref_fingerprint.mem_exctime,
+                    safe_div(self.mem_latency_max, ref_fingerprint.mem_latency_max),
+                    safe_div(self.mem_exctime, ref_fingerprint.mem_exctime),
                 )
             elif for_kind == BenchmarkedResourceKind.NETWORK_IPERF3:
                 vec = (
-                    self.net_transfer_bitrate / ref_fingerprint.net_transfer_bitrate,
+                    safe_div(self.net_transfer_bitrate, ref_fingerprint.net_transfer_bitrate),
                 )
             elif for_kind == BenchmarkedResourceKind.NETWORK_QPERF:
                 vec = (
-                    self.net_tcp_msg_rate / ref_fingerprint.net_tcp_msg_rate,
-                    self.net_tcp_latency / ref_fingerprint.net_tcp_latency,
-                    self.net_bw_cpu_usage / ref_fingerprint.net_bw_cpu_usage,
-                    self.net_lat_cpu_usage / ref_fingerprint.net_lat_cpu_usage,
+                    safe_div(self.net_tcp_msg_rate, ref_fingerprint.net_tcp_msg_rate),
+                    safe_div(self.net_tcp_latency, ref_fingerprint.net_tcp_latency),
+                    safe_div(self.net_bw_cpu_usage, ref_fingerprint.net_bw_cpu_usage),
+                    safe_div(self.net_lat_cpu_usage, ref_fingerprint.net_lat_cpu_usage),
                 )
         else:
             vec = (
-                self.cpu_events_per_second / ref_fingerprint.cpu_events_per_second,
-                self.cpu_latency_95 / ref_fingerprint.cpu_latency_95,
-                self.mem_latency_max / ref_fingerprint.mem_latency_max,
-                self.mem_exctime / ref_fingerprint.mem_exctime,
-                self.disk_iops / ref_fingerprint.disk_iops,
-                self.disk_latency_avg / ref_fingerprint.disk_latency_avg,
-                self.disk_write_iops / ref_fingerprint.disk_write_iops,
-                self.disk_write_mibps / ref_fingerprint.disk_write_mibps,
-                self.net_transfer_bitrate / ref_fingerprint.net_transfer_bitrate,
-                self.net_tcp_msg_rate / ref_fingerprint.net_tcp_msg_rate,
-                self.net_tcp_latency / ref_fingerprint.net_tcp_latency,
-                self.net_bw_cpu_usage / ref_fingerprint.net_bw_cpu_usage,
-                self.net_lat_cpu_usage / ref_fingerprint.net_lat_cpu_usage,
+                safe_div(self.cpu_events_per_second, ref_fingerprint.cpu_events_per_second),
+                safe_div(self.cpu_latency_95, ref_fingerprint.cpu_latency_95),
+                safe_div(self.mem_latency_max, ref_fingerprint.mem_latency_max),
+                safe_div(self.mem_exctime, ref_fingerprint.mem_exctime),
+                safe_div(self.disk_iops, ref_fingerprint.disk_iops),
+                safe_div(self.disk_latency_avg, ref_fingerprint.disk_latency_avg),
+                safe_div(self.disk_write_iops, ref_fingerprint.disk_write_iops),
+                safe_div(self.disk_write_mibps, ref_fingerprint.disk_write_mibps),
+                safe_div(self.net_transfer_bitrate, ref_fingerprint.net_transfer_bitrate),
+                safe_div(self.net_tcp_msg_rate, ref_fingerprint.net_tcp_msg_rate),
+                safe_div(self.net_tcp_latency, ref_fingerprint.net_tcp_latency),
+                safe_div(self.net_bw_cpu_usage, ref_fingerprint.net_bw_cpu_usage),
+                safe_div(self.net_lat_cpu_usage, ref_fingerprint.net_lat_cpu_usage),
             )
 
         return mean(vec)
@@ -232,7 +238,7 @@ class BaseFingerprintEngine(ABC):
     async def get_fingerprint_for_cluster(self) -> BaseFingerprint:
         raise NotImplementedError
 
-    async def get_scores_for_node(self, node_name: str) -> NodeScores:
+    async def get_scores_for_node(self, node_name: str, relative_to_cluster: bool) -> NodeScores:
         raise NotImplementedError
 
     async def get_scores(self, *node_names: str) -> Dict[str, NodeScores]:
@@ -335,27 +341,30 @@ class SimpleFingerprintEngine(BaseFingerprintEngine):
             return SimpleFingerprint.mean(fps)
             
 
-    async def get_scores_for_node(self, node_name: str) -> NodeScores:
+    async def get_scores_for_node(self, node_name: str, relative_to_cluster: bool=False) -> NodeScores:
         fp = await self.get_fingerprint_for_node(node_name)
 
-        # TODO: global reference fingerprint
-        ref_fingerprint = SimpleFingerprint(
-            _node_name=node_name,
-            _utctimestamp=datetime.datetime(2022, 5, 25, 18, 47, 00),
-            cpu_events_per_second=73834.30137412282,
-            cpu_latency_95=0.7090241200365385,
-            mem_latency_max=52.53,
-            mem_exctime=8.4504,
-            disk_iops=869.149952244506,
-            disk_latency_avg=6.566380133715361,
-            disk_write_iops=5000,
-            disk_write_mibps=18000,
-            net_transfer_bitrate=2.5,
-            net_tcp_msg_rate=63.6,
-            net_tcp_latency=15.7,
-            net_bw_cpu_usage=565.0,
-            net_lat_cpu_usage=264.0
-        )
+        if relative_to_cluster:
+            ref_fingerprint = await self.get_fingerprint_for_cluster()
+        else:
+            # TODO: global reference fingerprint
+            ref_fingerprint = SimpleFingerprint(
+                _node_name=node_name,
+                _utctimestamp=datetime.datetime(2022, 5, 25, 18, 47, 00),
+                cpu_events_per_second=73834.30137412282,
+                cpu_latency_95=0.7090241200365385,
+                mem_latency_max=52.53,
+                mem_exctime=8.4504,
+                disk_iops=869.149952244506,
+                disk_latency_avg=6.566380133715361,
+                disk_write_iops=5000,
+                disk_write_mibps=18000,
+                net_transfer_bitrate=2.5,
+                net_tcp_msg_rate=63.6,
+                net_tcp_latency=15.7,
+                net_bw_cpu_usage=565.0,
+                net_lat_cpu_usage=264.0
+            )
 
         return NodeScores(
             node_name=node_name,
