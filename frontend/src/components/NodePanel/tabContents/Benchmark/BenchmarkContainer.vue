@@ -15,6 +15,7 @@ import {
   BmType,
 } from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
 import { IBenchmark } from "@/models/IBenchmark";
+import Node from "@/models/Node";
 
 interface availableBMs {
   cpu?: BmType[];
@@ -162,6 +163,7 @@ const fetchResultsByNode = (
             fetchingActiveList.value[nodeName][bmType].intervalID?.toString();
           if (!fetchingActiveList.value[nodeName][bmType].isFetching) {
             resetIntervalIDByNode(bmType, nodeName, parseInt(tmp ? tmp : ""));
+            Node.dispatch("fetchScore", props.node);
           } else {
             Benchmark.dispatch("fetchBenchmarkById", benchmark);
           }

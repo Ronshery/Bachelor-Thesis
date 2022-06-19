@@ -1,6 +1,6 @@
 <template>
   <TabContentCardsWrapper>
-    <ScoreCard :description="description" :score="5" strokeColor="#5245EA" />
+    <ScoreCard :description="description" :score="5" strokeColor="#352BA9" />
     <div
       v-if="chartsData.qperfBandWidthSeries[0].data.length === 0"
       class="no-data"
@@ -122,9 +122,14 @@ const qperfBandWidthApexArguments = (
     );
     qperfBandWidthSeries[5].data.push(metrics.tcp_bw_send_cpus_used);
     const date = new Date(tmp.started + "Z");
-    const minutes =
-      date.getMinutes() < 10 ? `0${date.getMinutes()}` : date.getMinutes();
-    categories.push(`${date.getHours()}:${minutes}`);
+    const clock = date.toLocaleString("en-US", {
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true,
+    });
+    const month =
+      date.getMonth() < 10 ? `0${date.getMonth()}` : date.getMonth();
+    categories.push(`${month}/${date.getDate()} ${clock}`);
   }
 
   // on: panning and zoom enabled
@@ -188,9 +193,14 @@ const qperfLatencyApexArguments = (
     qperfLatencySeries[1].data.push(metrics.tcp_lat_loc_cpus_used);
     qperfLatencySeries[2].data.push(metrics.tcp_lat_rem_cpus_used);
     const date = new Date(tmp.started + "Z");
-    const minutes =
-      date.getMinutes() < 10 ? `0${date.getMinutes()}` : date.getMinutes();
-    categories.push(`${date.getHours()}:${minutes}`);
+    const clock = date.toLocaleString("en-US", {
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true,
+    });
+    const month =
+      date.getMonth() < 10 ? `0${date.getMonth()}` : date.getMonth();
+    categories.push(`${month}/${date.getDate()} ${clock}`);
   }
 
   // on: panning and zoom enabled

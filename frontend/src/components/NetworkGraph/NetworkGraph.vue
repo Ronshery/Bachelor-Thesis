@@ -1,16 +1,33 @@
 <template>
   <div class="v-network-graph-container">
     <div class="graph-panel">
-      <button @click="graph?.zoomIn()">Zoom In</button>
-      <button @click="graph?.zoomOut()">Zoom Out</button>
-      <button @click="graph?.fitToContents()">Fit</button>
-      <button @click="graph?.panToCenter()">Center</button>
-      <button @click="reset">Reset</button>
+      <div class="network-button" @click="graph?.zoomIn()">
+        <div>zoom in</div>
+      </div>
+      <div class="network-button" @click="graph?.zoomOut()">
+        <div>zoom out</div>
+      </div>
+      <div class="network-button" @click="graph?.fitToContents()">
+        <div>fit</div>
+      </div>
+      <div class="network-button" @click="graph?.panToCenter()">
+        <div>center</div>
+      </div>
+      <div class="network-button" @click="reset"><div>reset</div></div>
       {{ selectedNodes }}
       <br />
       {{ layouts }}
       <br />
       {{ layoutsBackup }}
+    </div>
+    <div class="graph-panel" style="top: 60px; flex-direction: column">
+      <label style="margin-left: 1em">nodes list</label>
+      <input v-model="inputSelectedNodes" list="nodes" name="nodes" />
+      <datalist id="nodes">
+        <option v-for="node in nodes" :value="node.name" :key="node.name">
+          {{ node.name }}
+        </option>
+      </datalist>
     </div>
     <v-network-graph
       ref="graph"
@@ -106,6 +123,7 @@ const store = useStore();
 // data
 let zoomLevel = ref(1);
 const selectedNodes = ref<string[]>([]);
+const inputSelectedNodes = ref<string>("");
 const graph = ref<vNG.Instance>();
 const layouts = ref<Layouts>({ nodes: {} });
 const layoutsBackup = ref<vNG.Layouts>();
@@ -217,6 +235,15 @@ const eventHandlers: vNG.EventHandlers = {
   },
 };
 
+watch(inputSelectedNodes, () => {
+  if (Object.keys(props.nodes).indexOf(inputSelectedNodes.value) != -1) {
+    selectedNodes.value.push(inputSelectedNodes.value);
+    emit("nodeClicked", props.nodes[inputSelectedNodes.value]);
+    setTimeout(() => {
+      inputSelectedNodes.value = "";
+    }, 2000);
+  }
+});
 /// Node DonutChart
 // data
 const maxValue = 10;
@@ -248,5 +275,42 @@ const convertedScore = (score: number) => (score * circumference) / maxValue;
   display: flex;
   z-index: 10;
   color: white;
+}
+
+.network-button {
+  cursor: pointer;
+  background-color: #4c4f69;
+  border: 1px solid #393b54;
+  border-radius: 10px;
+  display: table;
+  padding: 4px;
+  margin-right: 5px;
+  width: 4em;
+}
+
+.network-button:active {
+  background-color: #393b54;
+}
+
+.network-button div {
+  display: table-cell;
+  vertical-align: middle;
+  text-align: center;
+}
+
+input {
+  border-radius: 8px;
+  border: 1px solid white;
+  background-color: #282935ff;
+  padding: 5px;
+  font-weight: bold;
+  color: white;
+  margin-left: 1em;
+}
+
+option {
+  background-color: #282935ff;
+  color: white;
+  border-radius: 20px;
 }
 </style>

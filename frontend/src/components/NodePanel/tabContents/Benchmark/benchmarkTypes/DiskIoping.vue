@@ -1,6 +1,6 @@
 <template>
   <TabContentCardsWrapper>
-    <ScoreCard :score="5" strokeColor="#7D72FF" :description="description" />
+    <ScoreCard :score="5" strokeColor="#AEA7FF" :description="description" />
     <div v-if="!chartsData.globalOptions" class="no-data">
       run to see results
     </div>
@@ -122,9 +122,14 @@ const iopsApexArguments = (
     iopsSeries[1].data.push(metrics.transfer_bitrate);
     iopsSeries[2].data.push(metrics.total_duration);
     const date = new Date(tmp.started + "Z");
-    const minutes =
-      date.getMinutes() < 10 ? `0${date.getMinutes()}` : date.getMinutes();
-    categories.push(`${date.getHours()}:${minutes}`);
+    const clock = date.toLocaleString("en-US", {
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true,
+    });
+    const month =
+      date.getMonth() < 10 ? `0${date.getMonth()}` : date.getMonth();
+    categories.push(`${month}/${date.getDate()} ${clock}`);
   }
 
   // on: panning and zoom enabled

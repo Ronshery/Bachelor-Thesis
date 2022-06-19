@@ -1,4 +1,5 @@
 <template>
+  {{ nodes }}
   <div v-for="bmType in bmTypes" :key="bmType">
     <TabContentCard
       :cssStyle="{
@@ -19,12 +20,11 @@
           <span
             class="run-wrapper"
             :class="{
-              'run-disabled':
-                selections[bmType] === '0' || runningState[bmType],
+              'run-disabled': selections[bmType] === '' || runningState[bmType],
             }"
           >
             <span
-              :class="{ 'cursor-pointer': selections[bmType] !== '0' }"
+              :class="{ 'cursor-pointer': selections[bmType] !== '' }"
               v-if="!runningState[bmType]"
               @click="runBenchmark(bmType)"
             >
@@ -33,7 +33,7 @@
                 alt="run"
                 :src="require('@/assets/benchmark/benchmark-run-icon.svg')"
               />
-              <span :class="{ 'run-text': selections[bmType] !== '0' }">
+              <span :class="{ 'run-text': selections[bmType] !== '' }">
                 run
               </span>
             </span>
@@ -77,8 +77,8 @@ import NetworkQperf from "@/components/NodePanel/tabContents/Benchmark/benchmark
 const props = defineProps(["bmTypes", "nodeID", "runningState"]);
 
 // data
-let iPerf3SelectValue = ref("0");
-let qperfSelectValue = ref("0");
+let iPerf3SelectValue = ref("");
+let qperfSelectValue = ref("");
 const selections = ref<{ [key: string]: Ref<string> }>({
   [BmType.NETWORK_IPERF3]: iPerf3SelectValue,
   [BmType.NETWORK_QPERF]: qperfSelectValue,

@@ -1,14 +1,15 @@
 <template>
-  <select v-model="networkSelection">
-    <option value="0" disabled>--server node--</option>
-    <option
-      v-for="node in nodes"
-      :key="node.$getAttributes().id"
-      :value="node.$getAttributes().id"
-    >
-      {{ node.$getAttributes().id }}
+  <input
+    v-model="networkSelection"
+    list="nodes"
+    name="nodes"
+    placeholder="---server node---"
+  />
+  <datalist id="nodes">
+    <option v-for="node in nodes" :key="node" :value="node">
+      {{ node }}
     </option>
-  </select>
+  </datalist>
 </template>
 
 <script setup lang="ts">
@@ -20,19 +21,26 @@ const props = defineProps(["bmType", "nodeID"]);
 const emit = defineEmits(["networkSelected"]);
 
 // data
-const networkSelection = ref("0");
-const nodes = computed(() => Node.all());
+const networkSelection = ref("");
+const nodes = computed(() => Node.all().map((node: Node) => node.$id));
 
 // methods
 watch(networkSelection, () => {
-  emit("networkSelected", {
-    bmType: props.bmType,
-    value: networkSelection.value,
-  });
+  if (nodes.value.indexOf(networkSelection.value) != -1) {
+    emit("networkSelected", {
+      bmType: props.bmType,
+      value: networkSelection.value,
+    });
+  } else {
+    emit("networkSelected", {
+      bmType: props.bmType,
+      value: "",
+    });
+  }
 });
 
 watch(props, () => {
-  networkSelection.value = "0";
+  networkSelection.value = "";
   emit("networkSelected", {
     bmType: props.bmType,
     value: networkSelection.value,
@@ -41,7 +49,7 @@ watch(props, () => {
 </script>
 
 <style scoped>
-select {
+input {
   border-radius: 8px;
   border: 1px solid white;
   background-color: #282935ff;

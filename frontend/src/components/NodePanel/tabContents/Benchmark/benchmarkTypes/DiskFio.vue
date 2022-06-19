@@ -1,6 +1,6 @@
 <template>
   <TabContentCardsWrapper>
-    <ScoreCard :score="5" strokeColor="#5245EA" :description="description" />
+    <ScoreCard :score="5" strokeColor="#7D72FF" :description="description" />
     <div v-if="!chartsData.globalOptions" class="no-data">
       run to see results
     </div>
@@ -106,9 +106,14 @@ const fioApexArguments = (
     fioSeries[0].data.push(metrics.write_iops);
     fioSeries[1].data.push(metrics.write_mibps);
     const date = new Date(tmp.started + "Z");
-    const minutes =
-      date.getMinutes() < 10 ? `0${date.getMinutes()}` : date.getMinutes();
-    categories.push(`${date.getHours()}:${minutes}`);
+    const clock = date.toLocaleString("en-US", {
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true,
+    });
+    const month =
+      date.getMonth() < 10 ? `0${date.getMonth()}` : date.getMonth();
+    categories.push(`${month}/${date.getDate()} ${clock}`);
   }
 
   // on: panning and zoom enabled

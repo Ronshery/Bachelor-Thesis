@@ -7,7 +7,7 @@
       </TabContentCard>
       <TabContentCard>
         <template v-slot:title> Characteristic </template>
-        <CharacteristicCard />
+        <CharacteristicCard :nodeScore="nodeScore" />
       </TabContentCard>
       <TabContentCardsWrapper>
         <TabContentCard>
@@ -48,6 +48,7 @@ import TabContentCard from "@/components/NodePanel/tabContents/TabContentCard.vu
 import TabContentCardsWrapper from "@/components/NodePanel/tabContents/TabContentCardsWrapper.vue";
 import InnerTableCard from "@/components/NodePanel/tabContents/InnerTableCard.vue";
 import CharacteristicCard from "@/components/NodePanel/tabContents/Overview/CharacteristicCard.vue";
+import Node from "@/models/Node";
 
 interface Segment {
   benchmark: string;
@@ -99,6 +100,7 @@ const nodeComp = computed(() => {
       status: undefined,
     };
   } else {
+    Node.dispatch("fetchScore", props.node);
     return props.node;
   }
 });
@@ -115,35 +117,41 @@ const segments = ref<Segment[]>([
   {
     benchmark: "cpu-sysbench",
     score: 3,
-    color: "#CECAFF",
+    color: "#E3E0FF",
   },
   {
     benchmark: "memory-sysbench",
     score: 5,
-    color: "#AEA7FF",
-  },
-  {
-    benchmark: "network-iperf3",
-    score: 5,
-    color: "green",
-  },
-  {
-    benchmark: "network-qperf",
-    score: 5,
-    color: "#AEA7FF",
+    color: "#CECAFF",
   },
   {
     benchmark: "disk-ioping",
     score: 1,
-    color: "#7D72FF",
+    color: "#AEA7FF",
   },
   {
     benchmark: "disk-fio",
     score: 3,
+    color: "#7D72FF",
+  },
+  {
+    benchmark: "network-iperf3",
+    score: 5,
     color: "#5245EA",
+  },
+  {
+    benchmark: "network-qperf",
+    score: 5,
+    color: "#352BA9",
   },
 ]);
 // methods
+const nodeScore = computed(() => {
+  if (nodeComp.value != null) {
+    return Node.find(nodeComp.value.id)?.$getAttributes().scores;
+  }
+  return null;
+});
 const nodeInfoComp = computed(() => {
   let kubeNodeInfo = nodeComp.value.status;
   let info: Record<string, string> = {};
@@ -234,6 +242,7 @@ const convertDataToApex = (
   let newData: ApexDataPoint[] = [];
   for (let i = 0; i < data.length; i++) {
     let date = new Date(data[i].time);
+
     let point = {
       x: date,
       y: Number(data[i].value).toFixed(2),
