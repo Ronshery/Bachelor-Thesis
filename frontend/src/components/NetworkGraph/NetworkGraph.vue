@@ -237,7 +237,6 @@ const eventHandlers: vNG.EventHandlers = {
 
 watch(inputSelectedNodes, () => {
   if (Object.keys(props.nodes).indexOf(inputSelectedNodes.value) != -1) {
-    console.log("we can emit the node");
     selectedNodes.value.push(inputSelectedNodes.value);
     emit("nodeClicked", props.nodes[inputSelectedNodes.value]);
     setTimeout(() => {

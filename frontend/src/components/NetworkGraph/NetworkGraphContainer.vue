@@ -20,16 +20,16 @@ import NetworkGraph from "@/components/NetworkGraph/NetworkGraph.vue";
 import * as vNG from "v-network-graph"; // @ is an alias to /src
 import { useStore } from "vuex";
 import NodePanel from "@/components/NodePanel/NodePanel.vue";
-import { INode } from "@/models/INode";
-
+import Node from "@/models/Node";
 // vue data
 const store = useStore();
 
 // data
-const selectedNode = ref<INode | null>(null);
+const selectedNode = ref<Node | null>(null);
 const NodeModel = computed(() => store.$db().model("nodes"));
 const nodes = computed(() => {
-  let nodesList = NodeModel.value.query().all();
+  console.log("nodes query");
+  let nodesList = Node.query().all();
 
   // convert fetched nodes to v-network-graph format
   let convertedNodesList: Record<string, any> = {};
@@ -55,15 +55,13 @@ const nodeClicked = (params: any) => {
       lastSelectedNode.value = params;
     }
     params.show = true;
-    lastSelectedNode.value.color = "white";
-    NodeModel.value.update({
+    Node.update({
       ...lastSelectedNode.value,
       color: "white",
     });
-    params.color = "#6753e1";
-    NodeModel.value.update({ ...params, show: true, color: "#6753e1" });
+    Node.update({ ...params, show: true, color: "#6753e1" });
 
-    selectedNode.value = params;
+    selectedNode.value = Node.find(params.id);
     lastSelectedNode.value = params;
   } else {
     if (lastSelectedNode.value == null) {
@@ -129,7 +127,7 @@ const configs: vNG.UserConfigs = reactive(
       maxZoomLevel: 16,
     },
     node: {
-      selectable: 1,
+      selectable: 2,
       label: {
         visible: false,
       },

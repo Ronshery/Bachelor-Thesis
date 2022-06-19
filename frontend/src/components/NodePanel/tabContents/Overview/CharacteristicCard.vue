@@ -3,6 +3,11 @@
 </template>
 
 <script setup lang="ts">
+import { defineProps, watch, ref } from "vue";
+
+// vue data
+const props = defineProps(["nodeScore"]);
+
 // data
 import { BmResource } from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
 
@@ -54,12 +59,27 @@ const options = {
   },
 };
 
-const series = [
+watch(props, () => {
+  if (props.nodeScore != null) {
+    const bmResources = [
+      BmResource.CPU,
+      BmResource.MEMORY,
+      BmResource.DISK,
+      BmResource.NETWORK,
+    ];
+    for (let i = 0; i < bmResources.length; i++) {
+      let resource = bmResources[i];
+      series.value[0].data[i] = props.nodeScore[resource].score;
+    }
+  }
+});
+
+const series = ref([
   {
-    data: [10, 5, 6, 3],
+    data: [0, 0, 0, 0] as number[],
     name: "value",
   },
-];
+]);
 </script>
 
 <style scoped></style>

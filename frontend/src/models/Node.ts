@@ -20,6 +20,7 @@ export default class Node extends Model {
       show: this.attr(false),
       bmScore: this.attr(10),
       metrics: this.attr(null),
+      scores: this.attr(null),
     };
   }
 }
@@ -96,6 +97,14 @@ const actions: ActionTree<NodeState, RootState> = {
         const updatedNode = { ...node, metrics: data.data };
         commit("updateNode", updatedNode);
       });
+  },
+  async fetchScore({ commit }, node) {
+    await benchmarkService.get(`/scores/${node.id}`).then((response) => {
+      console.log("************************asd");
+      console.log(response.data);
+      const updatedNode = { ...node, scores: response.data };
+      commit("updateNode", updatedNode);
+    });
   },
 };
 

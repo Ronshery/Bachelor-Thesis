@@ -7,7 +7,7 @@
       </TabContentCard>
       <TabContentCard>
         <template v-slot:title> Characteristic </template>
-        <CharacteristicCard />
+        <CharacteristicCard :nodeScore="nodeScore" />
       </TabContentCard>
       <TabContentCardsWrapper>
         <TabContentCard>
@@ -48,6 +48,7 @@ import TabContentCard from "@/components/NodePanel/tabContents/TabContentCard.vu
 import TabContentCardsWrapper from "@/components/NodePanel/tabContents/TabContentCardsWrapper.vue";
 import InnerTableCard from "@/components/NodePanel/tabContents/InnerTableCard.vue";
 import CharacteristicCard from "@/components/NodePanel/tabContents/Overview/CharacteristicCard.vue";
+import Node from "@/models/Node";
 
 interface Segment {
   benchmark: string;
@@ -99,6 +100,7 @@ const nodeComp = computed(() => {
       status: undefined,
     };
   } else {
+    Node.dispatch("fetchScore", props.node);
     return props.node;
   }
 });
@@ -144,6 +146,12 @@ const segments = ref<Segment[]>([
   },
 ]);
 // methods
+const nodeScore = computed(() => {
+  if (nodeComp.value != null) {
+    return Node.find(nodeComp.value.id)?.$getAttributes().scores;
+  }
+  return null;
+});
 const nodeInfoComp = computed(() => {
   let kubeNodeInfo = nodeComp.value.status;
   let info: Record<string, string> = {};
