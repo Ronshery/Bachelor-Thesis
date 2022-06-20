@@ -77,8 +77,8 @@ helm install \
     --set dashboard.service.type=NodePort \
     --set dashboard.service.nodePort=31333 \
     chaos-mesh chaos-mesh/chaos-mesh
-# check chaos installation
-kubectl get po -n chaos-testing
+# use 'wait' to check for Available status in .status.conditions[]
+kubectl wait deployment -n chaos-testing chaos-controller-manager --for condition=Available=True --timeout=120s
 # create chaos schedules
 kubectl apply -f ci_dev/chaos-stress-cpu.yml
 
