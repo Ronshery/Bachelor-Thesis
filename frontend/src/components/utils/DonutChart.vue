@@ -159,7 +159,7 @@ const scoreToPercent = (score: number) => (100 * score) / circumference;
 const percentToScore = (percent: number) => (circumference * percent) / 100;
 // score to segment size
 const convertedScore = (score: number) =>
-  (score * circumference) / props.maxValue;
+  ((score ? score + 0.0044603 : 0) * circumference) / props.maxValue;
 </script>
 
 <style>

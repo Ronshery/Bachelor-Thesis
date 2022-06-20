@@ -9,7 +9,7 @@
         :strokeWidth="30"
         :maxValue="10"
         :loadedView="true"
-        :score="score"
+        :score="scoreComp"
         :isSegmented="true"
         :segments="segments"
       />
@@ -42,16 +42,34 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps } from "vue";
+import { defineProps, watch, ref, computed } from "vue";
 import DonutChart from "@/components/utils/DonutChart.vue";
 
 // vue data
-const props = defineProps(["segments", "score"]);
+const props = defineProps(["segments", "score", "nodeScore"]);
+
+const scoreVal = ref<number>(0);
+watch(props, () => {
+  if (props.nodeScore != null) {
+    scoreVal.value = parseFloat(Number(props.nodeScore.total.score).toFixed(2));
+    const details = props.nodeScore["details"];
+    let sum = 0;
+    let segmentCounter = 0;
+    for (const key in details) {
+      sum += details[key].score;
+      segmentCounter++;
+    }
+    scoreVal.value = parseFloat(Number(sum / segmentCounter).toFixed(2));
+  }
+});
+
+const scoreComp = computed(() => scoreVal);
 </script>
 
 <style scoped>
 .donut-card-container {
   display: flex;
+  margin-top: 1em;
 }
 
 .donut-chart-wrapper {

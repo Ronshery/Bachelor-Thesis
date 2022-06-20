@@ -99,12 +99,18 @@ const actions: ActionTree<NodeState, RootState> = {
       });
   },
   async fetchScore({ commit }, node) {
-    await benchmarkService.get(`/scores/${node.id}`).then((response) => {
-      console.log("************************asd");
-      console.log(response.data);
-      const updatedNode = { ...node, scores: response.data };
-      commit("updateNode", updatedNode);
-    });
+    await benchmarkService
+      .get(`/scores/${node.id}`)
+      .then((response) => {
+        console.log(response.data);
+        const updatedNode = { ...node, scores: response.data };
+        commit("updateNode", updatedNode);
+      })
+      .catch((error) => {
+        if (error.response.status == 500) {
+          console.error(error.response.data.detail);
+        }
+      });
   },
 };
 

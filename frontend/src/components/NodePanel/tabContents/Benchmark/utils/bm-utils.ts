@@ -32,6 +32,12 @@ export const mappings = {
   [BmResource.NETWORK]: "Network benchmarks",
 };
 
+interface Metric {
+  name: string;
+  value: number;
+  unit: string;
+}
+
 export const defaultBarOptions = {
   chart: {
     id: "",
@@ -140,14 +146,19 @@ export default {
     const categories: string[] = [];
     for (const bm of currentBms) {
       const tmp = bm.$getAttributes();
-      const metrics = tmp.metrics;
-      latencySeries[0].data.push(metrics.latency_min);
-      latencySeries[1].data.push(metrics.latency_avg);
-      latencySeries[2].data.push(metrics.latency_max);
+      const metrics: Metric[] = tmp.metrics;
+
+      const metrics_converted: { [key: string]: string } =
+        this.convertedMetrics(metrics);
+
+      latencySeries[0].data.push(metrics_converted.latency_min);
+      latencySeries[1].data.push(metrics_converted.latency_avg);
+      latencySeries[2].data.push(metrics_converted.latency_max);
+
       if (bmType == BmType.DISK_IOPING) {
-        latencySeries[3].data.push(metrics.latency_mdev);
+        latencySeries[3].data.push(metrics_converted.latency_mdev);
       } else {
-        latencySeries[3].data.push(metrics.latency_95p);
+        latencySeries[3].data.push(metrics_converted.latency_95p);
       }
       const date = new Date(tmp.started + "Z");
       const clock = date.toLocaleString("en-US", {
@@ -223,32 +234,37 @@ export default {
       const tmp = bm.$getAttributes();
       const metrics = tmp.metrics;
 
+      const metrics_converted: { [key: string]: string } =
+        this.convertedMetrics(metrics);
+
       if (bmType == BmType.MEMORY_SYSBENCH) {
         eventsSeries[0].data.push(
-          Number(metrics.fairness_events.split("/")[0]).toFixed(0)
+          Number(metrics_converted.fairness_events.split("/")[0]).toFixed(0)
         );
         eventsSeries[1].data.push(
-          Number(metrics.fairness_events.split("/")[1]).toFixed(0)
+          Number(metrics_converted.fairness_events.split("/")[1]).toFixed(0)
         );
         eventsSeries[2].data.push(
-          Number(metrics.fairness_exctime.split("/")[0]).toFixed(2)
+          Number(metrics_converted.fairness_exctime.split("/")[0]).toFixed(2)
         );
         eventsSeries[3].data.push(
-          Number(metrics.fairness_exctime.split("/")[1]).toFixed(2)
+          Number(metrics_converted.fairness_exctime.split("/")[1]).toFixed(2)
         );
       } else {
-        eventsSeries[0].data.push(Number(metrics.events_per_second).toFixed(0));
+        eventsSeries[0].data.push(
+          Number(metrics_converted.events_per_second).toFixed(0)
+        );
         eventsSeries[1].data.push(
-          Number(metrics.fairness_events_avg).toFixed(0)
+          Number(metrics_converted.fairness_events_avg).toFixed(0)
         );
         eventsSeries[2].data.push(
-          Number(metrics.fairness_events_stddev).toFixed(0)
+          Number(metrics_converted.fairness_events_stddev).toFixed(0)
         );
         eventsSeries[3].data.push(
-          Number(metrics.fairness_exctime_avg).toFixed(2)
+          Number(metrics_converted.fairness_exctime_avg).toFixed(2)
         );
         eventsSeries[4].data.push(
-          Number(metrics.fairness_exctime_stddev).toFixed(2)
+          Number(metrics_converted.fairness_exctime_stddev).toFixed(2)
         );
       }
 
@@ -290,5 +306,29 @@ export default {
     let convertedTime = Number(substr).toFixed(0);
     convertedTime = convertedTime + time[time.length - 1];
     return convertedTime;
+  },
+  convertedMetrics(metrics: Metric[]) {
+    const metrics_converted: { [key: string]: string } = {};
+    metrics.forEach((metric: Metric) => {
+      metrics_converted[metric.name] = metric.value.toString();
+    });
+    return metrics_converted;
+  },
+  bmTypecolorMapping(bmType: BmType) {
+    bmType = bmType.toLowerCase().replace("_", "-") as BmType;
+    switch (bmType) {
+      case BmType.CPU_SYSBENCH:
+        return "#E3E0FF";
+      case BmType.MEMORY_SYSBENCH:
+        return "#CECAFF";
+      case BmType.DISK_IOPING:
+        return "#AEA7FF";
+      case BmType.DISK_FIO:
+        return "#7D72FF";
+      case BmType.NETWORK_IPERF3:
+        return "#5245EA";
+      case BmType.NETWORK_QPERF:
+        return "#352BA9";
+    }
   },
 };

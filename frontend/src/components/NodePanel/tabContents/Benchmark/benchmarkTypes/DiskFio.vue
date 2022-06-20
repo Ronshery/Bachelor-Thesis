@@ -68,8 +68,10 @@ const chartsData = computed(() => {
 
   let globalOptions = undefined;
   if (metrics) {
+    const metrics_converted: { [key: string]: string } =
+      bmUtils.convertedMetrics(metrics);
     globalOptions = {
-      number_of_processes: metrics.number_of_processes,
+      number_of_processes: metrics_converted.number_of_processes,
     };
   }
 
@@ -103,8 +105,11 @@ const fioApexArguments = (
   for (const bm of currentBms) {
     const tmp = bm.$getAttributes();
     const metrics = tmp.metrics;
-    fioSeries[0].data.push(metrics.write_iops);
-    fioSeries[1].data.push(metrics.write_mibps);
+    const metrics_converted: { [key: string]: string } =
+      bmUtils.convertedMetrics(metrics);
+
+    fioSeries[0].data.push(metrics_converted.write_iops);
+    fioSeries[1].data.push(metrics_converted.write_mibps);
     const date = new Date(tmp.started + "Z");
     const clock = date.toLocaleString("en-US", {
       hour: "numeric",

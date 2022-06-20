@@ -19,7 +19,7 @@
 import { computed, defineProps } from "vue";
 import Benchmark from "@/models/Benchmark";
 import { IBenchmark } from "@/models/IBenchmark";
-import {
+import bmUtils, {
   BmType,
   defaultBarOptions,
 } from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
@@ -76,7 +76,10 @@ const iPerf3ApexArguments = (
   for (const bm of currentBms) {
     const tmp = bm.$getAttributes();
     const metrics = tmp.metrics;
-    iPerf3Series[0].data.push(metrics.transfer_bitrate);
+    const metrics_converted: { [key: string]: string } =
+      bmUtils.convertedMetrics(metrics);
+
+    iPerf3Series[0].data.push(metrics_converted.transfer_bitrate);
     const date = new Date(tmp.started + "Z");
     const clock = date.toLocaleString("en-US", {
       hour: "numeric",

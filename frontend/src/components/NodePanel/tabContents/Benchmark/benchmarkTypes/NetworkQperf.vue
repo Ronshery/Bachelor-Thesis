@@ -30,7 +30,7 @@
 import { computed, defineProps } from "vue";
 import Benchmark from "@/models/Benchmark";
 import { IBenchmark } from "@/models/IBenchmark";
-import {
+import bmUtils, {
   BmType,
   defaultBarOptions,
 } from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
@@ -111,16 +111,23 @@ const qperfBandWidthApexArguments = (
   for (const bm of currentBms) {
     const tmp = bm.$getAttributes();
     const metrics = tmp.metrics;
-    qperfBandWidthSeries[0].data.push(metrics.tcp_bw_bandwidth);
-    qperfBandWidthSeries[1].data.push(metrics.tcp_bw_msg_rate);
+    const metrics_converted: { [key: string]: string } =
+      bmUtils.convertedMetrics(metrics);
+
+    qperfBandWidthSeries[0].data.push(metrics_converted.tcp_bw_bandwidth);
+    qperfBandWidthSeries[1].data.push(metrics_converted.tcp_bw_msg_rate);
     qperfBandWidthSeries[2].data.push(
-      metrics.tcp_bw_recv_cost ? metrics.tcp_bw_recv_cost : "0"
+      metrics_converted.tcp_bw_recv_cost
+        ? metrics_converted.tcp_bw_recv_cost
+        : "0"
     );
-    qperfBandWidthSeries[3].data.push(metrics.tcp_bw_recv_cpus_used);
+    qperfBandWidthSeries[3].data.push(metrics_converted.tcp_bw_recv_cpus_used);
     qperfBandWidthSeries[4].data.push(
-      metrics.tcp_bw_send_cost ? metrics.tcp_bw_send_cost : "0"
+      metrics_converted.tcp_bw_send_cost
+        ? metrics_converted.tcp_bw_send_cost
+        : "0"
     );
-    qperfBandWidthSeries[5].data.push(metrics.tcp_bw_send_cpus_used);
+    qperfBandWidthSeries[5].data.push(metrics_converted.tcp_bw_send_cpus_used);
     const date = new Date(tmp.started + "Z");
     const clock = date.toLocaleString("en-US", {
       hour: "numeric",
@@ -187,11 +194,16 @@ const qperfLatencyApexArguments = (
   for (const bm of currentBms) {
     const tmp = bm.$getAttributes();
     const metrics = tmp.metrics;
+    const metrics_converted: { [key: string]: string } =
+      bmUtils.convertedMetrics(metrics);
+
     qperfLatencySeries[0].data.push(
-      metrics.tcp_lat_latency ? metrics.tcp_lat_latency : "0"
+      metrics_converted.tcp_lat_latency
+        ? metrics_converted.tcp_lat_latency
+        : "0"
     );
-    qperfLatencySeries[1].data.push(metrics.tcp_lat_loc_cpus_used);
-    qperfLatencySeries[2].data.push(metrics.tcp_lat_rem_cpus_used);
+    qperfLatencySeries[1].data.push(metrics_converted.tcp_lat_loc_cpus_used);
+    qperfLatencySeries[2].data.push(metrics_converted.tcp_lat_rem_cpus_used);
     const date = new Date(tmp.started + "Z");
     const clock = date.toLocaleString("en-US", {
       hour: "numeric",

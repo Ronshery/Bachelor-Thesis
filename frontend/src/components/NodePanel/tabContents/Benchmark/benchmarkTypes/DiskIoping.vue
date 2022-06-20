@@ -79,8 +79,10 @@ const chartsData = computed(() => {
 
   let globalOptions = undefined;
   if (metrics) {
+    const metrics_converted: { [key: string]: string } =
+      bmUtils.convertedMetrics(metrics);
     globalOptions = {
-      number_of_requests: metrics.number_of_requests,
+      number_of_requests: metrics_converted.number_of_requests,
     };
   }
 
@@ -118,9 +120,12 @@ const iopsApexArguments = (
   for (const bm of currentBms) {
     const tmp = bm.$getAttributes();
     const metrics = tmp.metrics;
-    iopsSeries[0].data.push(metrics.iops);
-    iopsSeries[1].data.push(metrics.transfer_bitrate);
-    iopsSeries[2].data.push(metrics.total_duration);
+    const metrics_converted: { [key: string]: string } =
+      bmUtils.convertedMetrics(metrics);
+
+    iopsSeries[0].data.push(metrics_converted.iops);
+    iopsSeries[1].data.push(metrics_converted.transfer_bitrate);
+    iopsSeries[2].data.push(metrics_converted.total_duration);
     const date = new Date(tmp.started + "Z");
     const clock = date.toLocaleString("en-US", {
       hour: "numeric",

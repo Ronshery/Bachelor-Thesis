@@ -3,7 +3,11 @@
     <OverviewLayout>
       <TabContentCard>
         <template v-slot:title>Score</template>
-        <DonutCard :segments="segments" :score="nodeComp.bmScore" />
+        <DonutCard
+          :segments="segmentsComp"
+          :score="nodeComp.bmScore"
+          :nodeScore="nodeScore"
+        />
       </TabContentCard>
       <TabContentCard>
         <template v-slot:title> Characteristic </template>
@@ -49,6 +53,9 @@ import TabContentCardsWrapper from "@/components/NodePanel/tabContents/TabConten
 import InnerTableCard from "@/components/NodePanel/tabContents/InnerTableCard.vue";
 import CharacteristicCard from "@/components/NodePanel/tabContents/Overview/CharacteristicCard.vue";
 import Node from "@/models/Node";
+import bmUtils, {
+  BmType,
+} from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
 
 interface Segment {
   benchmark: string;
@@ -100,7 +107,9 @@ const nodeComp = computed(() => {
       status: undefined,
     };
   } else {
-    Node.dispatch("fetchScore", props.node);
+    if (props.node.name) {
+      Node.dispatch("fetchScore", props.node);
+    }
     return props.node;
   }
 });
@@ -112,39 +121,67 @@ let graphListApex = ref<GraphList[]>([
   { id: "memory_used", title: "Memory used", data: [] },
   { id: "disk_io_util", title: "Disk IO util", data: [] },
 ]);
-
-const segments = ref<Segment[]>([
+interface DetailScore {
+  max_score: number;
+  min_score: number;
+  score: number;
+}
+let segments = ref<Segment[]>([
   {
-    benchmark: "cpu-sysbench",
-    score: 3,
+    benchmark: BmType.CPU_SYSBENCH,
+    score: 0,
     color: "#E3E0FF",
   },
   {
-    benchmark: "memory-sysbench",
-    score: 5,
+    benchmark: BmType.MEMORY_SYSBENCH,
+    score: 0,
     color: "#CECAFF",
   },
   {
-    benchmark: "disk-ioping",
-    score: 1,
+    benchmark: BmType.DISK_IOPING,
+    score: 0,
     color: "#AEA7FF",
   },
   {
-    benchmark: "disk-fio",
-    score: 3,
+    benchmark: BmType.DISK_FIO,
+    score: 0,
     color: "#7D72FF",
   },
   {
-    benchmark: "network-iperf3",
-    score: 5,
+    benchmark: BmType.NETWORK_IPERF3,
+    score: 0,
     color: "#5245EA",
   },
   {
-    benchmark: "network-qperf",
-    score: 5,
+    benchmark: BmType.NETWORK_QPERF,
+    score: 0,
     color: "#352BA9",
   },
 ]);
+
+const segmentsComp = computed(() => {
+  if (nodeScore.value != null) {
+    const details = nodeScore.value["details"];
+    for (const key in details) {
+      const segment: Segment = {
+        benchmark: key.toLowerCase().replace("_", "-"),
+        score: details[key].score,
+        color: bmUtils.bmTypecolorMapping(key as BmType),
+      };
+      updateSegmentsBackup(segment);
+    }
+  }
+  return segments.value;
+});
+
+const updateSegmentsBackup = (updatedSegment: Segment) => {
+  for (let i = 0; i < segments.value.length; i++) {
+    if (segments.value[i].benchmark == updatedSegment.benchmark) {
+      segments.value[i].score = updatedSegment.score;
+    }
+  }
+};
+
 // methods
 const nodeScore = computed(() => {
   if (nodeComp.value != null) {

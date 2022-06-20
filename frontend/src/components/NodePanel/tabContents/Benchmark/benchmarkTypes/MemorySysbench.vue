@@ -81,12 +81,14 @@ const chartsData = computed(() => {
   const metrics = latestBm?.$getAttributes().metrics;
   let globalOptions = undefined;
   if (metrics) {
+    const metrics_converted: { [key: string]: string } =
+      bmUtils.convertedMetrics(metrics);
     globalOptions = {
-      num_threads: metrics.number_of_threads,
-      block_size: metrics.block_size,
-      total_size: metrics.total_size,
-      operation: metrics.operation,
-      total_time: bmUtils.convertTotalTime(metrics.total_time),
+      num_threads: metrics_converted.number_of_threads,
+      block_size: metrics_converted.block_size,
+      total_size: metrics_converted.total_size,
+      operation: metrics_converted.operation,
+      total_time: bmUtils.convertTotalTime(metrics_converted.total_time),
     };
   }
 
