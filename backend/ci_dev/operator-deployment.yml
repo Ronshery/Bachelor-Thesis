@@ -173,26 +173,13 @@ spec:
     app: perona-operator
 ---
 apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: perona-pv
-  labels:
-    type: local
-spec:
-  storageClassName: manual
-  capacity:
-    storage: 2Gi
-  accessModes:
-    - ReadWriteOnce
-  hostPath:
-    path: "/var/perona-data"
----
-apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: perona-pv-claim
+  labels:
+    type: local
 spec:
-  storageClassName: manual
+  storageClassName: standard
   accessModes:
     - ReadWriteOnce
   resources:
