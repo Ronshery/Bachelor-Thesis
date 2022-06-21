@@ -19,6 +19,7 @@ kind: Cluster
 name: benchmark-operator
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
+# the control plane node config
 - role: control-plane
   image: ${KIND_IMAGE}
   extraPortMappings:
@@ -55,8 +56,8 @@ do
 - role: worker
   image: ${KIND_IMAGE}
   extraMounts:
-  - containerPath: ${DATA_DIR}/perona-cluster-worker-${i}/
-    hostPath: /var/local-path-provisioner
+  - hostPath: ${DATA_DIR}/perona-cluster-worker-${i}/
+    containerPath: /var/local-path-provisioner
     readOnly: false
 EOF
 done
