@@ -2,7 +2,6 @@ kind: Cluster
 name: benchmark-operator
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
-# the control plane node config
 - role: control-plane
   image: kindest/node:v1.21.10@sha256:84709f09756ba4f863769bdcabe5edafc2ada72d3c8c44d6515fc581b66b029c
   extraPortMappings:
@@ -34,12 +33,12 @@ nodes:
 - role: worker
   image: kindest/node:v1.21.10@sha256:84709f09756ba4f863769bdcabe5edafc2ada72d3c8c44d6515fc581b66b029c
   extraMounts:
-  - hostPath: /perona-cluster-worker-1/
-    containerPath: /var/local-path-provisioner
+  - containerPath: /perona-cluster-worker-1/
+    hostPath: /var/local-path-provisioner
     readOnly: false
 - role: worker
   image: kindest/node:v1.21.10@sha256:84709f09756ba4f863769bdcabe5edafc2ada72d3c8c44d6515fc581b66b029c
   extraMounts:
-  - hostPath: /perona-cluster-worker-2/
-    containerPath: /var/local-path-provisioner
+  - containerPath: /perona-cluster-worker-2/
+    hostPath: /var/local-path-provisioner
     readOnly: false
