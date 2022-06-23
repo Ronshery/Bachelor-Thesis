@@ -9,7 +9,60 @@ printf "\n##### Build Docker Image...\n"
 docker build --network=host -t $IMAGE_NAME . &>/dev/null
 
 printf "\n##### Create Kind cluster...\n"
-kind create cluster --config=ci_dev/kind-config.yml
+NODE_NUM=3
+CONFIG_FILE=ci_dev/kind-config.yml
+KIND_IMAGE=kindest/node:v1.21.10@sha256:84709f09756ba4f863769bdcabe5edafc2ada72d3c8c44d6515fc581b66b029c
+DATA_DIR=""
+
+cat <<EOF > ${CONFIG_FILE}
+kind: Cluster
+name: benchmark-operator
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+# the control plane node config
+- role: control-plane
+  image: ${KIND_IMAGE}
+  extraPortMappings:
+  # perona operator
+  - containerPort: 31313
+    hostPort: 8000
+    listenAddress: "127.0.0.1"
+    protocol: TCP
+  # prometheus
+  - containerPort: 30090
+    hostPort: 9090
+    listenAddress: "127.0.0.1"
+    protocol: TCP
+  # dashboard
+  - containerPort: 31113
+    hostPort: 8001
+    listenAddress: "127.0.0.1"
+    protocol: TCP
+  # chaos dashboard
+  - containerPort: 31333
+    hostPort: 8333
+    listenAddress: "127.0.0.1"
+    protocol: TCP
+  extraMounts:
+  - hostPath: ${DATA_DIR}/perona-cluster-plane/
+    containerPath: /var/local-path-provisioner
+    readOnly: false
+# the workers
+EOF
+
+for ((i=1;i<NODE_NUM;i++))
+do
+    cat <<EOF >>  ${CONFIG_FILE}
+- role: worker
+  image: ${KIND_IMAGE}
+  extraMounts:
+  - hostPath: ${DATA_DIR}/perona-cluster-worker-${i}/
+    containerPath: /var/local-path-provisioner
+    readOnly: false
+EOF
+done
+
+kind create cluster --config=${CONFIG_FILE}
 kind --name benchmark-operator load docker-image $IMAGE_NAME &>/dev/null
 
 printf "\n##### Deploy Kubestone Operator...\n"
@@ -77,8 +130,8 @@ helm install \
     --set dashboard.service.type=NodePort \
     --set dashboard.service.nodePort=31333 \
     chaos-mesh chaos-mesh/chaos-mesh
-# check chaos installation
-kubectl get po -n chaos-testing
+# use 'wait' to check for Available status in .status.conditions[]
+kubectl wait deployment -n chaos-testing chaos-controller-manager --for condition=Available=True --timeout=120s
 # create chaos schedules
 kubectl apply -f ci_dev/chaos-stress-cpu.yml
 
