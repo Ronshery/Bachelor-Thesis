@@ -60,7 +60,7 @@
           :r="radius"
           :cx="pos.x"
           :cy="pos.y"
-          :stroke-dasharray="strokeDashArray(pos.bmScore)"
+          :stroke-dasharray="strokeDashArray(pos.score)"
           :stroke-dashoffset="percentToScore(25)"
           stroke="palevioletred"
           fill="none"
@@ -76,7 +76,7 @@
           alignment-baseline="central"
           style="pointer-events: none"
         >
-          {{ pos.bmScore }}/{{ maxValue }}
+          {{ pos.score === 0 ? "N/A" : pos.score + "/" + maxValue }}
         </text>
       </template>
     </v-network-graph>
@@ -104,9 +104,19 @@ interface Layouts extends vNG.Layouts {
       fixed?: boolean | undefined;
       x: number;
       y: number;
-      bmScore: number;
+      score: number;
     };
   };
+}
+
+interface DetailScore {
+  max_score: number;
+  min_score: number;
+  score: number;
+}
+
+interface DetailScores {
+  [key: string]: DetailScore;
 }
 
 // vue data
@@ -132,12 +142,32 @@ let data = ref([1, 9, 5, 6]);
 const layoutsComputed = computed(() => {
   const keys = Object.keys(layouts.value.nodes);
   Object.entries(layouts.value.nodes).forEach((node, index) => {
-    layouts.value.nodes[keys[index]].bmScore = props.nodes[node[0]].bmScore;
+    if (props.nodes[node[0]].scores != null) {
+      layouts.value.nodes[keys[index]].score = nodeTotalScore(
+        props.nodes[node[0]].scores.details
+      );
+    } else {
+      layouts.value.nodes[keys[index]].score = 0;
+    }
   });
   return layouts.value;
 });
 const loadedView = ref(false);
 // methods
+let nodeTotalScoreBackup = 0;
+const nodeTotalScore = (detailScores: DetailScores) => {
+  let scoreVal = 0;
+  let sum = 0;
+  let segmentCounter = 0;
+  for (const key in detailScores) {
+    sum += detailScores[key].score;
+    segmentCounter++;
+  }
+  scoreVal = parseFloat(Number(sum / segmentCounter).toFixed(2));
+  nodeTotalScoreBackup = scoreVal;
+
+  return nodeTotalScoreBackup;
+};
 let setTabContentHeight = () => {
   const tabContentContainerList = document.getElementsByClassName(
     "tab-content-container"

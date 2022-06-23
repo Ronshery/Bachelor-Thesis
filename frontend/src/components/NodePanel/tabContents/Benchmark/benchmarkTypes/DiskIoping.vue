@@ -1,6 +1,11 @@
 <template>
   <TabContentCardsWrapper>
-    <ScoreCard :score="5" strokeColor="#AEA7FF" :description="description" />
+    <ScoreCard
+      strokeColor="#AEA7FF"
+      :description="description"
+      :nodeID="props.nodeID"
+      :benchmarkType="BmType.DISK_IOPING"
+    />
     <div v-if="!chartsData.globalOptions" class="no-data">
       run to see results
     </div>

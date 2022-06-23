@@ -21,6 +21,7 @@ import * as vNG from "v-network-graph"; // @ is an alias to /src
 import { useStore } from "vuex";
 import NodePanel from "@/components/NodePanel/NodePanel.vue";
 import Node from "@/models/Node";
+
 // vue data
 const store = useStore();
 
@@ -29,7 +30,7 @@ const selectedNode = ref<Node | null>(null);
 const NodeModel = computed(() => store.$db().model("nodes"));
 const nodes = computed(() => {
   console.log("nodes query");
-  let nodesList = Node.query().all();
+  let nodesList = Node.all();
 
   // convert fetched nodes to v-network-graph format
   let convertedNodesList: Record<string, any> = {};

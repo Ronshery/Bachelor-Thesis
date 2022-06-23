@@ -2,12 +2,10 @@
   <TabLayout>
     <OverviewLayout>
       <TabContentCard>
-        <template v-slot:title>Score</template>
-        <DonutCard
-          :segments="segmentsComp"
-          :score="nodeComp.bmScore"
-          :nodeScore="nodeScore"
-        />
+        <template v-slot:title>
+          Score <NoBenchmarksInfo v-if="nodeTotalScore === 0" />
+        </template>
+        <DonutCard :segments="segmentsComp" :nodeScore="nodeScore" />
       </TabContentCard>
       <TabContentCard>
         <template v-slot:title> Characteristic </template>
@@ -56,6 +54,7 @@ import Node from "@/models/Node";
 import bmUtils, {
   BmType,
 } from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
+import NoBenchmarksInfo from "@/components/NodePanel/tabContents/Benchmark/utils/NoBenchmarksInfo.vue";
 
 interface Segment {
   benchmark: string;
@@ -102,7 +101,7 @@ const mappings = {
 const nodeComp = computed(() => {
   if (props.node == null) {
     return {
-      bmScore: 0,
+      score: 0,
       metrics: { cpu_busy: [], memory_used: [] },
       status: undefined,
     };
@@ -121,11 +120,7 @@ let graphListApex = ref<GraphList[]>([
   { id: "memory_used", title: "Memory used", data: [] },
   { id: "disk_io_util", title: "Disk IO util", data: [] },
 ]);
-interface DetailScore {
-  max_score: number;
-  min_score: number;
-  score: number;
-}
+
 let segments = ref<Segment[]>([
   {
     benchmark: BmType.CPU_SYSBENCH,
@@ -188,6 +183,24 @@ const nodeScore = computed(() => {
     return Node.find(nodeComp.value.id)?.$getAttributes().scores;
   }
   return null;
+});
+
+// is needed for rendering
+let nodeTotalScoreBackup = 0;
+const nodeTotalScore = computed(() => {
+  if (nodeScore.value != null) {
+    let scoreVal = 0;
+    const details = nodeScore.value["details"];
+    let sum = 0;
+    let segmentCounter = 0;
+    for (const key in details) {
+      sum += details[key].score;
+      segmentCounter++;
+    }
+    scoreVal = parseFloat(Number(sum / segmentCounter).toFixed(2));
+    nodeTotalScoreBackup = scoreVal;
+  }
+  return nodeTotalScoreBackup;
 });
 const nodeInfoComp = computed(() => {
   let kubeNodeInfo = nodeComp.value.status;

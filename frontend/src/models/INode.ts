@@ -8,5 +8,4 @@ export interface INode {
   spec: any;
   status: any;
   show: boolean;
-  bmScore: number;
 }

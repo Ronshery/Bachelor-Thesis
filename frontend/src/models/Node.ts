@@ -18,7 +18,6 @@ export default class Node extends Model {
       spec: this.attr(null),
       status: this.attr(null),
       show: this.attr(false),
-      bmScore: this.attr(10),
       metrics: this.attr(null),
       scores: this.attr(null),
     };
@@ -75,7 +74,6 @@ const actions: ActionTree<NodeState, RootState> = {
         ...node,
         id: node.metadata.name,
         name: node.metadata.name,
-        bmScore: index + 2,
       };
     }
     /*    const bmData = [
@@ -87,6 +85,10 @@ const actions: ActionTree<NodeState, RootState> = {
 
     // insert fetched data into vuex store
     commit("insertNodes", nodes);
+    for (const node of nodes) {
+      const index: number = nodes.indexOf(node);
+      await Node.dispatch("fetchScore", nodes[index]);
+    }
     commit("setLoading", false);
     return "action get Node worked";
   },
@@ -99,18 +101,22 @@ const actions: ActionTree<NodeState, RootState> = {
       });
   },
   async fetchScore({ commit }, node) {
-    await benchmarkService
-      .get(`/scores/${node.id}`)
-      .then((response) => {
-        console.log(response.data);
-        const updatedNode = { ...node, scores: response.data };
-        commit("updateNode", updatedNode);
-      })
-      .catch((error) => {
-        if (error.response.status == 500) {
-          console.error(error.response.data.detail);
-        }
-      });
+    return new Promise((resolve, reject) => {
+      benchmarkService
+        .get(`/scores/${node.id}`)
+        .then((response) => {
+          console.log(response.data);
+          const updatedNode = { ...node, scores: response.data };
+          resolve(response.data);
+          commit("updateNode", updatedNode);
+        })
+        .catch((error) => {
+          if (error.response.status == 500) {
+            console.error(error.response.data.detail);
+            reject(error.response.data.detail);
+          }
+        });
+    });
   },
 };
 

@@ -1,6 +1,8 @@
 <template>
   <TabContentCard>
-    <template v-slot:title> Score </template>
+    <template v-slot:title>
+      Score <NoBenchmarksInfo v-if="benchmarkScore === 0" />
+    </template>
     <div class="donut-score-chart-wrapper">
       <div>
         <DonutChart
@@ -12,7 +14,7 @@
           :strokeWidth="30"
           :maxValue="10"
           :loadedView="true"
-          :score="score"
+          :score="benchmarkScore"
           :strokeColor="strokeColor"
           :isSegmented="false"
         />
@@ -32,12 +34,35 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps } from "vue";
+import { computed, defineProps } from "vue";
 import DonutChart from "@/components/utils/DonutChart.vue";
 import TabContentCard from "@/components/NodePanel/tabContents/TabContentCard.vue";
+import Node from "@/models/Node";
+import bmUtils from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
+import NoBenchmarksInfo from "@/components/NodePanel/tabContents/Benchmark/utils/NoBenchmarksInfo.vue";
 
 // vue data
-const props = defineProps(["score", "strokeColor", "description"]);
+const props = defineProps([
+  "strokeColor",
+  "description",
+  "nodeID",
+  "benchmarkType",
+]);
+
+// data
+const benchmarkScore = computed(() => {
+  if (props.nodeID != null) {
+    const currentScores = Node.find(props.nodeID)?.$getAttributes().scores;
+    if (currentScores != null) {
+      return bmUtils.getRoundedScore(
+        currentScores.details[
+          bmUtils.convertToBmTypeUpperCase(props.benchmarkType)
+        ].score
+      );
+    }
+  }
+  return 0;
+});
 </script>
 
 <style scoped>

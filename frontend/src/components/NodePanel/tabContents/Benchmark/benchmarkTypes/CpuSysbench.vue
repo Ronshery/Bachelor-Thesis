@@ -1,6 +1,11 @@
 <template>
   <TabContentCardsWrapper>
-    <ScoreCard :description="description" :score="8" strokeColor="#E3E0FF" />
+    <ScoreCard
+      :description="description"
+      strokeColor="#E3E0FF"
+      :nodeID="props.nodeID"
+      :benchmarkType="BmType.CPU_SYSBENCH"
+    />
     <div v-if="!chartsData.globalOptions" class="no-data">
       run to see results
     </div>
@@ -86,7 +91,6 @@ const chartsData = computed(() => {
     globalOptions = {
       num_threads: metrics_converted.num_threads,
       prime_numbers_limit: metrics_converted.prime_numbers_limit,
-      total_time: bmUtils.convertTotalTime(metrics_converted.total_time),
     };
   }
 
@@ -100,7 +104,6 @@ const chartsData = computed(() => {
 });
 
 // methods
-
 /* for multiple y axis combinations
 *     yaxis: [
       {

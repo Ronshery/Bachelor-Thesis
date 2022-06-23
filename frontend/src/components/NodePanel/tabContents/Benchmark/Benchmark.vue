@@ -1,7 +1,7 @@
 <template>
   <TabLayout>
     <div class="menu-wrapper">
-      <Menu :items="menuItems" @itemClicked="itemClicked" />
+      <Menu :items="menuItems" @itemClicked="itemClicked" :id="props.node.id" />
     </div>
     <BenchmarkChapter
       v-for="(bm, key) in availableBenchmarks"
@@ -72,7 +72,7 @@ const itemClicked = (param: BmResource) => {
   let chapterID = param.toLowerCase().split(" ")[0] + "-chapter";
   const chapterElement = document.getElementById(chapterID);
   if (chapterElement) {
-    chapterElement.scrollIntoView({ behavior: "smooth" });
+    chapterElement.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 };
 </script>

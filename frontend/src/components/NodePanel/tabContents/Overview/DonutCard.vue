@@ -31,7 +31,7 @@
               :strokeWidth="13"
               :maxValue="10"
               :loadedView="true"
-              :score="segment.score"
+              :score="bmUtils.getRoundedScore(segment.score)"
               :strokeColor="segment.color"
             />
           </div>
@@ -44,14 +44,15 @@
 <script setup lang="ts">
 import { defineProps, watch, ref, computed } from "vue";
 import DonutChart from "@/components/utils/DonutChart.vue";
+import bmUtils from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
 
 // vue data
-const props = defineProps(["segments", "score", "nodeScore"]);
+const props = defineProps(["segments", "nodeScore"]);
 
 const scoreVal = ref<number>(0);
 watch(props, () => {
   if (props.nodeScore != null) {
-    scoreVal.value = parseFloat(Number(props.nodeScore.total.score).toFixed(2));
+    scoreVal.value = bmUtils.getRoundedScore(props.nodeScore.total.score);
     const details = props.nodeScore["details"];
     let sum = 0;
     let segmentCounter = 0;
@@ -59,7 +60,7 @@ watch(props, () => {
       sum += details[key].score;
       segmentCounter++;
     }
-    scoreVal.value = parseFloat(Number(sum / segmentCounter).toFixed(2));
+    scoreVal.value = bmUtils.getRoundedScore(sum / segmentCounter);
   }
 });
 

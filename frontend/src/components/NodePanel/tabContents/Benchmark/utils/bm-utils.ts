@@ -331,4 +331,10 @@ export default {
         return "#352BA9";
     }
   },
+  convertToBmTypeUpperCase(bmType: string) {
+    return bmType.toUpperCase().replace("-", "_") as BmType;
+  },
+  getRoundedScore(score: number) {
+    return parseFloat(Number(score).toFixed(2));
+  },
 };

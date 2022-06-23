@@ -1,6 +1,11 @@
 <template>
   <TabContentCardsWrapper>
-    <ScoreCard :description="description" :score="5" strokeColor="#352BA9" />
+    <ScoreCard
+      :description="description"
+      strokeColor="#352BA9"
+      :nodeID="props.nodeID"
+      :benchmarkType="BmType.NETWORK_QPERF"
+    />
     <div
       v-if="chartsData.qperfBandWidthSeries[0].data.length === 0"
       class="no-data"

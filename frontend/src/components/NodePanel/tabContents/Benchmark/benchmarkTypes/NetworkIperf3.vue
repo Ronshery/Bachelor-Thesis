@@ -1,6 +1,11 @@
 <template>
   <TabContentCardsWrapper>
-    <ScoreCard :description="description" :score="5" strokeColor="#5245EA" />
+    <ScoreCard
+      :description="description"
+      strokeColor="#5245EA"
+      :nodeID="props.nodeID"
+      :benchmarkType="BmType.NETWORK_IPERF3"
+    />
     <div v-if="chartsData.iPerf3Series[0].data.length === 0" class="no-data">
       run to see results
     </div>

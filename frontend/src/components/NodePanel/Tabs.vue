@@ -30,14 +30,14 @@
       </div>
       <BenchmarkContainer :node="node" :nodePanelOpen="nodePanelOpen" />
     </Tab>
-    <Tab ref="SettingsComponent" :nodePanelOpen="nodePanelOpen">
+    <!--    <Tab ref="SettingsComponent" :nodePanelOpen="nodePanelOpen">
       <div class="node-name-wrapper">
         <span class="node-name">
           {{ node.name }}
         </span>
       </div>
       Settings Content</Tab
-    >
+    >-->
   </div>
 </template>
 
@@ -61,11 +61,11 @@ const tabHeight = "50px";
 const selectedTab = ref<ITab>();
 const OverviewComponent = ref();
 const BenchmarkComponent = ref();
-const SettingsComponent = ref();
+//const SettingsComponent = ref();
 const tabList = ref([
   { title: "Overview", ref: OverviewComponent },
   { title: "Benchmark", ref: BenchmarkComponent },
-  { title: "Settings", ref: SettingsComponent },
+  // { title: "Settings", ref: SettingsComponent },
 ]);
 //methods
 let timer: number;
@@ -106,7 +106,17 @@ const resetActiveTab = () => {
   if (lastSelectedNode == undefined) {
     lastSelectedNode = props.node;
   } else if (lastSelectedNode.id != props.node.id) {
+    if (selectedTab.value) {
+      document.getElementsByClassName("tab-content-container")[
+        selectedTab.value.index
+      ].scrollTop = 0;
+    }
+
     changeTab(document.getElementsByClassName("tab")[0], 0);
+    // wait to change tab on DOM
+    nextTick(() => {
+      document.getElementsByClassName("tab-content-container")[0].scrollTop = 0;
+    });
     lastSelectedNode = props.node;
   }
 };

@@ -34,7 +34,11 @@
       alignment-baseline="central"
       style="pointer-events: none"
     >
-      {{ props.score }}/{{ props.maxValue }}
+      {{
+        props.score.value === 0
+          ? "N/A"
+          : `${props.score.value}/${props.maxValue}`
+      }}
     </text>
   </svg>
   <svg v-else>
@@ -68,7 +72,7 @@
       alignment-baseline="central"
       style="pointer-events: none"
     >
-      {{ props.score }}/{{ props.maxValue }}
+      {{ props.score === 0 ? "N/A" : props.score + "/" + props.maxValue }}
     </text>
   </svg>
 </template>

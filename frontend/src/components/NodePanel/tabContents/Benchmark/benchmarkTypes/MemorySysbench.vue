@@ -1,6 +1,11 @@
 <template>
   <TabContentCardsWrapper>
-    <ScoreCard :score="5" strokeColor="#CECAFF" :description="description" />
+    <ScoreCard
+      strokeColor="#CECAFF"
+      :description="description"
+      :nodeID="props.nodeID"
+      :benchmarkType="BmType.MEMORY_SYSBENCH"
+    />
     <div v-if="!chartsData.globalOptions" class="no-data">
       run to see results
     </div>
@@ -88,7 +93,6 @@ const chartsData = computed(() => {
       block_size: metrics_converted.block_size,
       total_size: metrics_converted.total_size,
       operation: metrics_converted.operation,
-      total_time: bmUtils.convertTotalTime(metrics_converted.total_time),
     };
   }
 

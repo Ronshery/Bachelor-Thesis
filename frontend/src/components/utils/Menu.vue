@@ -17,11 +17,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineProps, defineEmits } from "vue";
+import { ref, defineProps, defineEmits, watch } from "vue";
 import HamburgerIcon from "@/components/utils/HamburgerIcon.vue";
 
 // vue data
-const props = defineProps(["items"]);
+const props = defineProps(["items", "id"]);
 const emit = defineEmits(["itemClicked"]);
 
 // data
@@ -52,6 +52,13 @@ const toggleDisplayCSS = () => {
     }
   }
 };
+
+watch(props, () => {
+  // resets menu when node changes
+  if (props.id && menuOpen.value) {
+    toggleIcon();
+  }
+});
 </script>
 
 <style scoped>

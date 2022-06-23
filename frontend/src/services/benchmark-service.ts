@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 
 const config: AxiosRequestConfig = {
-  baseURL: process.env.VUE_APP_BENCHMARK_SERVICE_URL,
+  baseURL: "http://localhost:8000",
   headers: {},
 };
 

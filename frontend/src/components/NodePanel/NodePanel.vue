@@ -17,7 +17,7 @@ const nodePanelOpen = ref(false);
 const nodeComp = computed(() => {
   if (props.selectedNode == null) {
     return {
-      bmScore: 0,
+      score: 0,
       metrics: { cpu_busy: [], memory_used: [] },
       status: undefined,
     };
