@@ -337,4 +337,7 @@ export default {
   getRoundedScore(score: number) {
     return parseFloat(Number(score).toFixed(2));
   },
+  isNetworkBenchmark(bmType: BmType) {
+    return bmType == BmType.NETWORK_IPERF3 || bmType == BmType.NETWORK_QPERF;
+  },
 };

@@ -3,13 +3,15 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, watch, ref } from "vue";
+import { defineProps, ref, watch } from "vue";
+// data
+import bmUtils, {
+  BmResource,
+  BmType,
+} from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
 
 // vue data
 const props = defineProps(["nodeScore"]);
-
-// data
-import { BmResource } from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
 
 const options = {
   chart: {
@@ -67,11 +69,29 @@ watch(props, () => {
       BmResource.DISK,
       BmResource.NETWORK,
     ];
+
+    const diskBms = [BmType.DISK_FIO, BmType.DISK_IOPING];
+    const networkBms = [BmType.NETWORK_QPERF, BmType.NETWORK_IPERF3];
+
     for (let i = 0; i < bmResources.length; i++) {
       let resource = bmResources[i];
-      series.value[0].data[i] = parseFloat(
-        Number(props.nodeScore[resource].score).toFixed(2)
-      );
+      let score = 0;
+      let sum = 0;
+      const details = props.nodeScore.details;
+      if (resource == BmResource.DISK) {
+        for (let diskBm of diskBms) {
+          sum += details[bmUtils.convertToBmTypeUpperCase(diskBm)].score;
+        }
+        score = bmUtils.getRoundedScore(sum / diskBms.length);
+      } else if (resource == BmResource.NETWORK) {
+        for (let networkBm of networkBms) {
+          sum += details[bmUtils.convertToBmTypeUpperCase(networkBm)].score;
+        }
+        score = bmUtils.getRoundedScore(sum / networkBms.length);
+      } else {
+        score = bmUtils.getRoundedScore(props.nodeScore[resource].score);
+      }
+      series.value[0].data[i] = score;
     }
   }
 });

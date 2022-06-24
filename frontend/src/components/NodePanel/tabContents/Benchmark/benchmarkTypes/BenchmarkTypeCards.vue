@@ -11,7 +11,7 @@
         <span style="color: white">
           <span class="benchmark-type-title">{{ bmType }}</span>
           <DropDown
-            v-if="isNetworkBenchmark(bmType)"
+            v-if="bmUtils.isNetworkBenchmark(bmType)"
             :bmType="bmType"
             :nodeID="nodeID"
             @networkSelected="updateSelectValue"
@@ -65,7 +65,9 @@ import { defineProps, ref, Ref } from "vue";
 import TabContentCard from "@/components/NodePanel/tabContents/TabContentCard.vue";
 import CpuSysbench from "@/components/NodePanel/tabContents/Benchmark/benchmarkTypes/CpuSysbench.vue";
 import Benchmark from "@/models/Benchmark";
-import { BmType } from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
+import bmUtils, {
+  BmType,
+} from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
 import MemorySysbench from "@/components/NodePanel/tabContents/Benchmark/benchmarkTypes/MemorySysbench.vue";
 import DiskIoping from "@/components/NodePanel/tabContents/Benchmark/benchmarkTypes/DiskIoping.vue";
 import DiskFio from "@/components/NodePanel/tabContents/Benchmark/benchmarkTypes/DiskFio.vue";
@@ -90,7 +92,7 @@ const runBenchmark = (benchmarkType: BmType) => {
   if (selections.value[benchmarkType] == "0") {
     return;
   }
-  if (isNetworkBenchmark(benchmarkType)) {
+  if (bmUtils.isNetworkBenchmark(benchmarkType)) {
     nodeParam = props.nodeID + "@@@" + selections.value[benchmarkType];
   }
   Benchmark.dispatch("runBenchmark", {
@@ -106,18 +108,19 @@ const updateSelectValue = (param: { bmType: BmType; value: string }) => {
     qperfSelectValue.value = param.value;
   }
 };
-
-const isNetworkBenchmark = (benchmarkType: BmType) => {
-  return (
-    benchmarkType == BmType.NETWORK_IPERF3 ||
-    benchmarkType == BmType.NETWORK_QPERF
-  );
-};
 </script>
 
 <style scoped>
 .benchmark-type-title {
   font-size: 19px;
+}
+</style>
+
+<style>
+.no-data {
+  color: white;
+  font-weight: bold;
+  width: 100%;
 }
 
 .run-wrapper {
@@ -126,6 +129,7 @@ const isNetworkBenchmark = (benchmarkType: BmType) => {
   margin-left: 1em;
   border-radius: 20px;
   padding: 8px 16px 8px 16px;
+  color: white;
 }
 
 .run-icon {
@@ -166,13 +170,5 @@ const isNetworkBenchmark = (benchmarkType: BmType) => {
   100% {
     transform: rotate(360deg);
   }
-}
-</style>
-
-<style>
-.no-data {
-  color: white;
-  font-weight: bold;
-  width: 100%;
 }
 </style>
