@@ -10,6 +10,7 @@
         :maxValue="10"
         :loadedView="true"
         :score="scoreComp.value"
+        :strokeColor="'#ceb7ff'"
       />
     </div>
     <div class="segments-donut-container">

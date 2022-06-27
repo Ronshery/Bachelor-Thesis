@@ -71,7 +71,7 @@ const nodeClicked = (params: any) => {
       });
     }
 
-    Node.update({ ...params, show: true, color: "#6753e1" });
+    Node.update({ ...params, show: true, color: "#afafaf" });
 
     selectedNode.value = Node.find(params.id);
     lastSelectedNode.value = params;

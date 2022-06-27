@@ -45,7 +45,7 @@ if (props.isSVG) {
   margin-bottom: 16px;
   width: 49%;
   background-color: white;
-  min-width: 500px;
+  min-width: 481px;
 }
 
 .card-title {

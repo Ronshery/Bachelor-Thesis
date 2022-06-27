@@ -1,34 +1,36 @@
 <template>
   <div class="v-network-graph-container">
-    <div class="graph-panel">
-      <div class="network-button" @click="graph?.zoomIn()">
-        <div>zoom in</div>
+    <div class="graph-panel-container">
+      <div class="graph-panel">
+        <div class="network-button" @click="graph?.zoomIn()">
+          <div>zoom in</div>
+        </div>
+        <div class="network-button" @click="graph?.zoomOut()">
+          <div>zoom out</div>
+        </div>
+        <div class="network-button" @click="graph?.fitToContents()">
+          <div>fit</div>
+        </div>
+        <div class="network-button" @click="graph?.panToCenter()">
+          <div>center</div>
+        </div>
+        <div class="network-button" @click="reset"><div>reset</div></div>
+        <div class="graph-panel" style="top: 60px; flex-direction: column">
+          <input
+            placeholder="select node"
+            v-model="inputSelectedNodes"
+            list="nodes"
+            name="nodes"
+          />
+          <datalist id="nodes">
+            <option v-for="node in nodes" :value="node.name" :key="node.name">
+              {{ node.name }}
+            </option>
+          </datalist>
+        </div>
       </div>
-      <div class="network-button" @click="graph?.zoomOut()">
-        <div>zoom out</div>
-      </div>
-      <div class="network-button" @click="graph?.fitToContents()">
-        <div>fit</div>
-      </div>
-      <div class="network-button" @click="graph?.panToCenter()">
-        <div>center</div>
-      </div>
-      <div class="network-button" @click="reset"><div>reset</div></div>
-      {{ selectedNodes }}
-      <br />
-      {{ layouts }}
-      <br />
-      {{ layoutsBackup }}
     </div>
-    <div class="graph-panel" style="top: 60px; flex-direction: column">
-      <label style="margin-left: 1em">nodes list</label>
-      <input v-model="inputSelectedNodes" list="nodes" name="nodes" />
-      <datalist id="nodes">
-        <option v-for="node in nodes" :value="node.name" :key="node.name">
-          {{ node.name }}
-        </option>
-      </datalist>
-    </div>
+
     <v-network-graph
       ref="graph"
       v-model:selected-nodes="selectedNodes"
@@ -62,7 +64,7 @@
           :cy="pos.y"
           :stroke-dasharray="strokeDashArray(pos.score)"
           :stroke-dashoffset="percentToScore(25)"
-          stroke="palevioletred"
+          stroke="#ceb7ff"
           fill="none"
           stroke-width="15"
           style="pointer-events: none"
@@ -288,6 +290,11 @@ const convertedScore = (score: number) => (score * circumference) / maxValue;
   flex-grow: 1;
 }
 
+.graph-panel-container {
+  position: absolute;
+  padding-left: 1em;
+  padding-top: 1em;
+}
 .graph-panel {
   position: absolute;
   display: flex;
@@ -303,7 +310,8 @@ const convertedScore = (score: number) => (score * circumference) / maxValue;
   display: table;
   padding: 4px;
   margin-right: 5px;
-  width: 4em;
+  width: 4.2em;
+  height: 2em;
 }
 
 .network-button:active {
@@ -317,13 +325,14 @@ const convertedScore = (score: number) => (score * circumference) / maxValue;
 }
 
 input {
-  border-radius: 8px;
+  width: 29.5em;
+  height: 1.75em;
+  border-radius: 6px;
   border: 1px solid white;
   background-color: #282935ff;
   padding: 5px;
   font-weight: bold;
   color: white;
-  margin-left: 1em;
 }
 
 option {
