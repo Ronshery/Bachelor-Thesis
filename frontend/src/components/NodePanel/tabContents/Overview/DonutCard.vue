@@ -9,9 +9,7 @@
         :strokeWidth="30"
         :maxValue="10"
         :loadedView="true"
-        :score="scoreComp"
-        :isSegmented="true"
-        :segments="segments"
+        :score="scoreComp.value"
       />
     </div>
     <div class="segments-donut-container">
@@ -53,14 +51,6 @@ const scoreVal = ref<number>(0);
 watch(props, () => {
   if (props.nodeScore != null) {
     scoreVal.value = bmUtils.getRoundedScore(props.nodeScore.total.score);
-    const details = props.nodeScore["details"];
-    let sum = 0;
-    let segmentCounter = 0;
-    for (const key in details) {
-      sum += details[key].score;
-      segmentCounter++;
-    }
-    scoreVal.value = bmUtils.getRoundedScore(sum / segmentCounter);
   }
 });
 
@@ -106,6 +96,7 @@ const scoreComp = computed(() => scoreVal);
 }
 
 .benchmark-name {
+  width: 8.2em;
   text-align: center;
   vertical-align: middle;
 }

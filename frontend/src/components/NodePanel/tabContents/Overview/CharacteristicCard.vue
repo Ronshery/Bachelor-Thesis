@@ -7,7 +7,6 @@ import { defineProps, ref, watch } from "vue";
 // data
 import bmUtils, {
   BmResource,
-  BmType,
 } from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
 
 // vue data
@@ -23,7 +22,6 @@ const options = {
   },
   plotOptions: {
     radar: {
-      size: 140,
       polygons: {
         strokeColors: "#e9e9e9",
         fill: {
@@ -42,6 +40,7 @@ const options = {
     ],
     labels: {
       style: {
+        colors: ["black", "black", "black", "black"],
         fontSize: "15px",
       },
     },
@@ -70,28 +69,11 @@ watch(props, () => {
       BmResource.NETWORK,
     ];
 
-    const diskBms = [BmType.DISK_FIO, BmType.DISK_IOPING];
-    const networkBms = [BmType.NETWORK_QPERF, BmType.NETWORK_IPERF3];
-
     for (let i = 0; i < bmResources.length; i++) {
       let resource = bmResources[i];
-      let score = 0;
-      let sum = 0;
-      const details = props.nodeScore.details;
-      if (resource == BmResource.DISK) {
-        for (let diskBm of diskBms) {
-          sum += details[bmUtils.convertToBmTypeUpperCase(diskBm)].score;
-        }
-        score = bmUtils.getRoundedScore(sum / diskBms.length);
-      } else if (resource == BmResource.NETWORK) {
-        for (let networkBm of networkBms) {
-          sum += details[bmUtils.convertToBmTypeUpperCase(networkBm)].score;
-        }
-        score = bmUtils.getRoundedScore(sum / networkBms.length);
-      } else {
-        score = bmUtils.getRoundedScore(props.nodeScore[resource].score);
-      }
-      series.value[0].data[i] = score;
+      series.value[0].data[i] = bmUtils.getRoundedScore(
+        props.nodeScore[resource].score
+      );
     }
   }
 });

@@ -103,7 +103,7 @@ const actions: ActionTree<NodeState, RootState> = {
   async fetchScore({ commit }, node) {
     return new Promise((resolve, reject) => {
       benchmarkService
-        .get(`/scores/${node.id}`)
+        .get(`/scores/${node.id}/cluster`)
         .then((response) => {
           console.log(response.data);
           const updatedNode = { ...node, scores: response.data };
@@ -134,9 +134,9 @@ const mutations: MutationTree<NodeState> = {
   },
   updateNode(state, payload) {
     console.log(`mutation start - update node '${payload.id}'`);
-    Node.update(payload).then((r) =>
-      console.log(`mutation end - node '${payload.id}' updated`)
-    );
+    Node.update(payload).then((r) => {
+      console.log(`mutation end - node '${payload.id}' updated`);
+    });
   },
 };
 

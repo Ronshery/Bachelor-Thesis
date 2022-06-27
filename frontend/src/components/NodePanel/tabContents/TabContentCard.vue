@@ -65,7 +65,8 @@ if (props.isSVG) {
   .card {
     width: 100%;
     left: 0 !important;
-    margin-right: 0 !important;
+    margin-right: 2% !important;
+    margin-left: 15px;
   }
 }
 </style>

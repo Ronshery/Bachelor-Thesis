@@ -96,6 +96,7 @@ import {
 import * as vNG from "v-network-graph";
 import { useStore } from "vuex";
 import { VNetworkGraph } from "v-network-graph";
+import bmUtils from "@/components/NodePanel/tabContents/Benchmark/utils/bm-utils";
 
 // interfaces
 interface Layouts extends vNG.Layouts {
@@ -143,8 +144,8 @@ const layoutsComputed = computed(() => {
   const keys = Object.keys(layouts.value.nodes);
   Object.entries(layouts.value.nodes).forEach((node, index) => {
     if (props.nodes[node[0]].scores != null) {
-      layouts.value.nodes[keys[index]].score = nodeTotalScore(
-        props.nodes[node[0]].scores.details
+      layouts.value.nodes[keys[index]].score = bmUtils.getRoundedScore(
+        props.nodes[node[0]].scores.total.score
       );
     } else {
       layouts.value.nodes[keys[index]].score = 0;
@@ -153,21 +154,8 @@ const layoutsComputed = computed(() => {
   return layouts.value;
 });
 const loadedView = ref(false);
-// methods
-let nodeTotalScoreBackup = 0;
-const nodeTotalScore = (detailScores: DetailScores) => {
-  let scoreVal = 0;
-  let sum = 0;
-  let segmentCounter = 0;
-  for (const key in detailScores) {
-    sum += detailScores[key].score;
-    segmentCounter++;
-  }
-  scoreVal = parseFloat(Number(sum / segmentCounter).toFixed(2));
-  nodeTotalScoreBackup = scoreVal;
 
-  return nodeTotalScoreBackup;
-};
+// methods
 let setTabContentHeight = () => {
   const tabContentContainerList = document.getElementsByClassName(
     "tab-content-container"

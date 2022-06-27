@@ -56,10 +56,21 @@ const nodeClicked = (params: any) => {
       lastSelectedNode.value = params;
     }
     params.show = true;
-    Node.update({
-      ...lastSelectedNode.value,
-      color: "white",
-    });
+    const newScores = Node.find(lastSelectedNode.value.id)?.$getAttributes()
+      .scores;
+    if (newScores != null) {
+      Node.update({
+        ...lastSelectedNode.value,
+        color: "white",
+        scores: newScores,
+      });
+    } else {
+      Node.update({
+        ...lastSelectedNode.value,
+        color: "white",
+      });
+    }
+
     Node.update({ ...params, show: true, color: "#6753e1" });
 
     selectedNode.value = Node.find(params.id);
@@ -70,11 +81,23 @@ const nodeClicked = (params: any) => {
     }
     lastSelectedNode.value.show = false;
     lastSelectedNode.value.color = "white";
-    NodeModel.value.update({
-      ...lastSelectedNode.value,
-      show: false,
-      color: "white",
-    });
+    const newScores = Node.find(lastSelectedNode.value.id)?.$getAttributes()
+      .scores;
+    if (newScores != null) {
+      NodeModel.value.update({
+        ...lastSelectedNode.value,
+        show: false,
+        color: "white",
+        scores: newScores,
+      });
+    } else {
+      NodeModel.value.update({
+        ...lastSelectedNode.value,
+        show: false,
+        color: "white",
+      });
+    }
+
     // trigger events again with copy of object
     selectedNode.value = JSON.parse(JSON.stringify(lastSelectedNode.value));
   }
