@@ -91,6 +91,12 @@ const options = ref({
       show: true,
     },
     range: initRange,
+    title: {
+      text: "time",
+      style: {
+        color: "white",
+      },
+    },
   },
   yaxis: {
     labels: {
@@ -100,6 +106,12 @@ const options = ref({
     },
     max: 100,
     min: 0,
+    title: {
+      text: "usage in %",
+      style: {
+        color: "white",
+      },
+    },
   },
   noData: {
     text: "Loading...",

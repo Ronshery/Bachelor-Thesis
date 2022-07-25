@@ -1,38 +1,40 @@
 <template>
-  <div class="donut-card-container">
-    <div class="donut-chart-wrapper">
-      <DonutChart
-        class="segmented-donut"
-        :radius="80"
-        :x="95"
-        :y="95"
-        :strokeWidth="30"
-        :maxValue="10"
-        :loadedView="true"
-        :score="scoreComp.value"
-        :strokeColor="'#ceb7ff'"
-      />
-    </div>
-    <div class="segments-donut-container">
-      <div>
-        <div
-          class="segment-donut-content-wrapper"
-          v-for="segment in segments"
-          :key="segment.benchmark"
-        >
-          <div class="benchmark-name">{{ segment.benchmark }}</div>
-          <div class="segment-donut-chart-wrapper">
-            <DonutChart
-              class="segment-donut-chart"
-              :radius="35"
-              :x="42"
-              :y="42"
-              :strokeWidth="13"
-              :maxValue="10"
-              :loadedView="true"
-              :score="bmUtils.getRoundedScore(segment.score)"
-              :strokeColor="segment.color"
-            />
+  <div style="display: flex; height: 400px">
+    <div class="donut-card-container">
+      <div class="donut-chart-wrapper">
+        <DonutChart
+          class="segmented-donut"
+          :radius="80"
+          :x="95"
+          :y="95"
+          :strokeWidth="30"
+          :maxValue="10"
+          :loadedView="true"
+          :score="scoreComp.value"
+          :strokeColor="'#ceb7ff'"
+        />
+      </div>
+      <div class="segments-donut-container">
+        <div>
+          <div
+            class="segment-donut-content-wrapper"
+            v-for="segment in segments"
+            :key="segment.benchmark"
+          >
+            <div class="benchmark-name">{{ segment.benchmark }}</div>
+            <div class="segment-donut-chart-wrapper">
+              <DonutChart
+                class="segment-donut-chart"
+                :radius="35"
+                :x="42"
+                :y="42"
+                :strokeWidth="13"
+                :maxValue="10"
+                :loadedView="true"
+                :score="bmUtils.getRoundedScore(segment.score)"
+                :strokeColor="segment.color"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -61,7 +63,6 @@ const scoreComp = computed(() => scoreVal);
 <style scoped>
 .donut-card-container {
   display: flex;
-  margin-top: 1em;
 }
 
 .donut-chart-wrapper {
@@ -80,6 +81,7 @@ const scoreComp = computed(() => scoreVal);
   display: inline-block;
   width: 50%;
   margin: 0 1em 0 0;
+  align-self: center;
 }
 
 .segment-donut-chart-wrapper {

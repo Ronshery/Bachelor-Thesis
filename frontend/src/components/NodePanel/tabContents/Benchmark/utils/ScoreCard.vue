@@ -28,6 +28,9 @@
         "
       >
         {{ description }}
+        <div style="margin-top: 1em">
+          <a :href="link">details</a>
+        </div>
       </div>
     </div>
   </TabContentCard>
@@ -47,6 +50,7 @@ const props = defineProps([
   "description",
   "nodeID",
   "benchmarkType",
+  "link",
 ]);
 
 // data
@@ -73,5 +77,9 @@ const benchmarkScore = computed(() => {
 
 .donut-score-chart-wrapper {
   display: flex;
+}
+
+a {
+  color: blue;
 }
 </style>

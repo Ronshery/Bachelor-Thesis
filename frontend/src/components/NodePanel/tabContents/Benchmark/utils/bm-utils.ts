@@ -241,14 +241,20 @@ export default {
         eventsSeries[0].data.push(
           Number(metrics_converted.fairness_events.split("/")[0]).toFixed(0)
         );
-        eventsSeries[1].data.push(
+        /*        eventsSeries[1].data.push(
           Number(metrics_converted.fairness_events.split("/")[1]).toFixed(0)
+        );*/
+        eventsSeries[1].data.push(
+          this.getOriginalMetric(metrics, "fairness_events").unit.split("/")[1]
         );
         eventsSeries[2].data.push(
           Number(metrics_converted.fairness_exctime.split("/")[0]).toFixed(2)
         );
-        eventsSeries[3].data.push(
+        /*        eventsSeries[3].data.push(
           Number(metrics_converted.fairness_exctime.split("/")[1]).toFixed(2)
+        );*/
+        eventsSeries[3].data.push(
+          this.getOriginalMetric(metrics, "fairness_exctime").unit.split("/")[1]
         );
       } else {
         eventsSeries[0].data.push(
@@ -298,6 +304,9 @@ export default {
     };
     return { eventsOptions, eventsSeries };
   },
+  getOriginalMetric(metrics: Metric[], name: string) {
+    return metrics.filter((metric: Metric) => name == metric.name)[0];
+  },
   convertTotalTime(time: string) {
     if (time == null) {
       return time;
@@ -313,6 +322,12 @@ export default {
       metrics_converted[metric.name] = metric.value.toString();
     });
     return metrics_converted;
+  },
+  getUnitOfMetric(metrics: Metric[], metricName: string) {
+    return (
+      " " +
+      metrics.filter((metric: Metric) => metric.name === metricName)[0].unit
+    );
   },
   bmTypecolorMapping(bmType: BmType) {
     bmType = bmType.toLowerCase().replace("_", "-") as BmType;

@@ -5,6 +5,7 @@
       :description="description"
       :nodeID="props.nodeID"
       :benchmarkType="BmType.DISK_IOPING"
+      :link="'https://kubestone.io/en/latest/benchmarks/ioping/'"
     />
     <div v-if="!chartsData.globalOptions" class="no-data">
       run to see results
@@ -58,7 +59,7 @@ const props = defineProps(["nodeID"]);
 
 // data
 const description =
-  "A tool to monitor I/O latency in real time. It shows disk latency in the same way as ping shows network latency. With ioping benchmark you can measure the latency of the storage I/O subsystem in your Kubernetes cluster.";
+  '"A tool to monitor I/O latency in real time. It shows disk latency in the same way as ping shows network latency. With ioping benchmark you can measure the latency of the storage I/O subsystem in your Kubernetes cluster"';
 const chartsData = computed(() => {
   const query = Benchmark.query()
     .where("node", props.nodeID)

@@ -273,7 +273,7 @@ const fetchData = async (nodeID: string) => {
           for (let i = 0; i < graphListApex.value.length; i++) {
             if (graphListApex.value[i].id == dataName) {
               graphListApex.value[i].data = [
-                { name: "value", data: convertDataToApex(data) },
+                { name: "value (%)", data: convertDataToApex(data) },
               ];
             }
           }

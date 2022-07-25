@@ -310,7 +310,7 @@ const convertedScore = (score: number) => (score * circumference) / maxValue;
   display: table;
   padding: 4px;
   margin-right: 5px;
-  width: 4.2em;
+  width: 4.3em;
   height: 2em;
 }
 
@@ -325,7 +325,7 @@ const convertedScore = (score: number) => (score * circumference) / maxValue;
 }
 
 input {
-  width: 29.5em;
+  width: 30em;
   height: 1.75em;
   border-radius: 6px;
   border: 1px solid white;
