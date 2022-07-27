@@ -163,7 +163,7 @@ const fetchResultsByNode = (
             fetchingActiveList.value[nodeName][bmType].intervalID?.toString();
           if (!fetchingActiveList.value[nodeName][bmType].isFetching) {
             resetIntervalIDByNode(bmType, nodeName, parseInt(tmp ? tmp : ""));
-            Node.dispatch("fetchScore", props.node);
+            Node.dispatch("fetchScore", Node.find(nodeName)?.$getAttributes());
           } else {
             Benchmark.dispatch("fetchBenchmarkById", benchmark);
           }
