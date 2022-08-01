@@ -101,7 +101,7 @@ const mutations: MutationTree<BenchmarkState> = {
   },
   updateBenchmark(state, payload) {
     console.log(`mutation start - update benchmark '${payload.id}'`);
-    Benchmark.update(payload).then((r) => {
+    Benchmark.update(payload).then(() => {
       console.log(`mutation end - update benchmark '${payload.id}'`);
     });
   },
