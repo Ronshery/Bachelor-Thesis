@@ -76,35 +76,7 @@ const actions: ActionTree<NodeState, RootState> = {
         name: node.metadata.name,
       };
     }
-    /*
-    const bmData = [
-      { id: 1, name: "node1", color: "white", bmScore: 5 },
-      { id: 2, name: "node2", color: "white", bmScore: 8 },
-      { id: 3, name: "node3", color: "white", bmScore: 4 },
-      { id: 4, name: "node4", color: "white", bmScore: 6 },
-      { id: 5, name: "node5", color: "white", bmScore: 6 },
-      { id: 6, name: "node6", color: "white", bmScore: 6 },
-      { id: 7, name: "node7", color: "white", bmScore: 6 },
-      { id: 8, name: "node8", color: "white", bmScore: 6 },
-      { id: 9, name: "node9", color: "white", bmScore: 6 },
-      { id: 10, name: "node10", color: "white", bmScore: 6 },
-      { id: 11, name: "node11", color: "white", bmScore: 6 },
-      { id: 12, name: "node12", color: "white", bmScore: 6 },
-      { id: 13, name: "node13", color: "white", bmScore: 6 },
-      { id: 14, name: "node14", color: "white", bmScore: 6 },
-      { id: 15, name: "node15", color: "white", bmScore: 6 },
-      { id: 16, name: "node16", color: "white", bmScore: 6 },
-      { id: 17, name: "node17", color: "white", bmScore: 6 },
-      { id: 18, name: "node18", color: "white", bmScore: 6 },
-      { id: 19, name: "node19", color: "white", bmScore: 6 },
-      { id: 20, name: "node20", color: "white", bmScore: 6 },
-      { id: 21, name: "node21", color: "white", bmScore: 6 },
-      { id: 22, name: "node22", color: "white", bmScore: 6 },
-      { id: 23, name: "node23", color: "white", bmScore: 6 },
-      { id: 24, name: "node24", color: "white", bmScore: 6 },
-      { id: 25, name: "node25", color: "white", bmScore: 6 },
-    ];
-*/
+
     // insert fetched data into vuex store
     commit("insertNodes", nodes);
     for (const node of nodes) {
@@ -115,7 +87,7 @@ const actions: ActionTree<NodeState, RootState> = {
     return "action get Node worked";
   },
   async fetchMetricsById({ commit }, { node, timeDelta }) {
-    const metricsResponse = await benchmarkService
+    await benchmarkService
       .get(`/metrics/${node.id}/${timeDelta}`)
       .then((data) => {
         const updatedNode = { ...node, metrics: data.data };
@@ -156,7 +128,7 @@ const mutations: MutationTree<NodeState> = {
   },
   updateNode(state, payload) {
     console.log(`mutation start - update node '${payload.id}'`);
-    Node.update(payload).then((r) => {
+    Node.update(payload).then(() => {
       console.log(`mutation end - node '${payload.id}' updated`);
     });
   },

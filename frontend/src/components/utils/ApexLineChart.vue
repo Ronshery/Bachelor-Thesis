@@ -28,7 +28,7 @@ const props = defineProps(["series", "errorMsg"]);
 
 // data
 let initMax = new Date().getTime(); // Current timestamp
-let initMin = new Date(initMax - 5 * 60000).getTime(); // timestamp 90 days before
+let initMin = new Date(initMax - 5 * 60000).getTime();
 let initRange = initMax - initMin;
 
 const options = ref({

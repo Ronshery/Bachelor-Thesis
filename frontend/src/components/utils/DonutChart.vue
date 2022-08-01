@@ -159,15 +159,12 @@ const getPrecededSegmentsLength = (index: number) => {
   }
   return precededSegmentsLength;
 };
-const scoreToPercent = (score: number) => (100 * score) / circumference;
+
 const percentToScore = (percent: number) => (circumference * percent) / 100;
+
 // score to segment size
 const convertedScore = (score: number) => {
-  return (
-    ((score ? (props.score.value >= 9.9 ? score : score + 0.0044603) : 0) *
-      circumference) /
-    props.maxValue
-  );
+  return (score * circumference) / props.maxValue;
 };
 </script>
 

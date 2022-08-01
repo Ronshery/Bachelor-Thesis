@@ -241,18 +241,12 @@ export default {
         eventsSeries[0].data.push(
           Number(metrics_converted.fairness_events.split("/")[0]).toFixed(0)
         );
-        /*        eventsSeries[1].data.push(
-          Number(metrics_converted.fairness_events.split("/")[1]).toFixed(0)
-        );*/
         eventsSeries[1].data.push(
           this.getOriginalMetric(metrics, "fairness_events").unit.split("/")[1]
         );
         eventsSeries[2].data.push(
           Number(metrics_converted.fairness_exctime.split("/")[0]).toFixed(2)
         );
-        /*        eventsSeries[3].data.push(
-          Number(metrics_converted.fairness_exctime.split("/")[1]).toFixed(2)
-        );*/
         eventsSeries[3].data.push(
           this.getOriginalMetric(metrics, "fairness_exctime").unit.split("/")[1]
         );

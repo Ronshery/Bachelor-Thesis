@@ -103,31 +103,4 @@ const chartsData = computed(() => {
     globalOptions,
   };
 });
-
-// methods
-/* for multiple y axis combinations
-*     yaxis: [
-      {
-        seriesName: "95p",
-        title: {
-          text: "min, avg, 95p",
-        },
-      },
-      {
-        show: false,
-        seriesName: "95p",
-      },
-      {
-        opposite: true,
-        title: {
-          text: "max",
-        },
-        seriesName: "max",
-      },
-      {
-        show: false,
-        seriesName: "95p",
-      },
-    ],
-* */
 </script>

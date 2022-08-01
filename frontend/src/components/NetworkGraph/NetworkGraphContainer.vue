@@ -114,31 +114,6 @@ const triggerClosePanel = (close: boolean) => {
 };
 
 // *** v-network-graph config ***
-// interfaces
-
-// props
-/*const nodes: Record<string, Node> = {
-  node1: { name: "Node 1", color: "white" },
-  node2: { name: "Node 2", color: "white" },
-  node3: { name: "Node 3", color: "white" },
-  node4: { name: "Node 4", color: "white" },
-};*/
-
-/*let edges = ref<vNG.Edges>({
-  edge1: { source: "node1", target: "node2" },
-  edge2: { source: "node2", target: "node3" },
-  edge3: { source: "node3", target: "node4" },
-});*/
-
-/*const layouts = ref<vNG.Layouts>({
-  nodes: {
-    node1: { x: 0, y: 100 },
-    node2: { x: 250, y: 150 },
-    node3: { x: 500, y: 100 },
-    node4: { x: 750, y: 150 },
-  },
-});*/
-
 const layers = {
   badge: "nodes",
 };

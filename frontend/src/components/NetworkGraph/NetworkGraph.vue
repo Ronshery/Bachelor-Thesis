@@ -112,16 +112,6 @@ interface Layouts extends vNG.Layouts {
   };
 }
 
-interface DetailScore {
-  max_score: number;
-  min_score: number;
-  score: number;
-}
-
-interface DetailScores {
-  [key: string]: DetailScore;
-}
-
 // vue data
 const props = defineProps([
   "nodes",
@@ -276,10 +266,8 @@ const strokeDashArray = (score: number) => {
     return `0 ${circumference}`;
   }
 };
-// circumference  === 100%
-// x              === 60
+
 // methods
-const scoreToPercent = (score: number) => (100 * score) / circumference;
 const percentToScore = (percent: number) => (circumference * percent) / 100;
 const convertedScore = (score: number) => (score * circumference) / maxValue;
 </script>

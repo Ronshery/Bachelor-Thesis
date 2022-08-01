@@ -15,13 +15,6 @@
           stroke: '#9f7aea',
         }"
       />
-      <!--      <Marker
-        :value="1000"
-        label="Mean."
-        color="green"
-        :strokeWidth="2"
-        strokeDasharray="6 6"
-      />-->
     </template>
     <template #widgets>
       <Tooltip borderColor="#48CAE4" />

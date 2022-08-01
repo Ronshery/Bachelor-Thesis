@@ -189,7 +189,7 @@ const nodeScore = computed(() => {
 let nodeTotalScoreBackup = 0;
 const nodeTotalScore = computed(() => {
   if (nodeScore.value != null) {
-    let scoreVal = 0;
+    let scoreVal;
     const details = nodeScore.value["details"];
     let sum = 0;
     let segmentCounter = 0;
@@ -231,19 +231,6 @@ watch(props, () => {
   }
 });
 
-const dataNameMapper = (dataName: string): string => {
-  switch (dataName) {
-    case "memory_used":
-      return "Memory used";
-    case "disk_io_util":
-      return "Disk IO util";
-    case "cpu_busy":
-      return "CPU busy";
-  }
-  return "";
-};
-
-let firstCall = true;
 const fetchData = async (nodeID: string) => {
   let timeDelta = -1;
   if (nodeID) {
@@ -256,17 +243,6 @@ const fetchData = async (nodeID: string) => {
         let dataNames = Object.keys(responseData);
         dataNames = dataNames.filter((key) => key != "node_name");
 
-        //initialize graphList
-        /*        if (firstCall) {
-          firstCall = false;
-          dataNames.forEach((dataName) => {
-            graphListApex.value.push({
-              id: dataName,
-              title: dataNameMapper(dataName),
-              data: [],
-            });
-          });
-        }*/
         dataNames.forEach((dataName) => {
           let data = response.data[dataName];
 
@@ -300,16 +276,6 @@ const convertDataToApex = (
     newData.push(point);
   }
   return newData;
-};
-
-const convertMinutes = (minutes: number) => {
-  let convertedMinute;
-  if (minutes < 10) {
-    convertedMinute = "0" + minutes.toString();
-  } else {
-    convertedMinute = minutes.toString();
-  }
-  return convertedMinute;
 };
 </script>
 

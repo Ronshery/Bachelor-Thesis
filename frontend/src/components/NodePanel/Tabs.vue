@@ -30,14 +30,6 @@
       </div>
       <BenchmarkContainer :node="node" :nodePanelOpen="nodePanelOpen" />
     </Tab>
-    <!--    <Tab ref="SettingsComponent" :nodePanelOpen="nodePanelOpen">
-      <div class="node-name-wrapper">
-        <span class="node-name">
-          {{ node.name }}
-        </span>
-      </div>
-      Settings Content</Tab
-    >-->
   </div>
 </template>
 
@@ -61,12 +53,11 @@ const tabHeight = "50px";
 const selectedTab = ref<ITab>();
 const OverviewComponent = ref();
 const BenchmarkComponent = ref();
-//const SettingsComponent = ref();
 const tabList = ref([
   { title: "Overview", ref: OverviewComponent },
   { title: "Benchmark", ref: BenchmarkComponent },
-  // { title: "Settings", ref: SettingsComponent },
 ]);
+
 //methods
 let timer: number;
 let firstTime = false;
