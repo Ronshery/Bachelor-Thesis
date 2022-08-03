@@ -39,7 +39,7 @@ const props = defineProps(["nodeID"]);
 
 // data
 const description =
-  '"iPerf3 is a tool for active measurements of the maximum achievable bandwidth on IP networks. It supports tuning of various parameters related to timing, buffers and protocols (TCP, UDP, SCTP with IPv4 and IPv6). With the iPerf3 benchmark, you can measure the I/O performance of the network hardware and stack used in your Kubernetes cluster."';
+  "“iPerf3 is a tool for active measurements of the maximum achievable bandwidth on IP networks. It supports tuning of various parameters related to timing, buffers and protocols (TCP, UDP, SCTP with IPv4 and IPv6). With the iPerf3 benchmark, you can measure the I/O performance of the network hardware and stack used in your Kubernetes cluster.”";
 const chartsData = computed(() => {
   const query = Benchmark.query()
     .where("node", props.nodeID)

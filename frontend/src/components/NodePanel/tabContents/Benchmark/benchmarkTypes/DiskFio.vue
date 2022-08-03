@@ -48,7 +48,7 @@ const props = defineProps(["nodeID"]);
 
 // data
 const description =
-  '"fio is a tool that will spawn a number of threads or processes doing a particular type of I/O action as specified by the user. The typical use of fio is to write a job file matching the I/O load one wants to simulate. With the fio benchmark you can measure the I/O performance of the disks used in your Kubernetes cluster."';
+  "“fio is a tool that will spawn a number of threads or processes doing a particular type of I/O action as specified by the user. The typical use of fio is to write a job file matching the I/O load one wants to simulate. With the fio benchmark you can measure the I/O performance of the disks used in your Kubernetes cluster.”";
 const chartsData = computed(() => {
   const query = Benchmark.query()
     .where("node", props.nodeID)

@@ -50,7 +50,7 @@ const props = defineProps(["nodeID"]);
 
 // data
 const description =
-  '"Qperf measures bandwidth and latency between two nodes. It can work over TCP/IP as well as the RDMA transports. On one of the nodes, qperf is typically run with no arguments designating it the server node. One may then run qperf on a client node to obtain measurements such as bandwidth, latency and cpu utilization. In its most basic form, qperf is run on one node in server mode by invoking it with no arguments. On the other node, it is run with two arguments: the name of the server node followed by the name of the test. With the qperf benchmark, you can measure the I/O performance of the network hardware and stack used in your Kubernetes cluster."';
+  "“Qperf measures bandwidth and latency between two nodes. It can work over TCP/IP as well as the RDMA transports. On one of the nodes, qperf is typically run with no arguments designating it the server node. One may then run qperf on a client node to obtain measurements such as bandwidth, latency and cpu utilization. In its most basic form, qperf is run on one node in server mode by invoking it with no arguments. On the other node, it is run with two arguments: the name of the server node followed by the name of the test. With the qperf benchmark, you can measure the I/O performance of the network hardware and stack used in your Kubernetes cluster.”";
 const chartsData = computed(() => {
   const query = Benchmark.query()
     .where("node", props.nodeID)

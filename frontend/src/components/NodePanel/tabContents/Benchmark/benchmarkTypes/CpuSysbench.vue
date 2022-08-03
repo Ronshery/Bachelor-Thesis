@@ -57,7 +57,7 @@ const props = defineProps(["nodeID"]);
 
 // data
 const description =
-  '"sysbench is a scriptable multi-threaded benchmark tool based on LuaJIT. It is most frequently used for database benchmarks, but can also be used to create arbitrarily complex workloads that do not involve a database server. With the sysbench benchmark you can measure the CPU, Memory, Database and Filesystem characteritics of your Kubernetes cluster."';
+  "“sysbench is a scriptable multi-threaded benchmark tool based on LuaJIT. It is most frequently used for database benchmarks, but can also be used to create arbitrarily complex workloads that do not involve a database server. With the sysbench benchmark you can measure the CPU, Memory, Database and Filesystem characteristics of your Kubernetes cluster.”";
 const chartsData = computed(() => {
   const query = Benchmark.query()
     .where("node", props.nodeID)

@@ -29,7 +29,7 @@
       >
         {{ description }}
         <div style="margin-top: 1em">
-          <a :href="link">details</a>
+          <a :href="link">source</a>
         </div>
       </div>
     </div>
